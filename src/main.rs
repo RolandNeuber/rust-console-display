@@ -18,5 +18,5 @@ fn main() {
 
     println!("{}", disp.get_pixel(3, 5).unwrap());
 
-    println!("{:#?}", disp);
+    println!("{}", disp.to_string());
 }

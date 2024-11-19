@@ -6,32 +6,6 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn build(width: usize, height: usize, data: Vec<QuadPixel>) -> Result<Display, String> {
-        if width % 2 == 1 || height % 2 == 1 {
-            return Err(
-                format!(
-                    "Width and height must be even. Got width = {}, height = {}.", 
-                    width, 
-                    height
-                )
-            );
-        }
-        if data.len() * 4 / width / height != 1 {
-            return Err(
-                format!(
-                    "Data does not match specified dimensions. Expected length of {}, got {}.", 
-                    width * height, 
-                    data.len()
-                )
-            );
-        }
-        Ok(Display {
-            width, 
-            height, 
-            data
-        })
-    }
-
     pub fn build_from_bools(width: usize, height: usize, data: Vec<bool>) -> Result<Display, String> {
         if width % 2 == 1 || height % 2 == 1 {
             return Err(
@@ -67,7 +41,11 @@ impl Display {
                 })
             }
         }
-        Display::build(width, height, quad_pixels)
+        Ok(Display {
+            width, 
+            height, 
+            data: quad_pixels
+        })
     }
 
     pub fn get_pixel(&self, x: usize, y: usize) -> Result<bool, String> {
@@ -88,42 +66,23 @@ impl Display {
     }
 }
 
+impl ToString for Display {
+    fn to_string(&self) -> String {
+        let mut string_repr = String::new();
+        for y in 0..(self.height / 2) {
+            for x in 0..(self.width / 2) {
+                string_repr.push(self.data[x + y * self.width / 2].get_char());
+            }
+            string_repr.push('\n');
+        }
+        string_repr.pop();
+        string_repr
+    }
+}
+
 pub trait MultiPixel {
     fn get_char(&self) -> char;
     fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String>;
-}
-
-pub enum Pixel {
-    QuadPixel(QuadPixel),
-    HexPixel(HexPixel),
-}
-
-impl Pixel {
-    pub fn quad_pixel(u_l: bool, u_r: bool, l_l: bool, l_r: bool) -> Self {
-        Pixel::QuadPixel(
-            QuadPixel {
-                u_l, u_r, 
-                l_l, l_r
-            }
-        )
-    }
-
-    pub fn hex_pixel(u_l: bool, u_r: bool, m_l: bool, m_r: bool, l_l: bool, l_r: bool) -> Self {
-        Pixel::HexPixel(
-            HexPixel {
-                u_l, u_r, 
-                m_l, m_r, 
-                l_l, l_r
-            }
-        )
-    }
-
-    pub fn get_char(&self) -> char {
-        match self {
-            Self::QuadPixel(pix) => pix.get_char(),
-            Self::HexPixel(pix) => pix.get_char(),
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -142,6 +101,15 @@ impl QuadPixel {
         '▄', '▙', '▟', '█',
     ];
 
+    pub fn new(u_l: bool, u_r: bool, l_l: bool, l_r: bool) -> QuadPixel {
+        QuadPixel {
+            u_l,
+            u_r,
+            l_l,
+            l_r,
+        }
+    }
+
     fn index(&self) -> usize {
         (self.u_l as usize) | 
         (self.u_r as usize) << 1 | 
@@ -150,10 +118,16 @@ impl QuadPixel {
     }
 }
 
+impl ToString for QuadPixel {
+    fn to_string(&self) -> String {
+        self.get_char().to_string()
+    }
+}
+
 impl MultiPixel for QuadPixel {
     /// ```
-    /// use display::Pixel;
-    /// let pixel = Pixel::quad_pixel (
+    /// use display::{MultiPixel, QuadPixel};
+    /// let pixel = QuadPixel::new (
     ///     true, false, // #_
     ///     false, true, // _#
     /// );
@@ -194,6 +168,17 @@ impl HexPixel {
         '🬭', '🬮', '🬯', '🬰', '🬱', '🬲', '🬳', '🬴', '🬵', '🬶', '🬷', '🬸', '🬹', '🬺', '🬻', '█'
     ];
 
+    pub fn new(u_l: bool, u_r: bool, m_l: bool, m_r: bool, l_l: bool, l_r: bool) -> HexPixel {
+        HexPixel {
+            u_l,
+            u_r,
+            m_l,
+            m_r,
+            l_l,
+            l_r,
+        }
+    }
+
     fn index(&self) -> usize {
         (self.u_l as usize) | 
         (self.u_r as usize) << 1 | 
@@ -206,8 +191,8 @@ impl HexPixel {
 
 impl MultiPixel for HexPixel {
     /// ```
-    /// use display::Pixel;
-    /// let pixel = Pixel::hex_pixel (
+    /// use display::{MultiPixel, HexPixel};
+    /// let pixel = HexPixel::new (
     ///     true, false, // #_
     ///     false, true, // _#
     ///     true, true,  // ##
