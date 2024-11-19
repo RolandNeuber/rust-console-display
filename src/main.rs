@@ -1,10 +1,22 @@
-use display::Pixel;
+use display::Display;
 
 fn main() {
-    let pix1: Pixel = Pixel::quad_pixel(
-        true, false, 
-        false, true 
-    );
+    let disp = Display::build_from_bools(
+        8, 
+        8, 
+        vec![
+            true, false, true, false, true, false, true, false,
+            false, true, false, true, false, true, false, true,
+            true, false, true, false, true, false, true, false,
+            false, true, false, true, false, true, false, true,
+            true, false, true, false, true, false, true, false,
+            false, true, false, true, false, true, false, true,
+            true, false, true, false, true, false, true, false,
+            false, true, false, true, false, true, false, true,
+        ]
+    ).unwrap();
 
-    println!("{}", pix1.get_char());
+    println!("{}", disp.get_pixel(3, 5).unwrap());
+
+    println!("{:#?}", disp);
 }
