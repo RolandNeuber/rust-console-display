@@ -28,15 +28,15 @@ impl<T: MultiPixel<T>> Display<T> {
 
         let mut multi_pixels = Vec::with_capacity(width * height / T::WIDTH / T::HEIGHT);
 
-        for row in 0..(height / T::HEIGHT) {
-            for col in 0..(width / T::WIDTH) {
-                let block_x: usize = row * T::WIDTH;
-                let block_y: usize = col * T::HEIGHT;
+        for col in 0..(width / T::WIDTH) {
+            for row in 0..(height / T::HEIGHT) {
+                let block_x: usize = col * T::WIDTH;
+                let block_y: usize = row * T::HEIGHT;
 
                 let mut args = Vec::with_capacity(T::WIDTH * T::HEIGHT);
 
-                for x in 0..T::WIDTH {
-                    for y in 0..T::HEIGHT {
+                for y in 0..T::HEIGHT {
+                    for x in 0..T::WIDTH {
                         args.push(data[block_x + x + (block_y + y) * width]);
                     }
                 }
@@ -56,12 +56,12 @@ impl<T: MultiPixel<T>> Display<T> {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
 
-        let block_x: usize = x / 2;
-        let block_y: usize = y / 2;
-        let offset_x: usize = x % 2;
-        let offset_y: usize = y % 2;
+        let block_x: usize = x / T::WIDTH;
+        let block_y: usize = y / T::HEIGHT;
+        let offset_x: usize = x % T::WIDTH;
+        let offset_y: usize = y % T::HEIGHT;
 
-        let pixel = &self.data[block_x + block_y * self.width / 2];
+        let pixel = &self.data[block_x + block_y * self.width / T::WIDTH];
         match pixel.get_subpixel(offset_x, offset_y) {
             Ok(val) => Ok(val),
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
@@ -72,9 +72,9 @@ impl<T: MultiPixel<T>> Display<T> {
 impl<T: MultiPixel<T>> ToString for Display<T> {
     fn to_string(&self) -> String {
         let mut string_repr = String::new();
-        for y in 0..(self.height / 2) {
-            for x in 0..(self.width / 2) {
-                string_repr.push(self.data[x + y * self.width / 2].get_char());
+        for y in 0..(self.height / T::HEIGHT) {
+            for x in 0..(self.width / T::WIDTH) {
+                string_repr.push(self.data[x + y * self.width / T::WIDTH].get_char());
             }
             string_repr.push('\n');
         }
