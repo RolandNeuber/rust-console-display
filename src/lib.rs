@@ -1,16 +1,16 @@
 #[derive(Debug)]
-pub struct Display {
+pub struct Display<T: MultiPixel<T>> {
     width: usize,
     height: usize,
-    data: Vec<QuadPixel>,
+    data: Vec<T>,
 }
 
-impl Display {
-    pub fn build_from_bools(width: usize, height: usize, data: Vec<bool>) -> Result<Display, String> {
-        if width % 2 == 1 || height % 2 == 1 {
+impl<T: MultiPixel<T>> Display<T> {
+    pub fn build_from_bools(width: usize, height: usize, data: Vec<bool>) -> Result<Display<T>, String> {
+        if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
             return Err(
                 format!(
-                    "Width and height must be even. Got width = {}, height = {}.", 
+                    "Width and height must be multiples of multipixel dimensions. Got width = {}, height = {}.", 
                     width, 
                     height
                 )
@@ -26,25 +26,28 @@ impl Display {
             );
         }
 
-        let mut quad_pixels = Vec::with_capacity(width * height / 4);
+        let mut multi_pixels = Vec::with_capacity(width * height / T::WIDTH / T::HEIGHT);
 
-        for row in 0..(height / 2) {
-            for col in 0..(width / 2) {
-                let block_x: usize = row * 2;
-                let block_y: usize = col * 2;
+        for row in 0..(height / T::HEIGHT) {
+            for col in 0..(width / T::WIDTH) {
+                let block_x: usize = row * T::WIDTH;
+                let block_y: usize = col * T::HEIGHT;
 
-                quad_pixels.push(QuadPixel {
-                    u_l: data[block_x     +  block_y      * width],
-                    u_r: data[block_x + 1 +  block_y      * width],
-                    l_l: data[block_x     + (block_y + 1) * width],
-                    l_r: data[block_x + 1 + (block_y + 1) * width]
-                })
+                let mut args = Vec::with_capacity(T::WIDTH * T::HEIGHT);
+
+                for x in 0..T::WIDTH {
+                    for y in 0..T::HEIGHT {
+                        args.push(data[block_x + x + (block_y + y) * width]);
+                    }
+                }
+
+                multi_pixels.push(T::build(&args)?);
             }
         }
         Ok(Display {
             width, 
             height, 
-            data: quad_pixels
+            data: multi_pixels
         })
     }
 
@@ -66,7 +69,7 @@ impl Display {
     }
 }
 
-impl ToString for Display {
+impl<T: MultiPixel<T>> ToString for Display<T> {
     fn to_string(&self) -> String {
         let mut string_repr = String::new();
         for y in 0..(self.height / 2) {
@@ -80,7 +83,11 @@ impl ToString for Display {
     }
 }
 
-pub trait MultiPixel {
+pub trait MultiPixel<T> {
+    const WIDTH: usize;
+    const HEIGHT: usize;
+
+    fn build(args: &[bool]) -> Result<T, String>;
     fn get_char(&self) -> char;
     fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String>;
 }
@@ -124,7 +131,18 @@ impl ToString for QuadPixel {
     }
 }
 
-impl MultiPixel for QuadPixel {
+impl MultiPixel<QuadPixel> for QuadPixel {
+    const WIDTH: usize = 2;
+    const HEIGHT: usize = 2;
+
+    fn build(args: &[bool]) -> Result<QuadPixel, String> {
+        let (u_l, u_r, l_l, l_r) = match args {
+            [u_l, u_r, l_l, l_r] => (*u_l, *u_r, *l_l, *l_r),
+            _ => return Err(format!("Invalid number of arguments. Expected 4, got {}", args.len())), 
+        };
+        Ok(QuadPixel::new(u_l, u_r, l_l, l_r))
+    }
+
     /// ```
     /// use display::{MultiPixel, QuadPixel};
     /// let pixel = QuadPixel::new (
@@ -189,7 +207,18 @@ impl HexPixel {
     }
 }
 
-impl MultiPixel for HexPixel {
+impl MultiPixel<HexPixel> for HexPixel {
+    const WIDTH: usize = 2;
+    const HEIGHT: usize = 3;
+
+    fn build(args: &[bool]) -> Result<HexPixel, String> {
+        let (u_l, u_r, m_l, m_r, l_l, l_r) = match args {
+            [u_l, u_r, m_l, m_r, l_l, l_r] => (*u_l, *u_r, *m_l, *m_r, *l_l, *l_r),
+            _ => return Err(format!("Invalid number of arguments. Expected 4, got {}", args.len())), 
+        };
+        Ok(HexPixel::new(u_l, u_r, m_l, m_r, l_l, l_r))
+    }
+    
     /// ```
     /// use display::{MultiPixel, HexPixel};
     /// let pixel = HexPixel::new (
