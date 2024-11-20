@@ -28,8 +28,8 @@ impl<T: MultiPixel<T>> Display<T> {
 
         let mut multi_pixels = Vec::with_capacity(width * height / T::WIDTH / T::HEIGHT);
 
-        for col in 0..(width / T::WIDTH) {
-            for row in 0..(height / T::HEIGHT) {
+        for row in 0..(height / T::HEIGHT) {
+            for col in 0..(width / T::WIDTH) {
                 let block_x: usize = col * T::WIDTH;
                 let block_y: usize = row * T::HEIGHT;
 
