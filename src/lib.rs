@@ -1,4 +1,4 @@
-#[derive(Debug)]
+/// Represents a console display with a width and height in pixels.
 pub struct Display<T: MultiPixel<T>> {
     width: usize,
     height: usize,
@@ -6,6 +6,7 @@ pub struct Display<T: MultiPixel<T>> {
 }
 
 impl<T: MultiPixel<T>> Display<T> {
+    /// Builds a display struct with the specified dimensions from the given data.
     pub fn build_from_bools(width: usize, height: usize, data: Vec<bool>) -> Result<Display<T>, String> {
         if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
             return Err(
@@ -51,6 +52,35 @@ impl<T: MultiPixel<T>> Display<T> {
         })
     }
 
+    /// Returns a bool representing the state of the pixel at the specified coordinate.
+    /// Returns an error if the coordinates are out of bounds.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use display::{Display, SinglePixel};
+    /// let disp: Display<SinglePixel> = Display::build_from_bools(
+    ///     6, 
+    ///     6, 
+    ///     vec![
+    ///         true, true, true, true,  true, true, // 0
+    ///         true, true, true, true,  true, true, // 1
+    ///         true, true, true, false, true, true, //-2-
+    ///         true, true, true, true,  true, true, // 3
+    ///         true, true, true, true,  true, true, // 4
+    ///         true, true, true, true,  true, true, // 5
+    ///     ] //  0     1     2   --3--    4     5
+    /// ).expect("Dimensions of data should match the passed witdh and height");
+    /// // Replace with actual error handling
+    /// 
+    /// let pixel = disp.get_pixel(3, 2);
+    /// 
+    /// assert_eq!(pixel, Ok(false));
+    /// 
+    /// let pixel = disp.get_pixel(5, 6);
+    /// 
+    /// assert!(matches!(pixel, Err(_)));
+    /// ```
     pub fn get_pixel(&self, x: usize, y: usize) -> Result<bool, String> {
         if x >= self.width || y >= self.height {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
@@ -83,15 +113,85 @@ impl<T: MultiPixel<T>> ToString for Display<T> {
     }
 }
 
+/// Specifies a block of pixels with specified dimensions.
 pub trait MultiPixel<T> {
+    /// The width of the block of pixels.
     const WIDTH: usize;
+    /// The height of the block of pixels.
     const HEIGHT: usize;
 
+    /// Builds a block of pixels from a slice of bool.
+    /// Returns an error, if the number of booleans does not match the dimensions of the block.
     fn build(args: &[bool]) -> Result<T, String>;
+    /// Returns the char representing the data of the block visually.
     fn get_char(&self) -> char;
+    /// Returns the value of the block at the specified coordinates.
+    /// Returns an error, if the coordinates are out-of-bounds.
     fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String>;
 }
 
+/// Represents a singular pixel implementing the [`MultiPixel`] trait.
+pub struct SinglePixel {
+    pixel: bool,
+}
+
+impl SinglePixel {
+    pub fn new(pixel: bool) -> SinglePixel {
+        SinglePixel {
+            pixel
+        }
+    }
+}
+
+impl MultiPixel<SinglePixel> for SinglePixel {
+    const WIDTH: usize = 1;
+
+    const HEIGHT: usize = 1;
+
+    fn build(args: &[bool]) -> Result<SinglePixel, String> {
+        let pixel = match args {
+            [pixel] => *pixel,
+            _ => return Err(format!("Invalid number of arguments. Expected 1, got {}", args.len())), 
+        };
+        Ok(SinglePixel::new(pixel))
+    }
+
+    /// See [`MultiPixel::get_char`] for details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use display::{MultiPixel, SinglePixel};
+    /// let pixel = SinglePixel::new (
+    ///     true,
+    /// );
+    /// 
+    /// let symbol = pixel.get_char();
+    /// 
+    /// assert_eq!(symbol, '█');
+    /// 
+    /// let pixel = SinglePixel::new (
+    ///     false,
+    /// )
+    /// 
+    /// let symbol = pixel.get_char();
+    /// 
+    /// assert_eq!(symbol, ' ');
+    /// 
+    /// ```
+    fn get_char(&self) -> char {
+        if self.pixel {'█'} else {' '}
+    }
+
+    fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String> {
+        match (x, y) {
+            (0, 0) => Ok(self.pixel),
+            _ => Err("Coordinates out of range.".to_string())
+        }
+    }
+}
+
+/// Specifies a block of pixels with dimensions 2 (width) by 2 (height).
 #[derive(Debug)]
 pub struct QuadPixel {
     u_l: bool,
@@ -143,6 +243,10 @@ impl MultiPixel<QuadPixel> for QuadPixel {
         Ok(QuadPixel::new(u_l, u_r, l_l, l_r))
     }
 
+    /// See [`MultiPixel::get_char`] for details.
+    /// 
+    /// # Examples
+    /// 
     /// ```
     /// use display::{MultiPixel, QuadPixel};
     /// let pixel = QuadPixel::new (
@@ -169,6 +273,7 @@ impl MultiPixel<QuadPixel> for QuadPixel {
     }
 }
 
+/// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
 pub struct HexPixel {
     u_l: bool,
     u_r: bool,
@@ -218,7 +323,10 @@ impl MultiPixel<HexPixel> for HexPixel {
         };
         Ok(HexPixel::new(u_l, u_r, m_l, m_r, l_l, l_r))
     }
-    
+    /// See [`MultiPixel::get_char`] for details.
+    /// 
+    /// # Examples
+    /// 
     /// ```
     /// use display::{MultiPixel, HexPixel};
     /// let pixel = HexPixel::new (

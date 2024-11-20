@@ -1,7 +1,7 @@
-use display::{Display, HexPixel, QuadPixel};
+use display::{Display, HexPixel, QuadPixel, SinglePixel};
 
 fn main() {
-    let disp: Display<QuadPixel> = Display::build_from_bools(
+    let disp: Display<SinglePixel> = Display::build_from_bools(
         8, 
         6, 
         vec![
