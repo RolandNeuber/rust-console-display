@@ -97,6 +97,23 @@ impl<T: MultiPixel<T>> Display<T> {
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
         }
     }
+
+    pub fn set_pixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
+        if x >= self.width || y >= self.height {
+            return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
+        }
+
+        let block_x: usize = x / T::WIDTH;
+        let block_y: usize = y / T::HEIGHT;
+        let offset_x: usize = x % T::WIDTH;
+        let offset_y: usize = y % T::HEIGHT;
+
+        let pixel = &mut self.data[block_x + block_y * self.width / T::WIDTH];
+        match pixel.set_subpixel(offset_x, offset_y, value) {
+            Ok(val) => Ok(val),
+            Err(_) => Err("Offset should be 0 or 1.".to_string()),
+        }
+    }    
 }
 
 impl<T: MultiPixel<T>> ToString for Display<T> {
@@ -128,6 +145,8 @@ pub trait MultiPixel<T> {
     /// Returns the value of the block at the specified coordinates.
     /// Returns an error, if the coordinates are out-of-bounds.
     fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String>;
+
+    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String>;
 }
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
@@ -187,6 +206,13 @@ impl MultiPixel<SinglePixel> for SinglePixel {
         match (x, y) {
             (0, 0) => Ok(self.pixel),
             _ => Err("Coordinates out of range.".to_string())
+        }
+    }
+    
+    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
+        match (x, y) {
+            (0, 0) => Ok(self.pixel = value),
+            _ => Err("Coordinates out of range.".to_string()),
         }
     }
 }
@@ -271,6 +297,17 @@ impl MultiPixel<QuadPixel> for QuadPixel {
             _ => Err("Coordinates out of range.".to_string())
         }
     }
+
+    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
+        match (x, y) {
+            (0, 0) => self.u_l = value,
+            (1, 0) => self.u_r = value,
+            (0, 1) => self.l_l = value,
+            (1, 1) => self.l_r = value,
+            _ => return Err("Coordinates out of range.".to_string())
+        };
+        Ok(())
+    }
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
@@ -353,5 +390,18 @@ impl MultiPixel<HexPixel> for HexPixel {
             (1, 2) => Ok(self.l_r),
             _ => Err("Coordinates out of range.".to_string())
         }
+    }
+
+    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
+        match (x, y) {
+            (0, 0) => self.u_l = value,
+            (1, 0) => self.u_r = value,
+            (0, 1) => self.m_l = value,
+            (1, 1) => self.m_r = value,
+            (0, 2) => self.l_l = value,
+            (1, 2) => self.l_r = value,
+            _ => return Err("Coordinates out of range.".to_string())
+        };
+        Ok(())
     }
 }
