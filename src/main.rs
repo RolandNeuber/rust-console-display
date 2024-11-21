@@ -2,10 +2,10 @@ use display::{Display, HexPixel, OctPixel, QuadPixel, SinglePixel};
 use std::{thread, time};
 
 fn main() {
-    let mut disp: Display<OctPixel> = Display::build_from_bools(
-        8, 
-        8, 
-        vec![
+    let mut disp: Display<QuadPixel> = Display::build_from_bools(
+        256, 
+        64, 
+/*         vec![
             true, false, true, false, true, false, true, false,
             false, true, false, true, false, true, false, true,
             true, false, true, false, true, false, true, false,
@@ -14,17 +14,17 @@ fn main() {
             false, true, false, true, false, true, false, true,
             true, false, true, false, true, false, true, false,
             false, true, false, true, false, true, false, true,
-        ]
+        ] */
+       vec![true; 16384]
     ).unwrap();
 
-    let duration = time::Duration::from_millis(100);
-    for x in 0..8usize {
-        for y in 0..8usize {
+    let duration = time::Duration::from_millis(0);
+    for x in 0..256usize {
+        for y in 0..64usize {
             thread::sleep(duration);
             disp.set_pixel(x, y, !disp.get_pixel(x, y).unwrap()).unwrap();
-            println!("{}", disp.to_string());
-            print!("\x1b[2A");
+            disp.print_display(0);
         }
     }
-    print!("\x1b[2B");
+    disp.finalize_display();
 }

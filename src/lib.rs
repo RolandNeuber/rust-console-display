@@ -2,6 +2,8 @@
 pub struct Display<T: MultiPixel<T>> {
     width: usize,
     height: usize,
+    block_count_x: usize,
+    block_count_y: usize,
     data: Vec<T>,
 }
 
@@ -27,10 +29,13 @@ impl<T: MultiPixel<T>> Display<T> {
             );
         }
 
-        let mut multi_pixels = Vec::with_capacity(width * height / T::WIDTH / T::HEIGHT);
+        let block_count_x = width / T::WIDTH;
+        let block_count_y = height / T::HEIGHT;
 
-        for row in 0..(height / T::HEIGHT) {
-            for col in 0..(width / T::WIDTH) {
+        let mut multi_pixels = Vec::with_capacity(block_count_x * block_count_y);
+
+        for row in 0..block_count_y {
+            for col in 0..block_count_x {
                 let block_x: usize = col * T::WIDTH;
                 let block_y: usize = row * T::HEIGHT;
 
@@ -48,6 +53,8 @@ impl<T: MultiPixel<T>> Display<T> {
         Ok(Display {
             width, 
             height, 
+            block_count_x,
+            block_count_y,
             data: multi_pixels
         })
     }
@@ -91,7 +98,7 @@ impl<T: MultiPixel<T>> Display<T> {
         let offset_x: usize = x % T::WIDTH;
         let offset_y: usize = y % T::HEIGHT;
 
-        let pixel = &self.data[block_x + block_y * self.width / T::WIDTH];
+        let pixel = &self.data[block_x + block_y * self.block_count_x];
         match pixel.get_subpixel(offset_x, offset_y) {
             Ok(val) => Ok(val),
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
@@ -108,12 +115,40 @@ impl<T: MultiPixel<T>> Display<T> {
         let offset_x: usize = x % T::WIDTH;
         let offset_y: usize = y % T::HEIGHT;
 
-        let pixel = &mut self.data[block_x + block_y * self.width / T::WIDTH];
+        let pixel = &mut self.data[block_x + block_y * self.block_count_x];
         match pixel.set_subpixel(offset_x, offset_y, value) {
             Ok(val) => Ok(val),
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
         }
-    }    
+    }
+
+    /// Prints the display to the console with the top-left corner starting at cursor position.
+    /// Offset parameter may be used to adjust the horizontal position (> 0 - right, < 0 - left).
+    /// Last call to this method should be finalized with [`Self::finalize_display`].
+    pub fn print_display(&self, offset_x: isize) {
+        let horizontal_offset;
+        if offset_x > 0 {
+            horizontal_offset = format!("\x1b[{}C",  offset_x); // right
+        } else if offset_x < 0{
+            horizontal_offset = format!("\x1b[{}D", -offset_x); // left
+        } else {
+            horizontal_offset = "".to_string();
+        }
+
+        for line in self.to_string().lines() {
+            println!("{}{}", horizontal_offset, line);
+        }
+
+        print!("\x1b[{}A", self.block_count_y);
+    }
+
+    /// Adjusts the cursor position after the display has finished rendering.
+    /// Should be used after the display was printed for the last time.
+    /// Should not be used multiple times.
+    /// No [`Self::print_display`] calls should be executed after this.
+    pub fn finalize_display(&self) {
+        print!("\x1b[{}B", self.block_count_y)
+    }
 }
 
 impl<T: MultiPixel<T>> ToString for Display<T> {
@@ -396,6 +431,7 @@ impl MultiPixel<HexPixel> for HexPixel {
     }
 }
 
+/// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
 pub struct OctPixel {
     uu_l: bool, uu_r: bool,
     um_l: bool, um_r: bool,
