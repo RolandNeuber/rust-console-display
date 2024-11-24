@@ -122,46 +122,40 @@ impl<T: MultiPixel<T>> Display<T> {
         }
     }
 
-    /// Prints the display to the console with the top-left corner starting at cursor position.
-    /// Offset parameter may be used to adjust the horizontal position (> 0 - right, < 0 - left).
-    /// Last call to this method should be finalized with [`Self::finalize_display`].
-    pub fn print_display(&self, offset_x: isize) {
-        let horizontal_offset;
-        if offset_x > 0 {
-            horizontal_offset = format!("\x1b[{}C",  offset_x); // right
-        } else if offset_x < 0{
-            horizontal_offset = format!("\x1b[{}D", -offset_x); // left
-        } else {
-            horizontal_offset = "".to_string();
-        }
-
-        for line in self.to_string().lines() {
-            println!("{}{}", horizontal_offset, line);
-        }
-
-        print!("\x1b[{}A", self.block_count_y);
+    pub fn print_display(&self) {
+        print!("\x1B[H");
+        print!("{}", self.to_string());
     }
 
-    /// Adjusts the cursor position after the display has finished rendering.
-    /// Should be used after the display was printed for the last time.
-    /// Should not be used multiple times.
-    /// No [`Self::print_display`] calls should be executed after this.
-    pub fn finalize_display(&self) {
-        print!("\x1b[{}B", self.block_count_y)
+    pub fn initialize(&self) {
+        print!("\x1B[?1049h");    // use new screen
+
+        print!(
+            "\x1B[8;{};{}t", 
+            self.block_count_y, 
+            self.block_count_x
+        );                        // set dimensions of screen
+        print!("\x1B[2J");        // clear screen
     }
 }
 
 impl<T: MultiPixel<T>> ToString for Display<T> {
     fn to_string(&self) -> String {
         let mut string_repr = String::new();
-        for y in 0..(self.height / T::HEIGHT) {
-            for x in 0..(self.width / T::WIDTH) {
-                string_repr.push(self.data[x + y * self.width / T::WIDTH].get_char());
+        for y in 0..self.block_count_y {
+            for x in 0..self.block_count_x {
+                string_repr.push(self.data[x + y * self.block_count_x].get_char());
             }
             string_repr.push('\n');
         }
         string_repr.pop();
         string_repr
+    }
+}
+
+impl<T: MultiPixel<T>> Drop for Display<T> {
+    fn drop(&mut self) {
+        print!("\x1B[?1049l"); // return to previous screen
     }
 }
 
