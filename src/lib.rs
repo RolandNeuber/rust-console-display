@@ -1,3 +1,6 @@
+use crossterm::{cursor, execute, terminal};
+use std::io::{stdout, Write};
+
 /// Represents a console display with a width and height in pixels.
 pub struct Display<T: MultiPixel<T>> {
     width: usize,
@@ -123,19 +126,29 @@ impl<T: MultiPixel<T>> Display<T> {
     }
 
     pub fn print_display(&self) {
-        print!("\x1B[H");
-        print!("{}", self.to_string());
+        let mut stdout = stdout();
+        
+        write!(stdout, "\x1B[H");
+        write!(stdout, "{}", self.to_string());
     }
 
     pub fn initialize(&self) {
-        print!("\x1B[?1049h");    // use new screen
+        let mut stdout = stdout();
 
-        print!(
+        //print!("\x1B[?1049h");    // use new screen
+        execute!(stdout, terminal::EnterAlternateScreen);
+
+/*         print!(
             "\x1B[8;{};{}t", 
             self.block_count_y, 
             self.block_count_x
-        );                        // set dimensions of screen
-        print!("\x1B[2J");        // clear screen
+        );                        // set dimensions of screen */
+        execute!(stdout, terminal::SetSize(self.block_count_x as u16, self.block_count_y as u16));
+        
+        //print!("\x1B[2J");        // clear screen
+        execute!(stdout, terminal::Clear(terminal::ClearType::All));
+
+        execute!(stdout, cursor::Hide);
     }
 }
 
@@ -146,7 +159,7 @@ impl<T: MultiPixel<T>> ToString for Display<T> {
             for x in 0..self.block_count_x {
                 string_repr.push(self.data[x + y * self.block_count_x].get_char());
             }
-            string_repr.push('\n');
+            string_repr.push_str("\r\n");
         }
         string_repr.pop();
         string_repr
@@ -155,7 +168,13 @@ impl<T: MultiPixel<T>> ToString for Display<T> {
 
 impl<T: MultiPixel<T>> Drop for Display<T> {
     fn drop(&mut self) {
-        print!("\x1B[?1049l"); // return to previous screen
+        //print!("\x1B[?1049l"); // return to previous screen
+
+        let mut stdout = stdout();
+
+        execute!(stdout, terminal::LeaveAlternateScreen);
+
+        execute!(stdout, cursor::Show);
     }
 }
 
