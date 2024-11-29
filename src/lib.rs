@@ -3,8 +3,8 @@ use std::io::{stdout, Write};
 
 /// Represents a console display with a width and height in pixels.
 pub struct Display<T: MultiPixel<T>> {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
     block_count_x: usize,
     block_count_y: usize,
     data: Vec<T>,
