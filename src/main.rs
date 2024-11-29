@@ -20,13 +20,13 @@ fn main() {
     ).unwrap();
 
     let _ = terminal::enable_raw_mode();
-    disp.initialize(); 
+    let _ = disp.initialize(); 
     let duration = time::Duration::from_millis(0);
     'outer: for x in 0..256usize {
         for y in 0..64usize {
             thread::sleep(duration);
             disp.set_pixel(x, y, !disp.get_pixel(x, y).unwrap()).unwrap();
-            disp.print_display();
+            let _ = disp.print_display();
 
             // Wait for events (non-blocking, adjust duration as needed)
             if event::poll(std::time::Duration::from_millis(0)).unwrap() {

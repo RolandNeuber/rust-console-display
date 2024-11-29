@@ -125,30 +125,43 @@ impl<T: MultiPixel<T>> Display<T> {
         }
     }
 
-    pub fn print_display(&self) {
+    pub fn print_display(&self) -> Result<(), String> {
         let mut stdout = stdout();
         
-        write!(stdout, "\x1B[H");
-        write!(stdout, "{}", self.to_string());
+        if let Err(e) = write!(stdout, "\x1B[H") {
+            return Err(e.to_string());
+        };
+        if let Err(e) = write!(stdout, "{}", self.to_string()) {
+            return Err(e.to_string());
+        };
+
+        Ok(())
     }
 
-    pub fn initialize(&self) {
+    pub fn initialize(&self) -> Result<(), String> {
         let mut stdout = stdout();
 
-        //print!("\x1B[?1049h");    // use new screen
-        execute!(stdout, terminal::EnterAlternateScreen);
+        // use alternate screen
+        if let Err(e) = execute!(stdout, terminal::EnterAlternateScreen) {
+            return Err(e.to_string());
+        };
 
-/*         print!(
-            "\x1B[8;{};{}t", 
-            self.block_count_y, 
-            self.block_count_x
-        );                        // set dimensions of screen */
-        execute!(stdout, terminal::SetSize(self.block_count_x as u16, self.block_count_y as u16));
+        // set dimensions of screen
+        if let Err(e) = execute!(stdout, terminal::SetSize(self.block_count_x as u16, self.block_count_y as u16)) {
+            return Err(e.to_string());
+        };
         
-        //print!("\x1B[2J");        // clear screen
-        execute!(stdout, terminal::Clear(terminal::ClearType::All));
+        // clear screen
+        if let Err(e) = execute!(stdout, terminal::Clear(terminal::ClearType::All)) {
+            return Err(e.to_string());
+        };
 
-        execute!(stdout, cursor::Hide);
+        // hide cursor blinking
+        if let Err(e) = execute!(stdout, cursor::Hide) {
+            return Err(e.to_string());
+        };
+
+        Ok(())
     }
 }
 
@@ -168,13 +181,13 @@ impl<T: MultiPixel<T>> ToString for Display<T> {
 
 impl<T: MultiPixel<T>> Drop for Display<T> {
     fn drop(&mut self) {
-        //print!("\x1B[?1049l"); // return to previous screen
-
         let mut stdout = stdout();
 
-        execute!(stdout, terminal::LeaveAlternateScreen);
+        // return to previous screen
+        let _ = execute!(stdout, terminal::LeaveAlternateScreen);
 
-        execute!(stdout, cursor::Show);
+        // show cursor blinking
+        let _ = execute!(stdout, cursor::Show);
     }
 }
 
