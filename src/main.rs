@@ -1,12 +1,13 @@
 use crossterm::{event::{self, Event, KeyCode, KeyModifiers}, terminal};
-use display::{Display, pixel::{SinglePixel, QuadPixel, HexPixel, OctPixel}};
+use display::{color_pixel::{Color, ColorSinglePixel}, pixel::{DualPixel, HexPixel, OctPixel, QuadPixel, SinglePixel}, Display};
 use rand::Rng;
 use std::{thread, time::Duration};
 
 fn main() {
-    let mut disp: Display<SinglePixel> = Display::build(
-        100, 
+    let mut disp: Display<ColorSinglePixel> = Display::build(
+        50, 
         30,
+        Color {r: 0, b: 0, g: 0}
     ).unwrap();
     
     let _ = terminal::enable_raw_mode();
@@ -14,7 +15,7 @@ fn main() {
     let duration = Duration::from_millis(75);
     
     let mut snake: Vec<(usize, usize)> = vec![(disp.width / 2, disp.height / 2)];
-    disp.set_pixel(snake[0].0, snake[0].1, true);
+    disp.set_pixel(snake[0].0, snake[0].1, Color {r: 255, g: 255, b: 255});
 
     let mut apple = (
         rand::thread_rng().gen_range(0..disp.width), 
@@ -22,7 +23,7 @@ fn main() {
     );
     let mut direction = (0, 0);
 
-    disp.set_pixel(apple.0, apple.1, true);
+    disp.set_pixel(apple.0, apple.1, Color {r: 255, g: 0, b: 0});
     disp.print_display();
 
     let mut lost = false;
@@ -89,17 +90,17 @@ fn main() {
                 rand::thread_rng().gen_range(0..disp.width), 
                 rand::thread_rng().gen_range(0..disp.height)
             );
-            disp.set_pixel(apple.0, apple.1, true);
+            disp.set_pixel(apple.0, apple.1, Color {r: 255, g: 0, b: 0});
         }
         else {
             // remove pixel at last segment of snake
-            disp.set_pixel(snake.last().unwrap().0, snake.last().unwrap().1, false);
+            disp.set_pixel(snake.last().unwrap().0, snake.last().unwrap().1, Color {r: 0, g: 0, b: 0});
             // remove the last segment of snake if it hasn't eaten
             snake.pop();
         }
 
         // place pixel at snake head
-        disp.set_pixel(snake[0].0, snake[0].1, true);
+        disp.set_pixel(snake[0].0, snake[0].1, Color {r: 255, g: 255, b: 255});
     }
     let _ = terminal::disable_raw_mode();
 }

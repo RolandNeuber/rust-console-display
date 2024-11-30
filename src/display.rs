@@ -5,7 +5,7 @@ use crossterm::{cursor, terminal};
 use crate::pixel::MultiPixel;
 
 /// Represents a console display with a width and height in pixels.
-pub struct Display<T: MultiPixel<T>> {
+pub struct Display<T: MultiPixel<T> + ToString> {
     pub width: usize,
     pub height: usize,
     block_count_x: usize,
@@ -13,16 +13,16 @@ pub struct Display<T: MultiPixel<T>> {
     data: Vec<T>,
 }
 
-impl<T: MultiPixel<T>> Display<T> {
+impl<T: MultiPixel<T> + ToString> Display<T> {
 
     /// Convenience method to build a blank display struct with specified dimensions
-    pub fn build(width: usize, height: usize) -> Result<Display<T>, String> {
-        let data = vec![false; width * height];
+    pub fn build(width: usize, height: usize, fill: T::U) -> Result<Display<T>, String> {
+        let data: Vec<T::U> = vec![fill; width * height];
         Self::build_from_bools(width, height, data)
     }
 
     /// Builds a display struct with the specified dimensions from the given data.
-    pub fn build_from_bools(width: usize, height: usize, data: Vec<bool>) -> Result<Display<T>, String> {
+    pub fn build_from_bools(width: usize, height: usize, data: Vec<T::U>) -> Result<Display<T>, String> {
         if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
             return Err(
                 format!(
@@ -52,7 +52,7 @@ impl<T: MultiPixel<T>> Display<T> {
                 let block_x: usize = col * T::WIDTH;
                 let block_y: usize = row * T::HEIGHT;
 
-                let mut args = Vec::with_capacity(T::WIDTH * T::HEIGHT);
+                let mut args: Vec<T::U> = Vec::with_capacity(T::WIDTH * T::HEIGHT);
 
                 for y in 0..T::HEIGHT {
                     for x in 0..T::WIDTH {
@@ -101,7 +101,7 @@ impl<T: MultiPixel<T>> Display<T> {
     /// 
     /// assert!(matches!(pixel, Err(_)));
     /// ```
-    pub fn get_pixel(&self, x: usize, y: usize) -> Result<bool, String> {
+    pub fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String> {
         if x >= self.width || y >= self.height {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
@@ -118,7 +118,7 @@ impl<T: MultiPixel<T>> Display<T> {
         }
     }
 
-    pub fn set_pixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
+    pub fn set_pixel(&mut self, x: usize, y: usize, value: T::U) -> Result<(), String> {
         if x >= self.width || y >= self.height {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
@@ -175,12 +175,12 @@ impl<T: MultiPixel<T>> Display<T> {
     }
 }
 
-impl<T: MultiPixel<T>> ToString for Display<T> {
+impl<T: MultiPixel<T> + ToString> ToString for Display<T> {
     fn to_string(&self) -> String {
         let mut string_repr = String::new();
         for y in 0..self.block_count_y {
             for x in 0..self.block_count_x {
-                string_repr.push(self.data[x + y * self.block_count_x].get_char());
+                string_repr.push_str(self.data[x + y * self.block_count_x].to_string().as_str());
             }
             string_repr.push_str("\r\n");
         }
@@ -189,7 +189,7 @@ impl<T: MultiPixel<T>> ToString for Display<T> {
     }
 }
 
-impl<T: MultiPixel<T>> Drop for Display<T> {
+impl<T: MultiPixel<T> + ToString> Drop for Display<T> {
     fn drop(&mut self) {
         let mut stdout = io::stdout();
 
