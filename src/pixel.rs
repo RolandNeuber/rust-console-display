@@ -85,6 +85,90 @@ impl MultiPixel<SinglePixel> for SinglePixel {
     }
 }
 
+/// Specifies a block of pixels with dimensions 1 (width) by 2 (height).
+pub struct DualPixel {
+    upper: bool,
+    lower: bool,
+}
+
+impl DualPixel {
+    const CHARS: [char; 4] = [
+        ' ', '▀',  
+        '▄', '█',
+    ];
+
+    pub fn new(upper: bool, lower: bool) -> DualPixel {
+        DualPixel {
+            upper,
+            lower
+        }
+    }
+    
+    fn index(&self) -> usize {
+        (self.upper as usize) | 
+        (self.lower as usize) << 1
+    }
+}
+
+impl MultiPixel<DualPixel> for DualPixel {
+    const WIDTH: usize = 1;
+
+    const HEIGHT: usize = 2;
+
+    fn build(args: &[bool]) -> Result<DualPixel, String> {
+        let (upper, lower) = match args {
+            [upper, lower] => (*upper, *lower),
+            _ => return Err(format!("Invalid number of arguments. Expected 1, got {}", args.len())), 
+        };
+        Ok(DualPixel::new(upper, lower))
+    }
+
+    /// See [`MultiPixel::get_char`] for details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use display::pixel::{MultiPixel, DualPixel};
+    /// let pixel = DualPixel::new (
+    ///     true,  // #
+    ///     false, // _
+    /// );
+    /// 
+    /// let symbol = pixel.get_char();
+    /// 
+    /// assert_eq!(symbol, '▀');
+    /// 
+    /// let pixel = DualPixel::new (
+    ///     false, // _
+    ///     false, // _
+    /// );
+    /// 
+    /// let symbol = pixel.get_char();
+    /// 
+    /// assert_eq!(symbol, ' ');
+    /// 
+    /// ```
+    fn get_char(&self) -> char {
+        Self::CHARS[self.index()]
+    }
+
+    fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String> {
+        match (x, y) {
+            (0, 0) => Ok(self.upper),
+            (0, 1) => Ok(self.lower),
+            _ => Err("Coordinates out of range.".to_string())
+        }
+    }
+    
+    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
+        match (x, y) {
+            (0, 0) => Ok(self.upper = value),
+            (0, 1) => Ok(self.lower = value),
+            _ => Err("Coordinates out of range.".to_string()),
+        }
+    }
+}
+
 /// Specifies a block of pixels with dimensions 2 (width) by 2 (height).
 #[derive(Debug)]
 pub struct QuadPixel {
