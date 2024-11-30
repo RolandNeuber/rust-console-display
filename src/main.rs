@@ -1,13 +1,12 @@
 use crossterm::{event::{self, Event, KeyCode, KeyModifiers}, terminal};
-use display::{Display, HexPixel, OctPixel, QuadPixel, SinglePixel};
+use display::{Display, pixel::{SinglePixel, QuadPixel, HexPixel, OctPixel}};
 use rand::Rng;
 use std::{thread, time::Duration};
 
 fn main() {
-    let mut disp: Display<HexPixel> = Display::build_from_bools(
-        256, 
-        96, 
-        vec![false; 16384 * 3 / 2]
+    let mut disp: Display<SinglePixel> = Display::build(
+        100, 
+        30,
     ).unwrap();
     
     let _ = terminal::enable_raw_mode();
