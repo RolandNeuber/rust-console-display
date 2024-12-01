@@ -24,8 +24,8 @@ impl Color {
         }
         Color {
             r: (sum.0 / colors.len() as u32) as u8,
-            g: (sum.0 / colors.len() as u32) as u8,
-            b: (sum.0 / colors.len() as u32) as u8,
+            g: (sum.1 / colors.len() as u32) as u8,
+            b: (sum.2 / colors.len() as u32) as u8,
         }
     }
 
@@ -216,8 +216,8 @@ impl ToString for ColorQuadPixel {
             }
         }
         
-        let col1;
-        let col2;
+        let mut col1;
+        let mut col2;
         let symb;
         if ul_ur == max {
             col1 = self.u_l; // #_
@@ -278,6 +278,54 @@ impl ToString for ColorQuadPixel {
                 (false, true ) => '▞',
                 (false, false) => '▖',
             }
+        }
+
+        match symb {
+            '▘' => {
+                col1 = self.u_l;
+                col2 = Color::mix(&[self.u_r, self.l_l, self.l_r]);
+            }, 
+            '▝' => {
+                col1 = self.u_r;
+                col2 = Color::mix(&[self.u_l, self.l_l, self.l_r]);
+            }, 
+            '▀' => {
+                col1 = Color::mix(&[self.u_l, self.u_r]);
+                col2 = Color::mix(&[self.l_l, self.l_r]);
+            }, 
+            '▖' => {
+                col1 = self.l_l;
+                col2 = Color::mix(&[self.u_l, self.u_r, self.l_r]);
+            }, 
+            '▌' => {
+                col1 = Color::mix(&[self.u_l, self.l_l]);
+                col2 = Color::mix(&[self.u_r, self.l_r]);
+            }, 
+            '▞' => {
+                col1 = Color::mix(&[self.u_r, self.l_l]);
+                col2 = Color::mix(&[self.u_l, self.l_r]);
+            }, 
+            '▛' => {
+                col1 = Color::mix(&[self.u_l, self.u_r, self.l_l]);
+                col2 = self.l_r;
+            }
+            '▚' => {
+                col1 = Color::mix(&[self.u_l, self.l_r]);
+                col2 = Color::mix(&[self.u_r, self.l_l]);
+            }, 
+            '▐' => {
+                col1 = Color::mix(&[self.u_r, self.l_r]);
+                col2 = Color::mix(&[self.u_l, self.l_l]);
+            }, 
+            '▜' => {
+                col1 = Color::mix(&[self.u_l, self.u_r, self.l_r]);
+                col2 = self.l_l;
+            }, 
+            '▙' => {
+                col1 = Color::mix(&[self.u_l, self.l_l, self.l_r]);
+                col2 = self.u_r;
+            }, 
+            _ => unreachable!()
         }
         
         Color::color(symb.to_string().as_str(), &col1, &col2)
