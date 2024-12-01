@@ -216,12 +216,12 @@ impl ToString for ColorQuadPixel {
             }
         }
         
-        let mut col1;
-        let mut col2;
+        let col1;
+        let col2;
         let symb;
         if ul_ur == max {
-            col1 = self.u_l; // #_
-            col2 = self.u_r; // ??
+            // #_
+            // ??
             symb = match (ul_ll < ur_ll, ul_lr < ur_lr) {
                 (true,  true ) => '▙',
                 (true,  false) => '▌',
@@ -230,8 +230,8 @@ impl ToString for ColorQuadPixel {
             }
         }
         else if ul_ll == max {
-            col1 = self.u_l; // #?
-            col2 = self.l_l; // _?
+            // #?
+            // _?
             symb = match (ul_ur < ur_ll, ul_lr < ll_lr) {
                 (true,  true ) => '▜',
                 (true,  false) => '▀',
@@ -240,8 +240,8 @@ impl ToString for ColorQuadPixel {
             }
         }
         else if ul_lr == max {
-            col1 = self.u_l; // #?
-            col2 = self.l_r; // ?_
+            // #?
+            // ?_
             symb = match (ul_ur < ur_lr, ul_ll < ll_lr) {
                 (true,  true ) => '▛',
                 (true,  false) => '▀',
@@ -250,8 +250,8 @@ impl ToString for ColorQuadPixel {
             }
         }
         else if ur_ll == max {
-            col1 = self.u_r; // ?#
-            col2 = self.l_l; // _?
+            // ?#
+            // _?
             symb = match (ul_ur < ul_ll, ur_lr < ll_lr) {
                 (true,  true ) => '▜',
                 (true,  false) => '▀',
@@ -260,8 +260,8 @@ impl ToString for ColorQuadPixel {
             }
         }
         else if ur_lr == max {
-            col1 = self.u_r; // ?#
-            col2 = self.l_r; // ?_
+            // ?#
+            // ?_
             symb = match (ul_ur < ul_lr, ur_ll < ll_lr) {
                 (true,  true ) => '▛',
                 (true,  false) => '▀',
@@ -270,8 +270,8 @@ impl ToString for ColorQuadPixel {
             }
         }
         else /* if ll_lr == max */ {
-            col1 = self.l_l; // ??
-            col2 = self.l_r; // #_
+            // ??
+            // #_
             symb = match (ul_ll < ul_lr, ur_ll < ur_lr) {
                 (true,  true ) => '▛',
                 (true,  false) => '▌',
