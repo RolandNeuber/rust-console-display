@@ -1,4 +1,4 @@
-use crate::pixel::MultiPixel;
+use crate::pixel::{MultiPixel, QuadPixel};
 
 pub struct Color {
     pub r: u8,
@@ -15,18 +15,46 @@ impl Color {
         ).sqrt()
     }
 
-    fn mix(colors: &[Color]) -> Color {
+    fn mix(colors: &[Color]) -> Result<Color, &str> {
+        if colors.len() == 0 {
+            return Err("colors must contain at least one element");
+        }
         let mut sum = (0, 0, 0);
         for color in colors {
             sum.0 += color.r as u32;
             sum.1 += color.g as u32;
             sum.2 += color.b as u32;
         }
-        Color {
+        Ok(Color {
             r: (sum.0 / colors.len() as u32) as u8,
             g: (sum.1 / colors.len() as u32) as u8,
             b: (sum.2 / colors.len() as u32) as u8,
+        })
+    }
+
+    fn group<const N: usize>(colors: &[Color; N]) -> [bool; N] {
+        let mut max = 0f32;
+        let mut col1 = 0;
+        let mut col2 = 0;
+        for i in 0..N {
+            for j in (i+1)..N {
+                let dist = Self::distance(colors[i], colors[j]);
+                if dist > max {
+                    max = dist;
+                    col1 = i;
+                    col2 = j;
+                }
+            }
         }
+        let mut groups = [false; N];
+        for i in 0..N {
+            if 
+                Self::distance(colors[col1], colors[i]) >
+                Self::distance(colors[col2], colors[i]) {
+                groups[i] = true;
+            }
+        }
+        groups
     }
 
     fn color(text: &str, foreground_color: &Color, background_color: &Color) -> String {
@@ -202,132 +230,26 @@ impl MultiPixel<ColorQuadPixel> for ColorQuadPixel {
 
 impl ToString for ColorQuadPixel {
     fn to_string(&self) -> String {
-        let ul_ur = Color::distance(self.u_l, self.u_r);
-        let ul_ll = Color::distance(self.u_l, self.l_l);
-        let ul_lr = Color::distance(self.u_l, self.l_r);
-        let ur_ll = Color::distance(self.u_r, self.l_l);
-        let ur_lr = Color::distance(self.u_r, self.l_r);
-        let ll_lr = Color::distance(self.l_l, self.l_r);
-        let mut max = 0f32;
+        let colors = [self.u_l, self.u_r, self.l_l, self.l_r];
+        let grouping = Color::group(&colors);
+        let symb = QuadPixel::new(
+            grouping[0], grouping[1], 
+            grouping[2], grouping[3]
+        ).to_string().chars().next().unwrap();
 
-        for dist in [ul_ur, ul_ll, ul_lr, ur_ll, ur_lr, ll_lr] {
-            if dist > max {
-                max = dist;
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
             }
         }
-        
-        let col1;
-        let col2;
-        let symb;
-        if ul_ur == max {
-            // #_
-            // ??
-            symb = match (ul_ll < ur_ll, ul_lr < ur_lr) {
-                (true,  true ) => '▙',
-                (true,  false) => '▌',
-                (false, true ) => '▚',
-                (false, false) => '▘',
-            }
-        }
-        else if ul_ll == max {
-            // #?
-            // _?
-            symb = match (ul_ur < ur_ll, ul_lr < ll_lr) {
-                (true,  true ) => '▜',
-                (true,  false) => '▀',
-                (false, true ) => '▚',
-                (false, false) => '▘',
-            }
-        }
-        else if ul_lr == max {
-            // #?
-            // ?_
-            symb = match (ul_ur < ur_lr, ul_ll < ll_lr) {
-                (true,  true ) => '▛',
-                (true,  false) => '▀',
-                (false, true ) => '▌',
-                (false, false) => '▘',
-            }
-        }
-        else if ur_ll == max {
-            // ?#
-            // _?
-            symb = match (ul_ur < ul_ll, ur_lr < ll_lr) {
-                (true,  true ) => '▜',
-                (true,  false) => '▀',
-                (false, true ) => '▐',
-                (false, false) => '▝',
-            }
-        }
-        else if ur_lr == max {
-            // ?#
-            // ?_
-            symb = match (ul_ur < ul_lr, ur_ll < ll_lr) {
-                (true,  true ) => '▛',
-                (true,  false) => '▀',
-                (false, true ) => '▞',
-                (false, false) => '▝',
-            }
-        }
-        else /* if ll_lr == max */ {
-            // ??
-            // #_
-            symb = match (ul_ll < ul_lr, ur_ll < ur_lr) {
-                (true,  true ) => '▛',
-                (true,  false) => '▌',
-                (false, true ) => '▞',
-                (false, false) => '▖',
-            }
-        }
+        let col1 = Color::mix(&col1).unwrap_or(Color {r: 0, g: 0, b: 0});
+        let col2 = Color::mix(&col2).unwrap_or(Color {r: 0, g: 0, b: 0});
 
-        match symb {
-            '▘' => {
-                col1 = self.u_l;
-                col2 = Color::mix(&[self.u_r, self.l_l, self.l_r]);
-            }, 
-            '▝' => {
-                col1 = self.u_r;
-                col2 = Color::mix(&[self.u_l, self.l_l, self.l_r]);
-            }, 
-            '▀' => {
-                col1 = Color::mix(&[self.u_l, self.u_r]);
-                col2 = Color::mix(&[self.l_l, self.l_r]);
-            }, 
-            '▖' => {
-                col1 = self.l_l;
-                col2 = Color::mix(&[self.u_l, self.u_r, self.l_r]);
-            }, 
-            '▌' => {
-                col1 = Color::mix(&[self.u_l, self.l_l]);
-                col2 = Color::mix(&[self.u_r, self.l_r]);
-            }, 
-            '▞' => {
-                col1 = Color::mix(&[self.u_r, self.l_l]);
-                col2 = Color::mix(&[self.u_l, self.l_r]);
-            }, 
-            '▛' => {
-                col1 = Color::mix(&[self.u_l, self.u_r, self.l_l]);
-                col2 = self.l_r;
-            }
-            '▚' => {
-                col1 = Color::mix(&[self.u_l, self.l_r]);
-                col2 = Color::mix(&[self.u_r, self.l_l]);
-            }, 
-            '▐' => {
-                col1 = Color::mix(&[self.u_r, self.l_r]);
-                col2 = Color::mix(&[self.u_l, self.l_l]);
-            }, 
-            '▜' => {
-                col1 = Color::mix(&[self.u_l, self.u_r, self.l_r]);
-                col2 = self.l_l;
-            }, 
-            '▙' => {
-                col1 = Color::mix(&[self.u_l, self.l_l, self.l_r]);
-                col2 = self.u_r;
-            }, 
-            _ => unreachable!()
-        }
-        
         Color::color(symb.to_string().as_str(), &col1, &col2)
     }
 }
