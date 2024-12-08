@@ -7,14 +7,41 @@ pub trait MultiPixel<T: ToString> {
     /// The height of the block of pixels.
     const HEIGHT: usize;
 
+    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> T;
+
+    fn get_pixels(&self) -> [Self::U; Self::WIDTH * Self::HEIGHT];
+
     /// Builds a block of pixels from a slice of pixels.
     /// Returns an error, if the number of pixels does not match the dimensions of the block.
-    fn build(args: &[Self::U]) -> Result<T, String>;
+    fn build(args: &[Self::U]) -> Result<T, String> where [(); Self::WIDTH * Self::HEIGHT]: {
+        if let Ok(pixels) = <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args) {
+            Ok(Self::new(pixels))
+        }
+        else {
+            Err(format!("Invalid number of arguments. Expected {}, got {}", Self::WIDTH * Self::HEIGHT, args.len()))
+        }        
+    }
+
     /// Returns the value of the block at the specified coordinates.
     /// Returns an error, if the coordinates are out-of-bounds.
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<Self::U, String>;
+    fn get_subpixel(&self, x: usize, y: usize) -> Result<Self::U, String> where [(); Self::WIDTH * Self::HEIGHT]: {
+        if let Some(subpixel) = self.get_pixels().get(x + y * Self::WIDTH) {
+            Ok(*subpixel)
+        }
+        else {
+            Err("Coordinates out of range.".to_string())
+        }
+    }
 
-    fn set_subpixel(&mut self, x: usize, y: usize, value: Self::U) -> Result<(), String>;
+    fn set_subpixel(&mut self, x: usize, y: usize, value: Self::U) -> Result<(), String> where [(); Self::WIDTH * Self::HEIGHT]: {
+        let index = x + y * Self::WIDTH;
+        if index < self.get_pixels().len() {
+            Ok(self.get_pixels()[index] = value)
+        }
+        else {
+            Err("Coordinates out of range.".to_string())
+        }
+    }
 }
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
@@ -63,27 +90,15 @@ impl MultiPixel<SinglePixel> for SinglePixel {
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 1;
-
-    fn build(args: &[bool]) -> Result<SinglePixel, String> {
-        let pixel = match args {
-            [pixel] => *pixel,
-            _ => return Err(format!("Invalid number of arguments. Expected 1, got {}", args.len())), 
-        };
-        Ok(SinglePixel::new(pixel))
-    }
-
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.pixel),
-            _ => Err("Coordinates out of range.".to_string())
+    
+    fn new(pixels: [Self::U; 1]) -> SinglePixel {
+        SinglePixel {
+            pixel: pixels[0]
         }
     }
     
-    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => Ok(self.pixel = value),
-            _ => Err("Coordinates out of range.".to_string()),
-        }
+    fn get_pixels(&self) -> [Self::U; 1] {
+        [self.pixel]
     }
 }
 
@@ -153,29 +168,16 @@ impl MultiPixel<DualPixel> for DualPixel {
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 2;
-
-    fn build(args: &[bool]) -> Result<DualPixel, String> {
-        let (upper, lower) = match args {
-            [upper, lower] => (*upper, *lower),
-            _ => return Err(format!("Invalid number of arguments. Expected 1, got {}", args.len())), 
-        };
-        Ok(DualPixel::new(upper, lower))
-    }
-
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.upper),
-            (0, 1) => Ok(self.lower),
-            _ => Err("Coordinates out of range.".to_string())
+    
+    fn new(pixels: [Self::U; 2]) -> DualPixel {
+        DualPixel { 
+            upper: pixels[0],
+            lower: pixels[1] 
         }
     }
     
-    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => Ok(self.upper = value),
-            (0, 1) => Ok(self.lower = value),
-            _ => Err("Coordinates out of range.".to_string()),
-        }
+    fn get_pixels(&self) -> [Self::U; 2] {
+        [self.upper, self.lower]
     }
 }
 
@@ -246,34 +248,16 @@ impl MultiPixel<QuadPixel> for QuadPixel {
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 2;
-
-    fn build(args: &[bool]) -> Result<QuadPixel, String> {
-        let (u_l, u_r, l_l, l_r) = match args {
-            [u_l, u_r, l_l, l_r] => (*u_l, *u_r, *l_l, *l_r),
-            _ => return Err(format!("Invalid number of arguments. Expected 4, got {}", args.len())), 
-        };
-        Ok(QuadPixel::new(u_l, u_r, l_l, l_r))
-    }
-
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.u_l),
-            (1, 0) => Ok(self.u_r),
-            (0, 1) => Ok(self.l_l),
-            (1, 1) => Ok(self.l_r),
-            _ => Err("Coordinates out of range.".to_string())
+    
+    fn new(pixels: [Self::U; 4]) -> QuadPixel {
+        QuadPixel {
+            u_l: pixels[0], u_r: pixels[1],
+            l_l: pixels[2], l_r: pixels[3]
         }
     }
-
-    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => self.u_l = value,
-            (1, 0) => self.u_r = value,
-            (0, 1) => self.l_l = value,
-            (1, 1) => self.l_r = value,
-            _ => return Err("Coordinates out of range.".to_string())
-        };
-        Ok(())
+    
+    fn get_pixels(&self) -> [Self::U; 4] {
+        [self.u_l, self.u_r, self.l_l, self.l_r]
     }
 }
 
@@ -336,39 +320,18 @@ impl MultiPixel<HexPixel> for HexPixel {
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 3;
-
-    fn build(args: &[bool]) -> Result<HexPixel, String> {
-        let (u_l, u_r, m_l, m_r, l_l, l_r) = match args {
-            [u_l, u_r, m_l, m_r, l_l, l_r] => (*u_l, *u_r, *m_l, *m_r, *l_l, *l_r),
-            _ => return Err(format!("Invalid number of arguments. Expected 4, got {}", args.len())), 
-        };
-        Ok(HexPixel::new(u_l, u_r, m_l, m_r, l_l, l_r))
-    }
     
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.u_l),
-            (1, 0) => Ok(self.u_r),
-            (0, 1) => Ok(self.m_l),
-            (1, 1) => Ok(self.m_r),
-            (0, 2) => Ok(self.l_l),
-            (1, 2) => Ok(self.l_r),
-            _ => Err("Coordinates out of range.".to_string())
+    fn new(pixels: [Self::U; 6]) -> HexPixel {
+        HexPixel {
+            u_l: pixels[0], u_r: pixels[1],
+            m_l: pixels[2], m_r: pixels[3],
+            l_l: pixels[4], l_r: pixels[5],
         }
     }
-
-    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => self.u_l = value,
-            (1, 0) => self.u_r = value,
-            (0, 1) => self.m_l = value,
-            (1, 1) => self.m_r = value,
-            (0, 2) => self.l_l = value,
-            (1, 2) => self.l_r = value,
-            _ => return Err("Coordinates out of range.".to_string())
-        };
-        Ok(())
-    }
+    
+    fn get_pixels(&self) -> [Self::U; 6] {
+        [self.u_l, self.u_r, self.m_l, self.m_r, self.l_l, self.l_r]
+    }    
 }
 
 impl ToString for HexPixel {
@@ -449,47 +412,22 @@ impl OctPixel {
 
 impl MultiPixel<OctPixel> for OctPixel {
     type U = bool;
-
+    
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 4;
 
-    fn build(args: &[bool]) -> Result<OctPixel, String> {
-        let (uu_l, uu_r, um_l, um_r, lm_l, lm_r, ll_l, ll_r) = match args {
-            [uu_l, uu_r, um_l, um_r, lm_l, lm_r, ll_l, ll_r] 
-            => (*uu_l, *uu_r, *um_l, *um_r, *lm_l, *lm_r, *ll_l, *ll_r),
-            _ => return Err(format!("Invalid number of arguments. Expected 4, got {}", args.len())), 
-        };
-        Ok(OctPixel::new(uu_l, uu_r, um_l, um_r, lm_l, lm_r, ll_l, ll_r))
-    }
-    
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<bool, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.uu_l),
-            (1, 0) => Ok(self.uu_r),
-            (0, 1) => Ok(self.um_l),
-            (1, 1) => Ok(self.um_r),
-            (0, 2) => Ok(self.lm_l),
-            (1, 2) => Ok(self.lm_r),
-            (0, 3) => Ok(self.ll_l),
-            (1, 3) => Ok(self.ll_r),
-            _ => Err("Coordinates out of range.".to_string())
+    fn new(pixels: [Self::U; 8]) -> OctPixel {
+        OctPixel {
+            uu_l: pixels[0], uu_r: pixels[1],
+            um_l: pixels[2], um_r: pixels[3],
+            lm_l: pixels[4], lm_r: pixels[5],
+            ll_l: pixels[6], ll_r: pixels[7],
         }
     }
-
-    fn set_subpixel(&mut self, x: usize, y: usize, value: bool) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => self.uu_l = value,
-            (1, 0) => self.uu_r = value,
-            (0, 1) => self.um_l = value,
-            (1, 1) => self.um_r = value,
-            (0, 2) => self.lm_l = value,
-            (1, 2) => self.lm_r = value,
-            (0, 3) => self.ll_l = value,
-            (1, 3) => self.ll_r = value,
-            _ => return Err("Coordinates out of range.".to_string())
-        };
-        Ok(())
+    
+    fn get_pixels(&self) -> [Self::U; 8] {
+        [self.uu_l, self.uu_r, self.um_l, self.um_r, self.lm_l, self.lm_r, self.ll_l, self.ll_r]
     }
 }
 
