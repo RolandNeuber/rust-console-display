@@ -1,5 +1,5 @@
 use crossterm::{event::{self, Event, KeyCode, KeyModifiers}, terminal};
-use display::{color_pixel::{Color, ColorDualPixel, ColorQuadPixel, ColorSinglePixel}, pixel::{DualPixel, HexPixel, OctPixel, QuadPixel, SinglePixel}, Display};
+use display::{color_pixel::{Color, ColorDualPixel, ColorHexPixel, ColorQuadPixel, ColorSinglePixel}, pixel::{DualPixel, HexPixel, OctPixel, QuadPixel, SinglePixel}, Display};
 use rand::Rng;
 use std::{thread, time::Duration};
 
@@ -8,9 +8,9 @@ fn main() {
     let snake_color = Color {r: 0, g: 255, b: 0};
     let apple_color = Color {r: 255, g: 0, b: 0};
 
-    let mut disp: Display<ColorQuadPixel> = Display::build(
-        100, 
-        30,
+    let mut disp: Display<ColorHexPixel> = Display::build(
+        300, 
+        120,
         Color {r: 0, b: 0, g: 0}
     ).unwrap();
     

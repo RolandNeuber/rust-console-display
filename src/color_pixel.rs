@@ -1,4 +1,4 @@
-use crate::pixel::{MultiPixel, QuadPixel};
+use crate::pixel::{HexPixel, MultiPixel, QuadPixel};
 
 pub struct Color {
     pub r: u8,
@@ -235,6 +235,81 @@ impl ToString for ColorQuadPixel {
         let symb = QuadPixel::new(
             grouping[0], grouping[1], 
             grouping[2], grouping[3]
+        ).to_string().chars().next().unwrap();
+
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
+            }
+        }
+        let col1 = Color::mix(&col1).unwrap_or(Color {r: 0, g: 0, b: 0});
+        let col2 = Color::mix(&col2).unwrap_or(Color {r: 0, g: 0, b: 0});
+
+        Color::color(symb.to_string().as_str(), &col1, &col2)
+    }
+}
+
+pub struct ColorHexPixel {
+    pixels: [Color; 6]
+}
+
+impl ColorHexPixel {
+    pub fn new(pixels: [Color; 6]) -> ColorHexPixel {
+        ColorHexPixel {
+            pixels
+        }
+    }
+}
+
+impl MultiPixel<ColorHexPixel> for ColorHexPixel {
+    type U = Color;
+
+    const WIDTH: usize = 2;
+
+    const HEIGHT: usize = 3;
+
+    fn build(args: &[Color]) -> Result<ColorHexPixel, String> {
+        if let Ok(pixels) = <[Color; Self::WIDTH * Self::HEIGHT]>::try_from(args) {
+            Ok(ColorHexPixel::new(pixels))
+        }
+        else {
+            Err(format!("Invalid number of arguments. Expected {}, got {}", Self::WIDTH * Self::HEIGHT, args.len()))
+        }        
+    }
+
+    fn get_subpixel(&self, x: usize, y: usize) -> Result<Color, String> {
+        if let Some(subpixel) = self.pixels.get(x + y * Self::WIDTH) {
+            Ok(*subpixel)
+        }
+        else {
+            Err("Coordinates out of range.".to_string())
+        }
+    }
+    
+    fn set_subpixel(&mut self, x: usize, y: usize, value: Color) -> Result<(), String> {
+        let index = x + y * Self::WIDTH;
+        if index < self.pixels.len() {
+            Ok(self.pixels[index] = value)
+        }
+        else {
+            Err("Coordinates out of range.".to_string())
+        }
+    }
+}
+
+impl ToString for ColorHexPixel {
+    fn to_string(&self) -> String {
+        let colors = self.pixels;
+        let grouping = Color::group(&colors);
+        let symb = HexPixel::new(
+            grouping[0], grouping[1], 
+            grouping[2], grouping[3],
+            grouping[4], grouping[5]
         ).to_string().chars().next().unwrap();
 
         let mut col1 = vec![];
