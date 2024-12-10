@@ -266,7 +266,7 @@ impl MultiPixel<QuadPixel> for QuadPixel {
         }
     }
     
-    fn get_pixels(&self) -> &[Self::U; 4] {
+    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
         &self.pixels
     }
 
@@ -277,9 +277,7 @@ impl MultiPixel<QuadPixel> for QuadPixel {
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
 pub struct HexPixel {
-    u_l: bool, u_r: bool,
-    m_l: bool, m_r: bool,
-    l_l: bool, l_r: bool,
+    pixels: [bool; 6]
 }
 
 impl HexPixel {
@@ -292,19 +290,21 @@ impl HexPixel {
 
     pub fn new(u_l: bool, u_r: bool, m_l: bool, m_r: bool, l_l: bool, l_r: bool) -> HexPixel {
         HexPixel {
-            u_l, u_r,
-            m_l, m_r,
-            l_l, l_r,
+            pixels: [
+                u_l, u_r,
+                m_l, m_r,
+                l_l, l_r,
+            ]
         }
     }
 
     fn index(&self) -> usize {
-        (self.u_l as usize) | 
-        (self.u_r as usize) << 1 | 
-        (self.m_l as usize) << 2 | 
-        (self.m_r as usize) << 3 | 
-        (self.l_l as usize) << 4 | 
-        (self.l_r as usize) << 5
+        (self.pixels[0] as usize) | 
+        (self.pixels[1] as usize) << 1 | 
+        (self.pixels[2] as usize) << 2 | 
+        (self.pixels[3] as usize) << 3 | 
+        (self.pixels[4] as usize) << 4 | 
+        (self.pixels[5] as usize) << 5
     }
     
     /// See [`MultiPixel::get_char`] for details.
@@ -337,15 +337,17 @@ impl MultiPixel<HexPixel> for HexPixel {
     
     fn new(pixels: [Self::U; 6]) -> HexPixel {
         HexPixel {
-            u_l: pixels[0], u_r: pixels[1],
-            m_l: pixels[2], m_r: pixels[3],
-            l_l: pixels[4], l_r: pixels[5],
+            pixels
         }
     }
     
-    fn get_pixels(&self) -> [Self::U; 6] {
-        [self.u_l, self.u_r, self.m_l, self.m_r, self.l_l, self.l_r]
-    }    
+    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
+        &self.pixels
+    }
+
+    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
+        &mut self.pixels
+    }
 }
 
 impl ToString for HexPixel {
@@ -356,10 +358,7 @@ impl ToString for HexPixel {
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
 pub struct OctPixel {
-    uu_l: bool, uu_r: bool,
-    um_l: bool, um_r: bool,
-    lm_l: bool, lm_r: bool,
-    ll_l: bool, ll_r: bool,
+    pixels: [bool; 8]
 }
 
 impl OctPixel {
@@ -385,22 +384,24 @@ impl OctPixel {
     pub fn new(uu_l: bool, uu_r: bool, um_l: bool, um_r: bool, lm_l: bool, lm_r: bool, ll_l: bool, ll_r: bool)
      -> OctPixel {
         OctPixel {
-            uu_l, uu_r,
-            um_l, um_r,
-            lm_l, lm_r,
-            ll_l, ll_r,
+            pixels: [
+                uu_l, uu_r,
+                um_l, um_r,
+                lm_l, lm_r,
+                ll_l, ll_r,
+            ]
         }
     }
 
     fn index(&self) -> usize {
-        (self.uu_l as usize) | 
-        (self.uu_r as usize) << 1 | 
-        (self.um_l as usize) << 2 | 
-        (self.um_r as usize) << 3 | 
-        (self.lm_l as usize) << 4 | 
-        (self.lm_r as usize) << 5 |
-        (self.ll_l as usize) << 6 |
-        (self.ll_r as usize) << 7
+        (self.pixels[0] as usize) | 
+        (self.pixels[1] as usize) << 1 | 
+        (self.pixels[2] as usize) << 2 | 
+        (self.pixels[3] as usize) << 3 | 
+        (self.pixels[4] as usize) << 4 | 
+        (self.pixels[5] as usize) << 5 |
+        (self.pixels[6] as usize) << 6 |
+        (self.pixels[7] as usize) << 7
     }
 
     /// See [`MultiPixel::get_char`] for details.
@@ -433,15 +434,16 @@ impl MultiPixel<OctPixel> for OctPixel {
 
     fn new(pixels: [Self::U; 8]) -> OctPixel {
         OctPixel {
-            uu_l: pixels[0], uu_r: pixels[1],
-            um_l: pixels[2], um_r: pixels[3],
-            lm_l: pixels[4], lm_r: pixels[5],
-            ll_l: pixels[6], ll_r: pixels[7],
+            pixels
         }
     }
     
-    fn get_pixels(&self) -> [Self::U; 8] {
-        [self.uu_l, self.uu_r, self.um_l, self.um_r, self.lm_l, self.lm_r, self.ll_l, self.ll_r]
+    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
+        &self.pixels
+    }
+
+    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
+        &mut self.pixels
     }
 }
 
