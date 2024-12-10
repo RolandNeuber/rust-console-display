@@ -1,3 +1,5 @@
+use crate::{impl_getters, impl_new};
+
 /// Specifies a block of pixels with specified dimensions.
 pub trait MultiPixel<T: ToString> {
     type U: Copy;
@@ -52,11 +54,6 @@ pub struct SinglePixel {
 }
 
 impl SinglePixel {
-    pub fn new(pixel: bool) -> SinglePixel {
-        SinglePixel {
-            pixels: [pixel]
-        }
-    }
 
     /// See [`MultiPixel::get_char`] for details.
     /// 
@@ -93,19 +90,9 @@ impl MultiPixel<SinglePixel> for SinglePixel {
 
     const HEIGHT: usize = 1;
     
-    fn new(pixels: [Self::U; 1]) -> SinglePixel {
-        SinglePixel {
-            pixels
-        }
-    }
-    
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
+    impl_new!(SinglePixel, pixels: [bool; 1]);
 
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [bool; 1]);
 }
 
 impl ToString for SinglePixel {
@@ -125,15 +112,6 @@ impl DualPixel {
         '▄', '█',
     ];
 
-    pub fn new(upper: bool, lower: bool) -> DualPixel {
-        DualPixel {
-            pixels: [
-                upper, 
-                lower
-            ]
-        }
-    }
-    
     fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
         (self.pixels[1] as usize) << 1
@@ -176,19 +154,9 @@ impl MultiPixel<DualPixel> for DualPixel {
 
     const HEIGHT: usize = 2;
     
-    fn new(pixels: [Self::U; 2]) -> DualPixel {
-        DualPixel { 
-            pixels
-        }
-    }
+    impl_new!(DualPixel, pixels: [bool; 2]);
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [bool; 2]);
 }
 
 impl ToString for DualPixel {
@@ -210,15 +178,6 @@ impl QuadPixel {
         '▗', '▚', '▐', '▜', 
         '▄', '▙', '▟', '█',
     ];
-
-    pub fn new(u_l: bool, u_r: bool, l_l: bool, l_r: bool) -> QuadPixel {
-        QuadPixel {
-            pixels: [
-                u_l, u_r,
-                l_l, l_r,
-            ]
-        }
-    }
 
     fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
@@ -260,19 +219,9 @@ impl MultiPixel<QuadPixel> for QuadPixel {
 
     const HEIGHT: usize = 2;
     
-    fn new(pixels: [Self::U; 4]) -> QuadPixel {
-        QuadPixel {
-            pixels
-        }
-    }
+    impl_new!(QuadPixel, pixels: [bool; 4]);
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [bool; 4]);
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
@@ -287,16 +236,6 @@ impl HexPixel {
         '🬞', '🬟', '🬠', '🬡', '🬢', '🬣', '🬤', '🬥', '🬦', '🬧', '▐', '🬨', '🬩', '🬪', '🬫', '🬬', 
         '🬭', '🬮', '🬯', '🬰', '🬱', '🬲', '🬳', '🬴', '🬵', '🬶', '🬷', '🬸', '🬹', '🬺', '🬻', '█'
     ];
-
-    pub fn new(u_l: bool, u_r: bool, m_l: bool, m_r: bool, l_l: bool, l_r: bool) -> HexPixel {
-        HexPixel {
-            pixels: [
-                u_l, u_r,
-                m_l, m_r,
-                l_l, l_r,
-            ]
-        }
-    }
 
     fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
@@ -335,19 +274,9 @@ impl MultiPixel<HexPixel> for HexPixel {
 
     const HEIGHT: usize = 3;
     
-    fn new(pixels: [Self::U; 6]) -> HexPixel {
-        HexPixel {
-            pixels
-        }
-    }
+    impl_new!(HexPixel, pixels: [bool; 6]);
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [bool; 6]);
 }
 
 impl ToString for HexPixel {
@@ -380,18 +309,6 @@ impl OctPixel {
         '⣠', '⣡', '⣨', '⣩', '⣢', '⣣', '⣪', '⣫', '⣰', '⣱', '⣸', '⣹', '⣲', '⣳', '⣺', '⣻',
         '⣤', '⣥', '⣬', '⣭', '⣦', '⣧', '⣮', '⣯', '⣴', '⣵', '⣼', '⣽', '⣶', '⣷', '⣾', '⣿',
     ];
-
-    pub fn new(uu_l: bool, uu_r: bool, um_l: bool, um_r: bool, lm_l: bool, lm_r: bool, ll_l: bool, ll_r: bool)
-     -> OctPixel {
-        OctPixel {
-            pixels: [
-                uu_l, uu_r,
-                um_l, um_r,
-                lm_l, lm_r,
-                ll_l, ll_r,
-            ]
-        }
-    }
 
     fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
@@ -432,19 +349,9 @@ impl MultiPixel<OctPixel> for OctPixel {
 
     const HEIGHT: usize = 4;
 
-    fn new(pixels: [Self::U; 8]) -> OctPixel {
-        OctPixel {
-            pixels
-        }
-    }
+    impl_new!(OctPixel, pixels: [bool; 8]);
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [bool; 8]);
 }
 
 impl ToString for OctPixel {

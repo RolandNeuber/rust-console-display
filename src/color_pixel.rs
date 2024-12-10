@@ -1,4 +1,4 @@
-use crate::pixel::{HexPixel, MultiPixel, QuadPixel};
+use crate::{impl_getters, pixel::{HexPixel, MultiPixel, QuadPixel}};
 
 pub struct Color {
     pub r: u8,
@@ -82,14 +82,6 @@ pub struct ColorSinglePixel {
     pixels: [Color; 1],
 }
 
-impl ColorSinglePixel {
-    pub fn new(pixel: Color) -> ColorSinglePixel {
-        ColorSinglePixel {
-            pixels: [pixel]
-        }
-    }
-}
-
 impl MultiPixel<ColorSinglePixel> for ColorSinglePixel {
     type U = Color;
 
@@ -103,13 +95,7 @@ impl MultiPixel<ColorSinglePixel> for ColorSinglePixel {
         }
     }
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl ToString for ColorSinglePixel {
@@ -120,17 +106,6 @@ impl ToString for ColorSinglePixel {
 
 pub struct ColorDualPixel {
     pixels: [Color; 2]
-}
-
-impl ColorDualPixel {
-    pub fn new(upper: Color, lower: Color) -> ColorDualPixel {
-        ColorDualPixel {
-            pixels: [
-                upper,
-                lower,
-            ]
-        }
-    }
 }
 
 impl MultiPixel<ColorDualPixel> for ColorDualPixel {
@@ -146,13 +121,7 @@ impl MultiPixel<ColorDualPixel> for ColorDualPixel {
         }
     }
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl ToString for ColorDualPixel {
@@ -163,17 +132,6 @@ impl ToString for ColorDualPixel {
 
 pub struct ColorQuadPixel {
     pixels: [Color; 4]
-}
-
-impl ColorQuadPixel {
-    pub fn new(u_l: Color, u_r: Color, l_l: Color, l_r: Color) -> ColorQuadPixel {
-        ColorQuadPixel {
-            pixels: [
-                u_l, u_r,
-                l_l, l_r,
-            ]
-        }
-    }
 }
 
 impl MultiPixel<ColorQuadPixel> for ColorQuadPixel {
@@ -189,13 +147,7 @@ impl MultiPixel<ColorQuadPixel> for ColorQuadPixel {
         }
     }
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl ToString for ColorQuadPixel {
@@ -203,8 +155,7 @@ impl ToString for ColorQuadPixel {
         let colors = self.pixels;
         let grouping = Color::group(&colors);
         let symb = QuadPixel::new(
-            grouping[0], grouping[1], 
-            grouping[2], grouping[3]
+            grouping
         ).to_string().chars().next().unwrap();
 
         let mut col1 = vec![];
@@ -228,14 +179,6 @@ pub struct ColorHexPixel {
     pixels: [Color; 6]
 }
 
-impl ColorHexPixel {
-    pub fn new(pixels: [Color; 6]) -> ColorHexPixel {
-        ColorHexPixel {
-            pixels
-        }
-    }
-}
-
 impl MultiPixel<ColorHexPixel> for ColorHexPixel {
     type U = Color;
 
@@ -249,13 +192,7 @@ impl MultiPixel<ColorHexPixel> for ColorHexPixel {
         }
     }
     
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
-        &self.pixels
-    }
-
-    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
-        &mut self.pixels
-    }
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl ToString for ColorHexPixel {
@@ -263,9 +200,7 @@ impl ToString for ColorHexPixel {
         let colors = self.pixels;
         let grouping = Color::group(&colors);
         let symb = HexPixel::new(
-            grouping[0], grouping[1], 
-            grouping[2], grouping[3],
-            grouping[4], grouping[5]
+            grouping
         ).to_string().chars().next().unwrap();
 
         let mut col1 = vec![];
