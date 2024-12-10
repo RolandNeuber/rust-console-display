@@ -9,7 +9,9 @@ pub trait MultiPixel<T: ToString> {
 
     fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> T;
 
-    fn get_pixels(&self) -> [Self::U; Self::WIDTH * Self::HEIGHT];
+    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT];
+
+    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT];
 
     /// Builds a block of pixels from a slice of pixels.
     /// Returns an error, if the number of pixels does not match the dimensions of the block.
@@ -36,7 +38,7 @@ pub trait MultiPixel<T: ToString> {
     fn set_subpixel(&mut self, x: usize, y: usize, value: Self::U) -> Result<(), String> where [(); Self::WIDTH * Self::HEIGHT]: {
         let index = x + y * Self::WIDTH;
         if index < self.get_pixels().len() {
-            Ok(self.get_pixels()[index] = value)
+            Ok(self.get_pixels_mut()[index] = value)
         }
         else {
             Err("Coordinates out of range.".to_string())
@@ -46,13 +48,13 @@ pub trait MultiPixel<T: ToString> {
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
 pub struct SinglePixel {
-    pixel: bool,
+    pixels: [bool; 1],
 }
 
 impl SinglePixel {
     pub fn new(pixel: bool) -> SinglePixel {
         SinglePixel {
-            pixel
+            pixels: [pixel]
         }
     }
 
@@ -80,7 +82,7 @@ impl SinglePixel {
     /// 
     /// ```
     fn get_char(&self) -> char {
-        if self.pixel {'█'} else {' '}
+        if self.pixels[0] {'█'} else {' '}
     }
 }
 
@@ -93,12 +95,16 @@ impl MultiPixel<SinglePixel> for SinglePixel {
     
     fn new(pixels: [Self::U; 1]) -> SinglePixel {
         SinglePixel {
-            pixel: pixels[0]
+            pixels
         }
     }
     
-    fn get_pixels(&self) -> [Self::U; 1] {
-        [self.pixel]
+    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
+        &self.pixels
+    }
+
+    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
+        &mut self.pixels
     }
 }
 
@@ -110,8 +116,7 @@ impl ToString for SinglePixel {
 
 /// Specifies a block of pixels with dimensions 1 (width) by 2 (height).
 pub struct DualPixel {
-    upper: bool,
-    lower: bool,
+    pixels: [bool; 2]
 }
 
 impl DualPixel {
@@ -122,14 +127,16 @@ impl DualPixel {
 
     pub fn new(upper: bool, lower: bool) -> DualPixel {
         DualPixel {
-            upper,
-            lower
+            pixels: [
+                upper, 
+                lower
+            ]
         }
     }
     
     fn index(&self) -> usize {
-        (self.upper as usize) | 
-        (self.lower as usize) << 1
+        (self.pixels[0] as usize) | 
+        (self.pixels[1] as usize) << 1
     }
 
     /// See [`MultiPixel::get_char`] for details.
@@ -171,13 +178,16 @@ impl MultiPixel<DualPixel> for DualPixel {
     
     fn new(pixels: [Self::U; 2]) -> DualPixel {
         DualPixel { 
-            upper: pixels[0],
-            lower: pixels[1] 
+            pixels
         }
     }
     
-    fn get_pixels(&self) -> [Self::U; 2] {
-        [self.upper, self.lower]
+    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
+        &self.pixels
+    }
+
+    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
+        &mut self.pixels
     }
 }
 
@@ -190,8 +200,7 @@ impl ToString for DualPixel {
 /// Specifies a block of pixels with dimensions 2 (width) by 2 (height).
 #[derive(Debug)]
 pub struct QuadPixel {
-    u_l: bool, u_r: bool,
-    l_l: bool, l_r: bool,
+    pixels: [bool; 4]
 }
 
 impl QuadPixel {
@@ -204,16 +213,18 @@ impl QuadPixel {
 
     pub fn new(u_l: bool, u_r: bool, l_l: bool, l_r: bool) -> QuadPixel {
         QuadPixel {
-            u_l, u_r,
-            l_l, l_r,
+            pixels: [
+                u_l, u_r,
+                l_l, l_r,
+            ]
         }
     }
 
     fn index(&self) -> usize {
-        (self.u_l as usize) | 
-        (self.u_r as usize) << 1 | 
-        (self.l_l as usize) << 2 | 
-        (self.l_r as usize) << 3
+        (self.pixels[0] as usize) | 
+        (self.pixels[1] as usize) << 1 | 
+        (self.pixels[2] as usize) << 2 | 
+        (self.pixels[3] as usize) << 3
     }
 
     /// See [`MultiPixel::get_char`] for details.
@@ -251,13 +262,16 @@ impl MultiPixel<QuadPixel> for QuadPixel {
     
     fn new(pixels: [Self::U; 4]) -> QuadPixel {
         QuadPixel {
-            u_l: pixels[0], u_r: pixels[1],
-            l_l: pixels[2], l_r: pixels[3]
+            pixels
         }
     }
     
-    fn get_pixels(&self) -> [Self::U; 4] {
-        [self.u_l, self.u_r, self.l_l, self.l_r]
+    fn get_pixels(&self) -> &[Self::U; 4] {
+        &self.pixels
+    }
+
+    fn get_pixels_mut(&mut self) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
+        &mut self.pixels
     }
 }
 

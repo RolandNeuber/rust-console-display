@@ -1,3 +1,5 @@
+#![feature(generic_const_exprs)]
+
 use crossterm::{event::{self, Event, KeyCode, KeyModifiers}, terminal};
 use display::{color_pixel::{Color, ColorDualPixel, ColorHexPixel, ColorQuadPixel, ColorSinglePixel}, pixel::{DualPixel, HexPixel, OctPixel, QuadPixel, SinglePixel}, Display};
 use rand::Rng;
