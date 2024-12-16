@@ -16,13 +16,13 @@ pub struct Display<T: MultiPixel<T> + ToString> {
 impl<T: MultiPixel<T> + ToString> Display<T> {
 
     /// Convenience method to build a blank display struct with specified dimensions
-    pub fn build(width: usize, height: usize, fill: T::U) -> Result<Display<T>, String> {
+    pub fn build(width: usize, height: usize, fill: T::U) -> Result<Display<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
         let data: Vec<T::U> = vec![fill; width * height];
         Self::build_from_bools(width, height, data)
     }
 
     /// Builds a display struct with the specified dimensions from the given data.
-    pub fn build_from_bools(width: usize, height: usize, data: Vec<T::U>) -> Result<Display<T>, String> {
+    pub fn build_from_bools(width: usize, height: usize, data: Vec<T::U>) -> Result<Display<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
         if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
             return Err(
                 format!(
@@ -101,7 +101,7 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
     /// 
     /// assert!(matches!(pixel, Err(_)));
     /// ```
-    pub fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String> {
+    pub fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String> where [(); T::WIDTH * T::HEIGHT]: {
         if x >= self.width || y >= self.height {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
@@ -118,7 +118,7 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
         }
     }
 
-    pub fn set_pixel(&mut self, x: usize, y: usize, value: T::U) -> Result<(), String> {
+    pub fn set_pixel(&mut self, x: usize, y: usize, value: T::U) -> Result<(), String> where [(); T::WIDTH * T::HEIGHT]: {
         if x >= self.width || y >= self.height {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }

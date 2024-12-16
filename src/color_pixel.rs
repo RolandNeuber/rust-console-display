@@ -1,4 +1,4 @@
-use crate::pixel::MultiPixel;
+use crate::{impl_getters, pixel::{HexPixel, MultiPixel, QuadPixel}};
 
 pub struct Color {
     pub r: u8,
@@ -15,18 +15,46 @@ impl Color {
         ).sqrt()
     }
 
-    fn mix(colors: &[Color]) -> Color {
+    fn mix(colors: &[Color]) -> Result<Color, &str> {
+        if colors.len() == 0 {
+            return Err("colors must contain at least one element");
+        }
         let mut sum = (0, 0, 0);
         for color in colors {
             sum.0 += color.r as u32;
             sum.1 += color.g as u32;
             sum.2 += color.b as u32;
         }
-        Color {
+        Ok(Color {
             r: (sum.0 / colors.len() as u32) as u8,
             g: (sum.1 / colors.len() as u32) as u8,
             b: (sum.2 / colors.len() as u32) as u8,
+        })
+    }
+
+    fn group<const N: usize>(colors: &[Color; N]) -> [bool; N] {
+        let mut max = 0f32;
+        let mut col1 = 0;
+        let mut col2 = 0;
+        for i in 0..N {
+            for j in (i+1)..N {
+                let dist = Self::distance(colors[i], colors[j]);
+                if dist > max {
+                    max = dist;
+                    col1 = i;
+                    col2 = j;
+                }
+            }
         }
+        let mut groups = [false; N];
+        for i in 0..N {
+            if 
+                Self::distance(colors[col1], colors[i]) >
+                Self::distance(colors[col2], colors[i]) {
+                groups[i] = true;
+            }
+        }
+        groups
     }
 
     fn color(text: &str, foreground_color: &Color, background_color: &Color) -> String {
@@ -51,15 +79,7 @@ impl Copy for Color {
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
 pub struct ColorSinglePixel {
-    pixel: Color,
-}
-
-impl ColorSinglePixel {
-    pub fn new(pixel: Color) -> ColorSinglePixel {
-        ColorSinglePixel {
-            pixel
-        }
-    }
+    pixels: [Color; 1],
 }
 
 impl MultiPixel<ColorSinglePixel> for ColorSinglePixel {
@@ -68,48 +88,24 @@ impl MultiPixel<ColorSinglePixel> for ColorSinglePixel {
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 1;
-
-    fn build(args: &[Color]) -> Result<ColorSinglePixel, String> {
-        let pixel = match args {
-            [pixel] => *pixel,
-            _ => return Err(format!("Invalid number of arguments. Expected {}, got {}", Self::WIDTH * Self::HEIGHT, args.len())), 
-        };
-        Ok(ColorSinglePixel::new(pixel))
-    }
-
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<Color, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.pixel),
-            _ => Err("Coordinates out of range.".to_string())
+    
+    fn new(pixels: [Self::U; 1]) -> ColorSinglePixel {
+        ColorSinglePixel {
+            pixels
         }
     }
     
-    fn set_subpixel(&mut self, x: usize, y: usize, value: Color) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => Ok(self.pixel = value),
-            _ => Err("Coordinates out of range.".to_string()),
-        }
-    }
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl ToString for ColorSinglePixel {
     fn to_string(&self) -> String {
-        Color::color("█",&self.pixel, &self.pixel)
+        Color::color("█",&self.pixels[0], &self.pixels[0])
     }
 }
 
 pub struct ColorDualPixel {
-    upper: Color,
-    lower: Color,
-}
-
-impl ColorDualPixel {
-    pub fn new(upper: Color, lower: Color) -> ColorDualPixel {
-        ColorDualPixel {
-            upper,
-            lower,
-        }
-    }
+    pixels: [Color; 2]
 }
 
 impl MultiPixel<ColorDualPixel> for ColorDualPixel {
@@ -118,50 +114,24 @@ impl MultiPixel<ColorDualPixel> for ColorDualPixel {
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 2;
-
-    fn build(args: &[Color]) -> Result<ColorDualPixel, String> {
-        let (upper, lower) = match args {
-            [upper, lower] => (*upper, *lower),
-            _ => return Err(format!("Invalid number of arguments. Expected {}, got {}", Self::WIDTH * Self::HEIGHT, args.len())), 
-        };
-        Ok(ColorDualPixel::new(upper, lower))
-    }
-
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<Color, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.upper),
-            (0, 1) => Ok(self.lower),
-            _ => Err("Coordinates out of range.".to_string())
+    
+    fn new(pixels: [Self::U; 2]) -> ColorDualPixel {
+        ColorDualPixel {
+            pixels
         }
     }
     
-    fn set_subpixel(&mut self, x: usize, y: usize, value: Color) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => Ok(self.upper = value),
-            (0, 1) => Ok(self.lower = value),
-            _ => Err("Coordinates out of range.".to_string()),
-        }
-    }
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl ToString for ColorDualPixel {
     fn to_string(&self) -> String {
-        Color::color("▀",&self.upper, &self.lower)
+        Color::color("▀",&self.pixels[0], &self.pixels[1])
     }
 }
 
 pub struct ColorQuadPixel {
-    u_l: Color, u_r: Color,
-    l_l: Color, l_r: Color
-}
-
-impl ColorQuadPixel {
-    pub fn new(u_l: Color, u_r: Color, l_l: Color, l_r: Color) -> ColorQuadPixel {
-        ColorQuadPixel {
-            u_l, u_r,
-            l_l, l_r,
-        }
-    }
+    pixels: [Color; 4]
 }
 
 impl MultiPixel<ColorQuadPixel> for ColorQuadPixel {
@@ -170,164 +140,82 @@ impl MultiPixel<ColorQuadPixel> for ColorQuadPixel {
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 2;
-
-    fn build(args: &[Color]) -> Result<ColorQuadPixel, String> {
-        let (u_l, u_r, l_l, l_r,) = match args {
-            [u_l, u_r, l_l, l_r,] => (*u_l, *u_r, *l_l, *l_r),
-            _ => return Err(format!("Invalid number of arguments. Expected {}, got {}", Self::WIDTH * Self::HEIGHT, args.len())), 
-        };
-        Ok(ColorQuadPixel::new(u_l, u_r, l_l, l_r))
-    }
-
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<Color, String> {
-        match (x, y) {
-            (0, 0) => Ok(self.u_l),
-            (1, 0) => Ok(self.u_r),
-            (0, 1) => Ok(self.l_l),
-            (1, 1) => Ok(self.l_r),
-            _ => Err("Coordinates out of range.".to_string())
+    
+    fn new(pixels: [Self::U; 4]) -> ColorQuadPixel {
+        ColorQuadPixel {
+            pixels
         }
     }
     
-    fn set_subpixel(&mut self, x: usize, y: usize, value: Color) -> Result<(), String> {
-        match (x, y) {
-            (0, 0) => Ok(self.u_l = value),
-            (1, 0) => Ok(self.u_r = value),
-            (0, 1) => Ok(self.l_l = value),
-            (1, 1) => Ok(self.l_r = value),
-            _ => Err("Coordinates out of range.".to_string()),
-        }
-    }
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl ToString for ColorQuadPixel {
     fn to_string(&self) -> String {
-        let ul_ur = Color::distance(self.u_l, self.u_r);
-        let ul_ll = Color::distance(self.u_l, self.l_l);
-        let ul_lr = Color::distance(self.u_l, self.l_r);
-        let ur_ll = Color::distance(self.u_r, self.l_l);
-        let ur_lr = Color::distance(self.u_r, self.l_r);
-        let ll_lr = Color::distance(self.l_l, self.l_r);
-        let mut max = 0f32;
+        let colors = self.pixels;
+        let grouping = Color::group(&colors);
+        let symb = QuadPixel::new(
+            grouping
+        ).to_string().chars().next().unwrap();
 
-        for dist in [ul_ur, ul_ll, ul_lr, ur_ll, ur_lr, ll_lr] {
-            if dist > max {
-                max = dist;
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
             }
         }
-        
-        let col1;
-        let col2;
-        let symb;
-        if ul_ur == max {
-            // #_
-            // ??
-            symb = match (ul_ll < ur_ll, ul_lr < ur_lr) {
-                (true,  true ) => '▙',
-                (true,  false) => '▌',
-                (false, true ) => '▚',
-                (false, false) => '▘',
-            }
-        }
-        else if ul_ll == max {
-            // #?
-            // _?
-            symb = match (ul_ur < ur_ll, ul_lr < ll_lr) {
-                (true,  true ) => '▜',
-                (true,  false) => '▀',
-                (false, true ) => '▚',
-                (false, false) => '▘',
-            }
-        }
-        else if ul_lr == max {
-            // #?
-            // ?_
-            symb = match (ul_ur < ur_lr, ul_ll < ll_lr) {
-                (true,  true ) => '▛',
-                (true,  false) => '▀',
-                (false, true ) => '▌',
-                (false, false) => '▘',
-            }
-        }
-        else if ur_ll == max {
-            // ?#
-            // _?
-            symb = match (ul_ur < ul_ll, ur_lr < ll_lr) {
-                (true,  true ) => '▜',
-                (true,  false) => '▀',
-                (false, true ) => '▐',
-                (false, false) => '▝',
-            }
-        }
-        else if ur_lr == max {
-            // ?#
-            // ?_
-            symb = match (ul_ur < ul_lr, ur_ll < ll_lr) {
-                (true,  true ) => '▛',
-                (true,  false) => '▀',
-                (false, true ) => '▞',
-                (false, false) => '▝',
-            }
-        }
-        else /* if ll_lr == max */ {
-            // ??
-            // #_
-            symb = match (ul_ll < ul_lr, ur_ll < ur_lr) {
-                (true,  true ) => '▛',
-                (true,  false) => '▌',
-                (false, true ) => '▞',
-                (false, false) => '▖',
-            }
-        }
+        let col1 = Color::mix(&col1).unwrap_or(Color {r: 0, g: 0, b: 0});
+        let col2 = Color::mix(&col2).unwrap_or(Color {r: 0, g: 0, b: 0});
 
-        match symb {
-            '▘' => {
-                col1 = self.u_l;
-                col2 = Color::mix(&[self.u_r, self.l_l, self.l_r]);
-            }, 
-            '▝' => {
-                col1 = self.u_r;
-                col2 = Color::mix(&[self.u_l, self.l_l, self.l_r]);
-            }, 
-            '▀' => {
-                col1 = Color::mix(&[self.u_l, self.u_r]);
-                col2 = Color::mix(&[self.l_l, self.l_r]);
-            }, 
-            '▖' => {
-                col1 = self.l_l;
-                col2 = Color::mix(&[self.u_l, self.u_r, self.l_r]);
-            }, 
-            '▌' => {
-                col1 = Color::mix(&[self.u_l, self.l_l]);
-                col2 = Color::mix(&[self.u_r, self.l_r]);
-            }, 
-            '▞' => {
-                col1 = Color::mix(&[self.u_r, self.l_l]);
-                col2 = Color::mix(&[self.u_l, self.l_r]);
-            }, 
-            '▛' => {
-                col1 = Color::mix(&[self.u_l, self.u_r, self.l_l]);
-                col2 = self.l_r;
-            }
-            '▚' => {
-                col1 = Color::mix(&[self.u_l, self.l_r]);
-                col2 = Color::mix(&[self.u_r, self.l_l]);
-            }, 
-            '▐' => {
-                col1 = Color::mix(&[self.u_r, self.l_r]);
-                col2 = Color::mix(&[self.u_l, self.l_l]);
-            }, 
-            '▜' => {
-                col1 = Color::mix(&[self.u_l, self.u_r, self.l_r]);
-                col2 = self.l_l;
-            }, 
-            '▙' => {
-                col1 = Color::mix(&[self.u_l, self.l_l, self.l_r]);
-                col2 = self.u_r;
-            }, 
-            _ => unreachable!()
+        Color::color(symb.to_string().as_str(), &col1, &col2)
+    }
+}
+
+pub struct ColorHexPixel {
+    pixels: [Color; 6]
+}
+
+impl MultiPixel<ColorHexPixel> for ColorHexPixel {
+    type U = Color;
+
+    const WIDTH: usize = 2;
+
+    const HEIGHT: usize = 3;
+    
+    fn new(pixels: [Self::U; 6]) -> ColorHexPixel {
+        ColorHexPixel {
+            pixels
         }
-        
+    }
+    
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+}
+
+impl ToString for ColorHexPixel {
+    fn to_string(&self) -> String {
+        let colors = self.pixels;
+        let grouping = Color::group(&colors);
+        let symb = HexPixel::new(
+            grouping
+        ).to_string().chars().next().unwrap();
+
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
+            }
+        }
+        let col1 = Color::mix(&col1).unwrap_or(Color {r: 0, g: 0, b: 0});
+        let col2 = Color::mix(&col2).unwrap_or(Color {r: 0, g: 0, b: 0});
+
         Color::color(symb.to_string().as_str(), &col1, &col2)
     }
 }
