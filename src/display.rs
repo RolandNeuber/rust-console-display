@@ -151,6 +151,11 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
     pub fn initialize(&self) -> Result<(), String> {
         let mut stdout = io::stdout();
 
+        // enables terminal raw mode
+        if let Err(e) = terminal::enable_raw_mode() {
+            return Err(e.to_string());
+        }
+
         // use alternate screen
         if let Err(e) = crossterm::execute!(stdout, terminal::EnterAlternateScreen) {
             return Err(e.to_string());
@@ -198,5 +203,8 @@ impl<T: MultiPixel<T> + ToString> Drop for Display<T> {
 
         // show cursor blinking
         let _ = crossterm::execute!(stdout, cursor::Show);
+        
+        // disable terminal raw mode
+        let _ = terminal::disable_raw_mode();
     }
 }
