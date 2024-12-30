@@ -285,12 +285,88 @@ impl ToString for HexPixel {
     }
 }
 
-/// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
+/// Specifies a block of pixels with dimensions 2 (width) by 4 (height).
 pub struct OctPixel {
     pixels: [bool; 8]
 }
 
 impl OctPixel {
+    const CHARS: [char; 256] = [
+        ' ', '𜺨', '𜺫', '🮂', '𜴀', '▘', '𜴁', '𜴂', '𜴃', '𜴄', '▝', '𜴅', '𜴆', '𜴇', '𜴈', '▀',
+        '𜴉', '𜴊', '𜴋', '𜴌', '🯦', '𜴍', '𜴎', '𜴏', '𜴐', '𜴑', '𜴒', '𜴓', '𜴔', '𜴕', '𜴖', '𜴗',
+        '𜴘', '𜴙', '𜴚', '𜴛', '𜴜', '𜴝', '𜴞', '𜴟', '🯧', '𜴠', '𜴡', '𜴢', '𜴣', '𜴤', '𜴥', '𜴦',
+        '𜴧', '𜴨', '𜴩', '𜴪', '𜴫', '𜴬', '𜴭', '𜴮', '𜴯', '𜴰', '𜴱', '𜴲', '𜴳', '𜴴', '𜴵', '🮅',
+        '𜺣', '𜴶', '𜴷', '𜴸', '𜴹', '𜴺', '𜴻', '𜴼', '𜴽', '𜴾', '𜴿', '𜵀', '𜵁', '𜵂', '𜵃', '𜵄',
+        '▖', '𜵅', '𜵆', '𜵇', '𜵈', '▌', '𜵉', '𜵊', '𜵋', '𜵌', '▞', '𜵍', '𜵎', '𜵏', '𜵐', '▛',
+        '𜵑', '𜵒', '𜵓', '𜵔', '𜵕', '𜵖', '𜵗', '𜵘', '𜵙', '𜵚', '𜵛', '𜵜', '𜵝', '𜵞', '𜵟', '𜵠',
+        '𜵡', '𜵢', '𜵣', '𜵤', '𜵥', '𜵦', '𜵧', '𜵨', '𜵩', '𜵪', '𜵫', '𜵬', '𜵭', '𜵮', '𜵯', '𜵰',
+        '𜺠', '𜵱', '𜵲', '𜵳', '𜵴', '𜵵', '𜵶', '𜵷', '𜵸', '𜵹', '𜵺', '𜵻', '𜵼', '𜵽', '𜵾', '𜵿',
+        '𜶀', '𜶁', '𜶂', '𜶃', '𜶄', '𜶅', '𜶆', '𜶇', '𜶈', '𜶉', '𜶊', '𜶋', '𜶌', '𜶍', '𜶎', '𜶏',
+        '▗', '𜶐', '𜶑', '𜶒', '𜶓', '▚', '𜶔', '𜶕', '𜶖', '𜶗', '▐', '𜶘', '𜶙', '𜶚', '𜶛', '▜',
+        '𜶜', '𜶝', '𜶞', '𜶟', '𜶠', '𜶡', '𜶢', '𜶣', '𜶤', '𜶥', '𜶦', '𜶧', '𜶨', '𜶩', '𜶪', '𜶫',
+        '▂', '𜶬', '𜶭', '𜶮', '𜶯', '𜶰', '𜶱', '𜶲', '𜶳', '𜶴', '𜶵', '𜶶', '𜶷', '𜶸', '𜶹', '𜶺',
+        '𜶻', '𜶼', '𜶽', '𜶾', '𜶿', '𜷀', '𜷁', '𜷂', '𜷃', '𜷄', '𜷅', '𜷆', '𜷇', '𜷈', '𜷉', '𜷊',
+        '𜷋', '𜷌', '𜷍', '𜷎', '𜷏', '𜷐', '𜷑', '𜷒', '𜷓', '𜷔', '𜷕', '𜷖', '𜷗', '𜷘', '𜷙', '𜷚',
+        '▄', '𜷛', '𜷜', '𜷝', '𜷞', '▙', '𜷟', '𜷠', '𜷡', '𜷢', '▟', '𜷣', '▆', '𜷤', '𜷥', '█',
+    ];
+
+    fn index(&self) -> usize {
+        (self.pixels[0] as usize) | 
+        (self.pixels[1] as usize) << 1 | 
+        (self.pixels[2] as usize) << 2 | 
+        (self.pixels[3] as usize) << 3 | 
+        (self.pixels[4] as usize) << 4 | 
+        (self.pixels[5] as usize) << 5 |
+        (self.pixels[6] as usize) << 6 |
+        (self.pixels[7] as usize) << 7
+    }
+
+    /// See [`MultiPixel::get_char`] for details.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use display::pixel::{MultiPixel, OctPixel};
+    /// let pixel = OctPixel::new (
+    ///     true, false, // #_
+    ///     false, true, // _#
+    ///     true, true,  // ##
+    ///     false, false // __
+    /// );
+    /// 
+    /// let symbol = pixel.get_char();
+    /// 
+    /// assert_eq!(symbol, '𜴰')
+    /// ```
+    fn get_char(&self) -> char {
+        Self::CHARS[self.index()]
+    }
+}
+
+impl MultiPixel<OctPixel> for OctPixel {
+    type U = bool;
+    
+    const WIDTH: usize = 2;
+
+    const HEIGHT: usize = 4;
+
+    impl_new!(OctPixel, pixels: [bool; 8]);
+    
+    impl_getters!(pixels: [bool; 8]);
+}
+
+impl ToString for OctPixel {
+    fn to_string(&self) -> String {
+        self.get_char().to_string()
+    }
+}
+
+/// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
+pub struct BrailleOctPixel {
+    pixels: [bool; 8]
+}
+
+impl BrailleOctPixel {
     const CHARS: [char; 256] = [
         '⠀', '⠁', '⠈', '⠉', '⠂', '⠃', '⠊', '⠋', '⠐', '⠑', '⠘', '⠙', '⠒', '⠓', '⠚', '⠛',
         '⠄', '⠅', '⠌', '⠍', '⠆', '⠇', '⠎', '⠏', '⠔', '⠕', '⠜', '⠝', '⠖', '⠗', '⠞', '⠟',
@@ -326,35 +402,36 @@ impl OctPixel {
     /// # Examples
     /// 
     /// ```
-    /// use display::pixel::{MultiPixel, HexPixel};
-    /// let pixel = HexPixel::new (
+    /// use display::pixel::{MultiPixel, BrailleOctPixel};
+    /// let pixel = BrailleOctPixel::new (
     ///     true, false, // #_
     ///     false, true, // _#
     ///     true, true,  // ##
+    ///     false, false // __
     /// );
     /// 
     /// let symbol = pixel.get_char();
     /// 
-    /// assert_eq!(symbol, '🬶')
+    /// assert_eq!(symbol, '⠵')
     /// ```
     fn get_char(&self) -> char {
         Self::CHARS[self.index()]
     }
 }
 
-impl MultiPixel<OctPixel> for OctPixel {
+impl MultiPixel<BrailleOctPixel> for BrailleOctPixel {
     type U = bool;
     
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 4;
 
-    impl_new!(OctPixel, pixels: [bool; 8]);
+    impl_new!(BrailleOctPixel, pixels: [bool; 8]);
     
     impl_getters!(pixels: [bool; 8]);
 }
 
-impl ToString for OctPixel {
+impl ToString for BrailleOctPixel {
     fn to_string(&self) -> String {
         self.get_char().to_string()
     }

@@ -1,4 +1,4 @@
-use crate::{impl_getters, pixel::{HexPixel, MultiPixel, QuadPixel}};
+use crate::{impl_getters, pixel::{HexPixel, MultiPixel, OctPixel, QuadPixel}};
 
 pub struct Color {
     pub r: u8,
@@ -200,6 +200,51 @@ impl ToString for ColorHexPixel {
         let colors = self.pixels;
         let grouping = Color::group(&colors);
         let symb = HexPixel::new(
+            grouping
+        ).to_string().chars().next().unwrap();
+
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
+            }
+        }
+        let col1 = Color::mix(&col1).unwrap_or(Color {r: 0, g: 0, b: 0});
+        let col2 = Color::mix(&col2).unwrap_or(Color {r: 0, g: 0, b: 0});
+
+        Color::color(symb.to_string().as_str(), &col1, &col2)
+    }
+}
+
+pub struct ColorOctPixel {
+    pixels: [Color; 8]
+}
+
+impl MultiPixel<ColorOctPixel> for ColorOctPixel {
+    type U = Color;
+
+    const WIDTH: usize = 2;
+
+    const HEIGHT: usize = 4;
+    
+    fn new(pixels: [Self::U; 8]) -> ColorOctPixel {
+        ColorOctPixel {
+            pixels
+        }
+    }
+    
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+}
+
+impl ToString for ColorOctPixel {
+    fn to_string(&self) -> String {
+        let colors = self.pixels;
+        let grouping = Color::group(&colors);
+        let symb = OctPixel::new(
             grouping
         ).to_string().chars().next().unwrap();
 
