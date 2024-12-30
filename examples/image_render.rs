@@ -3,15 +3,15 @@
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::color_pixel::{Color, ColorDualPixel, ColorHexPixel, ColorQuadPixel};
+use display::color_pixel::{Color, ColorDualPixel, ColorHexPixel, ColorOctPixel, ColorQuadPixel};
 use display::pixel::MultiPixel;
 use display::Display;
 use image::{GenericImageView, ImageReader};
 use image::imageops::FilterType;
 
 fn main() {
-    let max_dimensions: (u32, u32) = (200, 150);
-    type PixelType = ColorHexPixel;
+    let max_dimensions: (u32, u32) = (200, 160);
+    type PixelType = ColorOctPixel;
 
     let path_in = "examples/image.jpg";
     let mut img = 
