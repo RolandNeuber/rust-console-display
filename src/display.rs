@@ -5,24 +5,26 @@ use crossterm::{cursor, terminal};
 use crate::pixel::MultiPixel;
 
 /// Represents a console display with a width and height in pixels.
-pub struct Display<T: MultiPixel<T> + ToString> {
-    pub width: usize,
-    pub height: usize,
+pub struct DisplayDriver<T: MultiPixel<T>> {
+    width: usize,
+    height: usize,
     block_count_x: usize,
     block_count_y: usize,
     data: Vec<T>,
+    original_width: u16,
+    original_height: u16,
 }
 
-impl<T: MultiPixel<T> + ToString> Display<T> {
+impl<T: MultiPixel<T>> DisplayDriver<T> {
 
     /// Convenience method to build a blank display struct with specified dimensions
-    pub fn build(width: usize, height: usize, fill: T::U) -> Result<Display<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
+    pub fn build(width: usize, height: usize, fill: T::U) -> Result<DisplayDriver<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
         let data: Vec<T::U> = vec![fill; width * height];
         Self::build_from_bools(width, height, data)
     }
 
     /// Builds a display struct with the specified dimensions from the given data.
-    pub fn build_from_bools(width: usize, height: usize, data: Vec<T::U>) -> Result<Display<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
+    pub fn build_from_bools(width: usize, height: usize, data: Vec<T::U>) -> Result<DisplayDriver<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
         if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
             return Err(
                 format!(
@@ -63,12 +65,20 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
                 multi_pixels.push(T::build(&args)?);
             }
         }
-        Ok(Display {
+
+        let (original_width, original_height) = match crossterm::terminal::size(){
+            Ok((w, h)) => (w, h),
+            Err(_) => (0, 0)
+        }; 
+
+        Ok(DisplayDriver {
             width, 
             height, 
             block_count_x,
             block_count_y,
-            data: multi_pixels
+            data: multi_pixels,
+            original_width,
+            original_height
         })
     }
 
@@ -78,8 +88,11 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
     /// # Examples
     /// 
     /// ```
-    /// use display::{Display, pixel::SinglePixel};
-    /// let disp: Display<SinglePixel> = Display::build_from_bools(
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::{DisplayDriver, pixel::SinglePixel};
+    /// 
+    /// let disp: DisplayDriver<SinglePixel> = DisplayDriver::build_from_bools(
     ///     6, 
     ///     6, 
     ///     vec![
@@ -102,7 +115,7 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
     /// assert!(matches!(pixel, Err(_)));
     /// ```
     pub fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String> where [(); T::WIDTH * T::HEIGHT]: {
-        if x >= self.width || y >= self.height {
+        if x >= *self.get_width() || y >= *self.get_height() {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
 
@@ -111,7 +124,7 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
         let offset_x: usize = x % T::WIDTH;
         let offset_y: usize = y % T::HEIGHT;
 
-        let pixel = &self.data[block_x + block_y * self.block_count_x];
+        let pixel = &self.get_data()[block_x + block_y * self.get_block_count_x()];
         match pixel.get_subpixel(offset_x, offset_y) {
             Ok(val) => Ok(val),
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
@@ -119,7 +132,7 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
     }
 
     pub fn set_pixel(&mut self, x: usize, y: usize, value: T::U) -> Result<(), String> where [(); T::WIDTH * T::HEIGHT]: {
-        if x >= self.width || y >= self.height {
+        if x >= *self.get_width() || y >= *self.get_height() {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
 
@@ -128,7 +141,9 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
         let offset_x: usize = x % T::WIDTH;
         let offset_y: usize = y % T::HEIGHT;
 
-        let pixel = &mut self.data[block_x + block_y * self.block_count_x];
+        let block_count_x = *self.get_block_count_x();
+
+        let pixel = &mut self.get_data_mut()[block_x + block_y * block_count_x];
         match pixel.set_subpixel(offset_x, offset_y, value) {
             Ok(val) => Ok(val),
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
@@ -162,7 +177,10 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
         };
 
         // set dimensions of screen
-        if let Err(e) = crossterm::execute!(stdout, terminal::SetSize(self.block_count_x as u16, self.block_count_y as u16)) {
+        if let Err(e) = crossterm::execute!(stdout, terminal::SetSize(
+            self.get_block_count_x().clone() as u16, 
+            self.get_block_count_y().clone() as u16
+        )) {
             return Err(e.to_string());
         };
         
@@ -178,14 +196,50 @@ impl<T: MultiPixel<T> + ToString> Display<T> {
 
         Ok(())
     }
+
+    pub fn get_width(&self) -> &usize {
+        &self.width
+    }
+
+    pub fn get_height(&self) -> &usize {
+        &self.height
+    }
+
+    pub fn get_data(&self) -> &Vec<T> {
+        &self.data
+    }
+
+    fn get_data_mut(&mut self) -> &mut Vec<T> {
+        &mut self.data
+    }
+
+    pub fn get_block_count_x(&self) -> &usize {
+        &self.block_count_x
+    }
+
+    pub fn get_block_count_y(&self) -> &usize {
+        &self.block_count_y
+    }
+
+    fn get_original_width(&self) -> &u16 {
+        &self.original_width
+    }
+
+    fn get_orignal_height(&self) -> &u16 {
+        &self.original_height
+    }
 }
 
-impl<T: MultiPixel<T> + ToString> ToString for Display<T> {
+impl<T: MultiPixel<T>> ToString for DisplayDriver<T> {
     fn to_string(&self) -> String {
         let mut string_repr = String::new();
-        for y in 0..self.block_count_y {
-            for x in 0..self.block_count_x {
-                string_repr.push_str(self.data[x + y * self.block_count_x].to_string().as_str());
+        for y in 0..*self.get_block_count_y() {
+            for x in 0..*self.get_block_count_x() {
+                string_repr.push_str(
+                    self.get_data()[x + y * self.get_block_count_x()]
+                    .to_string()
+                    .as_str()
+                );
             }
             string_repr.push_str("\r\n");
         }
@@ -194,7 +248,7 @@ impl<T: MultiPixel<T> + ToString> ToString for Display<T> {
     }
 }
 
-impl<T: MultiPixel<T> + ToString> Drop for Display<T> {
+impl<T: MultiPixel<T>> Drop for DisplayDriver<T> {
     fn drop(&mut self) {
         let mut stdout = io::stdout();
 
@@ -204,7 +258,19 @@ impl<T: MultiPixel<T> + ToString> Drop for Display<T> {
         // show cursor blinking
         let _ = crossterm::execute!(stdout, cursor::Show);
         
+        // reset dimensions of screen
+        if *self.get_original_width() != 0 && *self.get_orignal_height() != 0 {
+            let _ = crossterm::execute!(stdout, terminal::SetSize(
+                self.get_original_width().clone() as u16, 
+                self.get_orignal_height().clone() as u16
+            ));
+        }
+
         // disable terminal raw mode
         let _ = terminal::disable_raw_mode();
     }
+}
+
+pub struct PixelDisplay {
+
 }

@@ -1,7 +1,7 @@
 #![feature(generic_const_exprs)]
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::{color_pixel::{Color, ColorDualPixel, ColorHexPixel}, Display};
+use display::{color_pixel::{Color, ColorDualPixel, ColorHexPixel}, DisplayDriver};
 use rand::Rng;
 use std::{thread, time::Duration};
 
@@ -10,7 +10,7 @@ fn main() {
     let snake_color = Color {r: 0, g: 255, b: 0};
     let apple_color = Color {r: 255, g: 0, b: 0};
 
-    let mut disp: Display<ColorDualPixel> = Display::build(
+    let mut disp: DisplayDriver<ColorDualPixel> = DisplayDriver::build(
         100, 
         42,
         Color {r: 0, b: 0, g: 0}
@@ -19,19 +19,19 @@ fn main() {
     disp.initialize().expect("Could not initialize display."); 
     let duration = Duration::from_millis(75);
     
-    let mut snake: Vec<(usize, usize)> = vec![(disp.width / 2, disp.height / 2)];
+    let mut snake: Vec<(usize, usize)> = vec![(disp.get_width() / 2, disp.get_height() / 2)];
     disp.set_pixel(snake[0].0, snake[0].1, snake_color).expect("Could not set pixel.");
 
     let mut score = 1;
 
     let mut apple = (
-        rand::thread_rng().gen_range(0..disp.width), 
-        rand::thread_rng().gen_range(0..disp.height)
+        rand::thread_rng().gen_range(0..disp.get_width().clone()), 
+        rand::thread_rng().gen_range(0..disp.get_height().clone())
     );
     while snake.contains(&apple) {
         apple = (
-            rand::thread_rng().gen_range(0..disp.width), 
-            rand::thread_rng().gen_range(0..disp.height)
+            rand::thread_rng().gen_range(0..disp.get_width().clone()), 
+            rand::thread_rng().gen_range(0..disp.get_height().clone())
         );
     }
 
@@ -94,20 +94,20 @@ fn main() {
         
         // place new segment in front (direction) of snake head
         snake.insert(0, (
-            (snake[0].0 as i32 + direction.0).rem_euclid(disp.width  as i32) as usize,
-            (snake[0].1 as i32 + direction.1).rem_euclid(disp.height as i32) as usize
+            (snake[0].0 as i32 + direction.0).rem_euclid(disp.get_width().clone()  as i32) as usize,
+            (snake[0].1 as i32 + direction.1).rem_euclid(disp.get_height().clone() as i32) as usize
         ));
 
         if snake[0] == apple {
             score += 1;
-            if score == disp.width * disp.height {
+            if score == disp.get_width().clone() * disp.get_height().clone() {
                 break;
             }
             // place new apple
             while snake.contains(&apple) {
                 apple = (
-                    rand::thread_rng().gen_range(0..disp.width), 
-                    rand::thread_rng().gen_range(0..disp.height)
+                    rand::thread_rng().gen_range(0..disp.get_width().clone()), 
+                    rand::thread_rng().gen_range(0..disp.get_height().clone())
                 );
             }
             disp.set_pixel(apple.0, apple.1, apple_color).expect("Could not set pixel.");

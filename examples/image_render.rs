@@ -5,7 +5,7 @@ use std::time::Duration;
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use display::color_pixel::{Color, ColorDualPixel, ColorHexPixel, ColorOctPixel, ColorQuadPixel};
 use display::pixel::MultiPixel;
-use display::Display;
+use display::DisplayDriver;
 use image::{GenericImageView, ImageReader};
 use image::imageops::FilterType;
 
@@ -56,7 +56,7 @@ fn main() {
         }
     }
     
-    let display = Display::<PixelType>::build_from_bools(
+    let display = DisplayDriver::<PixelType>::build_from_bools(
         padded_dimensions.0 as usize, 
         padded_dimensions.1 as usize, 
         data

@@ -1,7 +1,7 @@
 use crate::{impl_getters, impl_new};
 
 /// Specifies a block of pixels with specified dimensions.
-pub trait MultiPixel<T: ToString> {
+pub trait MultiPixel<T>: ToString {
     type U: Copy;
 
     /// The width of the block of pixels.
