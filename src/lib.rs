@@ -6,4 +6,4 @@ pub mod pixel;
 pub mod color_pixel;
 pub mod widget;
 
-pub use display::DisplayDriver;
+pub use display::*;

@@ -1,7 +1,7 @@
 #![feature(generic_const_exprs)]
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::{color_pixel::{Color, ColorDualPixel, ColorHexPixel}, DisplayDriver};
+use display::{color_pixel::{Color, ColorDualPixel, ColorHexPixel}, ConsoleDisplay, DisplayDriver, PixelDisplay};
 use rand::Rng;
 use std::{thread, time::Duration};
 
@@ -10,11 +10,11 @@ fn main() {
     let snake_color = Color {r: 0, g: 255, b: 0};
     let apple_color = Color {r: 255, g: 0, b: 0};
 
-    let mut disp: DisplayDriver<ColorDualPixel> = DisplayDriver::build(
+    let mut disp = DisplayDriver::new(PixelDisplay::<ColorDualPixel>::build(
         100, 
         42,
         Color {r: 0, b: 0, g: 0}
-    ).unwrap();
+    ).unwrap());
     
     disp.initialize().expect("Could not initialize display."); 
     let duration = Duration::from_millis(75);
