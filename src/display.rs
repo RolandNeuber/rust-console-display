@@ -2,16 +2,16 @@ use std::{io::{self, Write}, ops::{Deref, DerefMut}};
 
 use crossterm::{cursor, terminal};
 
-use crate::pixel::MultiPixel;
+use crate::{pixel::MultiPixel, widget::Widget};
 
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
-pub struct DisplayDriver<T: ConsoleDisplay> {
+pub struct DisplayDriver<T: Widget> {
     original_width: u16,
     original_height: u16,
     display: T
 }
 
-impl<T: ConsoleDisplay> DisplayDriver<T> {
+impl<T: Widget> DisplayDriver<T> {
 
     /// Convenience method to build a blank display struct with specified dimensions
     pub fn new(widget: T) -> DisplayDriver<T> {
@@ -91,7 +91,7 @@ impl<T: ConsoleDisplay> DisplayDriver<T> {
     }
 }
 
-impl<T: ConsoleDisplay> Deref for DisplayDriver<T> {
+impl<T: Widget> Deref for DisplayDriver<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -99,13 +99,13 @@ impl<T: ConsoleDisplay> Deref for DisplayDriver<T> {
     }
 }
 
-impl<T: ConsoleDisplay> DerefMut for DisplayDriver<T> {
+impl<T: Widget> DerefMut for DisplayDriver<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.get_widget_mut()
     }
 }
 
-impl<T: ConsoleDisplay> Drop for DisplayDriver<T> {
+impl<T: Widget> Drop for DisplayDriver<T> {
     fn drop(&mut self) {
         let mut stdout = io::stdout();
 

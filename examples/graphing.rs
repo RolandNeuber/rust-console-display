@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use display::color_pixel::{Color, ColorOctPixel};
+use display::widget::{NoneWidget, SingleWidget};
 use display::{DisplayDriver, PixelDisplay};
 
 fn main() {
@@ -14,11 +15,17 @@ fn main() {
     let uv_x = (-1.0, 1.0);
     let uv_y = (1.0, -1.0);
     
-    let mut display = DisplayDriver::new(PixelDisplay::<PixelType>::build(
-        dimensions.0 as usize, 
-        dimensions.1 as usize,
-        Color { r: 0, g: 0, b: 0 }
-    ).expect("Could not construct display."));
+    let mut display = 
+    DisplayDriver::new(
+        NoneWidget::new(
+            PixelDisplay::<PixelType>::build(
+                dimensions.0 as usize, 
+                dimensions.1 as usize,
+                Color { r: 0, g: 0, b: 0 }
+            ).expect("Could not construct display.")
+        )
+    );
+
     display.initialize().expect("Could not initialize display.");
     loop {
         for x_text in 0..dimensions.0 {
@@ -38,7 +45,7 @@ fn main() {
                 dimensions.1
             );
 
-            display.set_pixel(x_text as usize, y_text as usize, Color{ r: 255, g: 255, b: 255 });
+            display.get_child_mut().set_pixel(x_text as usize, y_text as usize, Color{ r: 255, g: 255, b: 255 });
         }
 
         display.print_display().expect("Could not print display.");

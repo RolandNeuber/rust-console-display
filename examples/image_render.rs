@@ -5,6 +5,7 @@ use std::time::Duration;
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use display::color_pixel::{Color, ColorDualPixel, ColorHexPixel, ColorOctPixel, ColorQuadPixel};
 use display::pixel::MultiPixel;
+use display::widget::{NoneWidget, SingleWidget};
 use display::{DisplayDriver, PixelDisplay};
 use image::{GenericImageView, ImageReader};
 use image::imageops::FilterType;
@@ -56,11 +57,17 @@ fn main() {
         }
     }
     
-    let display = DisplayDriver::new(PixelDisplay::<PixelType>::build_from_data(
-        padded_dimensions.0 as usize, 
-        padded_dimensions.1 as usize, 
-        data
-    ).expect("Could not construct display."));
+    let display = 
+    DisplayDriver::new(
+        NoneWidget::new(
+            PixelDisplay::<PixelType>::build_from_data(
+                padded_dimensions.0 as usize, 
+                padded_dimensions.1 as usize, 
+                data
+            ).expect("Could not construct display.")
+        )
+    );
+    
     display.initialize().expect("Could not initialize display.");
     loop {
         display.print_display().expect("Could not print display.");
