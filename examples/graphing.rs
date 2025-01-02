@@ -4,11 +4,11 @@ use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use display::color_pixel::{Color, ColorOctPixel};
-use display::widget::{NoneWidget, SingleWidget};
+use display::widget::{SingleWidget, UvWidget};
 use display::{DisplayDriver, PixelDisplay};
 
 fn main() {
-    let dimensions: (u32, u32) = (200, 200);
+    let dimensions: (usize, usize) = (200, 200);
     type PixelType = ColorOctPixel;
     let function = |x: f32| { x };
 
@@ -17,7 +17,7 @@ fn main() {
     
     let mut display = 
     DisplayDriver::new(
-        NoneWidget::new(
+        UvWidget::new(
             PixelDisplay::<PixelType>::build(
                 dimensions.0 as usize, 
                 dimensions.1 as usize,
@@ -25,27 +25,19 @@ fn main() {
             ).expect("Could not construct display.")
         )
     );
+    display.set_uv_x_min(uv_x.0);
+    display.set_uv_x_max(uv_x.1);
+    display.set_uv_y_min(uv_y.0);
+    display.set_uv_y_max(uv_y.1);
 
     display.initialize().expect("Could not initialize display.");
     loop {
         for x_text in 0..dimensions.0 {
-            let x = texture_to_uv(
-                x_text, 
-                dimensions.0, 
-                uv_x.0, 
-                uv_x.1
-            );
+            let x = display.texture_to_uv_x(x_text);
 
             let y = function(x);
 
-            let y_text = uv_to_texture(
-                y, 
-                uv_y.0, 
-                uv_y.1, 
-                dimensions.1
-            );
-
-            display.get_child_mut().set_pixel(x_text as usize, y_text as usize, Color{ r: 255, g: 255, b: 255 });
+            display.set_pixel(x, y, Color{ r: 255, g: 255, b: 255 });
         }
 
         display.print_display().expect("Could not print display.");
@@ -66,40 +58,4 @@ fn main() {
             }
         }
     }
-}
-
-fn texture_to_uv(texture_coordinate: u32, texture_coordinate_max: u32, uv_min: f32, uv_max: f32) -> f32 {
-    texture_coordinate as f32 / (texture_coordinate_max as f32 / (uv_max - uv_min)) + uv_min
-}
-
-fn uv_to_texture(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: u32) -> u32 {
-    ((uv - uv_min) * (texture_coordinate_max as f32 / (uv_max - uv_min))).round() as u32
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_texture_to_uv() {
-        let uv = texture_to_uv(
-            500, 
-            1000, 
-            -0.5, 
-            0.5
-        );
-        assert_eq!(uv, 0.0);
-    }
-
-    #[test]
-    fn test_uv_to_texture() {
-        let texture_coordinate = uv_to_texture(
-            0.5, 
-            -1.0, 
-            1.0, 
-            2000
-        );
-        assert_eq!(texture_coordinate, 1500); 
-    }
-
 }
