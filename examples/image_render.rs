@@ -3,9 +3,9 @@
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::color_pixel::{Color, ColorDualPixel, ColorHexPixel, ColorOctPixel, ColorQuadPixel};
+use display::color_pixel::{Color, ColorOctPixel};
 use display::pixel::MultiPixel;
-use display::widget::{NoneWidget, SingleWidget};
+use display::widget::NoneWidget;
 use display::{DisplayDriver, PixelDisplay};
 use image::{GenericImageView, ImageReader};
 use image::imageops::FilterType;

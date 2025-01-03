@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use std::{fmt::format, ops::{Deref, DerefMut}};
 
 use crate::{pixel::MultiPixel, ConsoleDisplay, PixelDisplay};
 
@@ -8,19 +8,25 @@ pub trait Widget: ToString {
 }
 
 pub trait SingleWidget<T>: Widget {
-    fn new(child: T) -> Self;
     fn get_child(&self) -> &T;
     fn get_child_mut(&mut self) -> &mut T;
 }
 
 pub trait TwoWidget<S, T>: Widget {
-    fn new(child1: S, child2: T) -> Self;
     fn get_children(&self) -> (&S, &T);
     fn get_children_mut(&mut self) -> (&mut S, &mut T);
 }
 
 pub struct NoneWidget<T: ConsoleDisplay> {
     child: T
+}
+
+impl<T: ConsoleDisplay> NoneWidget<T> {
+    pub fn new(child: T) -> Self {
+        NoneWidget {
+            child
+        }
+    }
 }
 
 impl<T: ConsoleDisplay> Widget for NoneWidget<T> {
@@ -34,12 +40,6 @@ impl<T: ConsoleDisplay> Widget for NoneWidget<T> {
 }
 
 impl<T: ConsoleDisplay> SingleWidget<T> for NoneWidget<T> {
-    fn new(child: T) -> Self {
-        NoneWidget {
-            child
-        }
-    }
-    
     fn get_child(&self) -> &T {
         &self.child
     }
@@ -93,43 +93,110 @@ impl<T: ConsoleDisplay> ToString for NoneWidget<T> {
 //     }
 // }
 
-// pub struct TilingWidget<S, T> {
-//     child1: S,
-//     child2: T
-// }
+pub struct HorizontalTilingWidget<S: Widget, T: Widget> {
+    child1: S,
+    child2: T
+}
 
-// impl<S, T> Widget for TilingWidget<S, T> {
-//     fn get_width_characters(&self) -> usize {
-//         todo!()
-//     }
+impl<S: Widget, T: Widget> HorizontalTilingWidget<S, T> {
+    pub fn build(child1: S, child2: T) -> Result<Self, String> {
+        if child1.get_height_characters() != child2.get_height_characters() {
+            return Err(format!(
+                "Height in characters of arguments does not match. {} and {}.",
+                child1.get_height_characters(),
+                child2.get_height_characters()
+            ));
+        }
+        Ok(HorizontalTilingWidget { 
+            child1,
+            child2
+        })
+    }
+}
 
-//     fn get_height_characters(&self) -> usize {
-//         todo!()
-//     }
-// }
+impl<S: Widget, T: Widget> Widget for HorizontalTilingWidget<S, T> {
+    fn get_width_characters(&self) -> usize {
+        self.child1.get_width_characters() + self.child2.get_width_characters()
+    }
 
-// impl<S, T> TwoWidget<S, T> for TilingWidget<S, T> {
-//     fn new(child1: S, child2: T) -> Self {
-//         TilingWidget { 
-//             child1,
-//             child2
-//         }
-//     }
+    fn get_height_characters(&self) -> usize {
+        self.child1.get_height_characters()
+    }
+}
 
-//     fn get_children(&self) -> (&S, &T) {
-//         (&self.child1, &self.child2)
-//     }
+impl<S: Widget, T: Widget> TwoWidget<S, T> for HorizontalTilingWidget<S, T> {
+    fn get_children(&self) -> (&S, &T) {
+        (&self.child1, &self.child2)
+    }
 
-//     fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-//         (&mut self.child1, &mut self.child2)
-//     }
-// }
+    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
+        (&mut self.child1, &mut self.child2)
+    }
+}
 
-// impl<S, T> ToString for TilingWidget<S, T> {
-//     fn to_string(&self) -> String {
-//         todo!()
-//     }
-// }
+impl<S: Widget, T: Widget> ToString for HorizontalTilingWidget<S, T> {
+    fn to_string(&self) -> String {
+        let str_repr1 = self.child1.to_string();
+        let str_repr2 = self.child2.to_string();
+        let lines= Iterator::zip(
+            str_repr1.lines(), 
+            str_repr2.lines()
+        );
+        let mut str_repr = String::new();
+        for line_pair in lines {
+            str_repr.push_str(line_pair.0);
+            str_repr.push_str(line_pair.1);
+        }
+        str_repr
+    }
+}
+
+pub struct VerticalTilingWidget<S: Widget, T: Widget> {
+    child1: S,
+    child2: T
+}
+
+impl<S: Widget, T: Widget> VerticalTilingWidget<S, T> {
+    pub fn build(child1: S, child2: T) -> Result<Self, String> {
+        if child1.get_width_characters() != child2.get_width_characters() {
+            return Err(format!(
+                "Height in characters of arguments does not match. {} and {}.",
+                child1.get_width_characters(),
+                child2.get_width_characters()
+            ));
+        }
+        Ok(VerticalTilingWidget { 
+            child1,
+            child2
+        })
+    }
+}
+
+impl<S: Widget, T: Widget> Widget for VerticalTilingWidget<S, T> {
+    fn get_width_characters(&self) -> usize {
+        self.child1.get_width_characters()
+    }
+
+    fn get_height_characters(&self) -> usize {
+        self.child1.get_height_characters() + self.child2.get_height_characters()
+    }
+}
+
+impl<S: Widget, T: Widget> TwoWidget<S, T> for VerticalTilingWidget<S, T> {
+    fn get_children(&self) -> (&S, &T) {
+        (&self.child1, &self.child2)
+    }
+
+    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
+        (&mut self.child1, &mut self.child2)
+    }
+}
+
+impl<S: Widget, T: Widget> ToString for VerticalTilingWidget<S, T> {
+    fn to_string(&self) -> String {
+        format!("{}\n{}", self.child1.to_string(), self.child2.to_string())
+    }
+}
 
 pub struct UvWidget<T: ConsoleDisplay> {
     child: T,
@@ -137,6 +204,19 @@ pub struct UvWidget<T: ConsoleDisplay> {
     uv_x_max: f32,
     uv_y_min: f32,
     uv_y_max: f32,
+}
+
+impl<T: ConsoleDisplay> UvWidget<T> {
+    pub fn new(child: T) -> Self {
+        let (width, height) = (child.get_width(), child.get_height());
+        UvWidget {
+            child,
+            uv_x_min: 0.0,
+            uv_x_max: width as f32,
+            uv_y_min: 0.0,
+            uv_y_max: height as f32,
+        }
+    }
 }
 
 impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
@@ -228,17 +308,6 @@ impl<T: ConsoleDisplay> Widget for UvWidget<T> {
 }
 
 impl<T: ConsoleDisplay> SingleWidget<T> for UvWidget<T> {
-    fn new(child: T) -> Self {
-        let (width, height) = (child.get_width(), child.get_height());
-        UvWidget {
-            child,
-            uv_x_min: 0.0,
-            uv_x_max: width as f32,
-            uv_y_min: 0.0,
-            uv_y_max: height as f32,
-        }
-    }
-
     fn get_child(&self) -> &T {
         &self.child
     }

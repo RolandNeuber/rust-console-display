@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use display::color_pixel::{Color, ColorOctPixel};
-use display::widget::{SingleWidget, UvWidget};
+use display::widget::UvWidget;
 use display::{DisplayDriver, PixelDisplay};
 
 fn main() {
