@@ -1,4 +1,4 @@
-use crate::{impl_getters, pixel::{HexPixel, MultiPixel, OctPixel, QuadPixel}};
+use crate::{impl_getters, pixel::monochrome_pixel::{HexPixel, MultiPixel, OctPixel, QuadPixel}};
 
 pub struct Color {
     pub r: u8,

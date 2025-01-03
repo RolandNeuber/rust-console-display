@@ -2,13 +2,29 @@
 
 use std::time::Duration;
 
-use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::color_pixel::{Color, ColorOctPixel};
-use display::pixel::MultiPixel;
-use display::widget::NoneWidget;
-use display::{DisplayDriver, PixelDisplay};
-use image::{GenericImageView, ImageReader};
-use image::imageops::FilterType;
+use crossterm::event::{
+    self, 
+    Event, 
+    KeyCode, 
+    KeyModifiers
+};
+use display::{
+    console_display::PixelDisplay, 
+    display_driver::DisplayDriver, 
+    pixel::{
+        color_pixel::{
+            Color, 
+            ColorOctPixel
+        }, 
+        monochrome_pixel::MultiPixel
+    }, 
+    widget::single_widget::NoneWidget
+};
+use image::{
+    imageops::FilterType, 
+    GenericImageView, 
+    ImageReader
+};
 
 fn main() {
     let max_dimensions: (u32, u32) = (200, 160);

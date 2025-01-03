@@ -1,7 +1,33 @@
 #![feature(generic_const_exprs)]
 
-use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::{color_pixel::{Color, ColorDualPixel, ColorSinglePixel}, widget::{NoneWidget, SingleWidget, TwoWidget, VerticalTilingWidget}, ConsoleDisplay, DisplayDriver, PixelDisplay};
+use crossterm::event::{
+    self, 
+    Event, 
+    KeyCode, 
+    KeyModifiers
+};
+use display::{
+    console_display::{
+        ConsoleDisplay, 
+        PixelDisplay
+    }, 
+    display_driver::DisplayDriver, 
+    pixel::color_pixel::{
+        Color, 
+        ColorDualPixel, 
+        ColorSinglePixel
+    }, 
+    widget::{
+        single_widget::{
+            NoneWidget, 
+            SingleWidget
+        }, 
+        two_widget::{
+            TwoWidget, 
+            VerticalTilingWidget
+        }
+    }
+};
 use rand::Rng;
 use std::{thread, time::Duration};
 

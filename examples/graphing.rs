@@ -1,11 +1,22 @@
 #![feature(generic_const_exprs)]
 
 use std::time::Duration;
+use crossterm::event::{
+    self, 
+    Event, 
+    KeyCode, 
+    KeyModifiers
+};
+use display::{
+    console_display::PixelDisplay, 
+    display_driver::DisplayDriver, 
+    pixel::color_pixel::{
+        Color, 
+        ColorOctPixel
+    }, 
+    widget::single_widget::UvWidget
+};
 
-use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::color_pixel::{Color, ColorOctPixel};
-use display::widget::UvWidget;
-use display::{DisplayDriver, PixelDisplay};
 
 fn main() {
     let dimensions: (usize, usize) = (200, 200);
