@@ -200,3 +200,33 @@ impl<T: MultiPixel<T>> ToString for PixelDisplay<T> {
         string_repr
     }
 }
+
+struct CharacterDisplay<T> {
+    data: Vec<T>,
+    width: usize,
+    height: usize,
+}
+
+impl<T> ConsoleDisplay for CharacterDisplay<T> {
+    fn get_width(&self) -> usize {
+        todo!()
+    }
+
+    fn get_height(&self) -> usize {
+        todo!()
+    }
+
+    fn get_width_characters(&self) -> usize {
+        todo!()
+    }
+
+    fn get_height_characters(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<T> ToString for CharacterDisplay<T> {
+    fn to_string(&self) -> String {
+        todo!()
+    }
+}
