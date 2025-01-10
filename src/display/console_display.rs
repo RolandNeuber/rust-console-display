@@ -1,4 +1,4 @@
-use crate::pixel::monochrome_pixel::MultiPixel;
+use crate::pixel::{character_pixel::CharacterPixel, monochrome_pixel::MultiPixel};
 
 pub trait ConsoleDisplay: ToString {
     /// Returns the width of the display in a display specific unit (e.g. pixels).
@@ -201,32 +201,50 @@ impl<T: MultiPixel<T>> ToString for PixelDisplay<T> {
     }
 }
 
-struct CharacterDisplay<T> {
-    data: Vec<T>,
+struct CharacterDisplay<CharacterPixel> {
+    data: Vec<CharacterPixel>,
     width: usize,
     height: usize,
 }
 
-impl<T> ConsoleDisplay for CharacterDisplay<T> {
-    fn get_width(&self) -> usize {
-        todo!()
-    }
-
-    fn get_height(&self) -> usize {
-        todo!()
-    }
-
-    fn get_width_characters(&self) -> usize {
-        todo!()
-    }
-
-    fn get_height_characters(&self) -> usize {
-        todo!()
+impl CharacterDisplay<CharacterPixel> {
+    fn get_data(&self) -> &Vec<CharacterPixel> {
+        &self.data
     }
 }
 
-impl<T> ToString for CharacterDisplay<T> {
+impl ConsoleDisplay for CharacterDisplay<CharacterPixel> {
+    fn get_width(&self) -> usize {
+        self.width
+    }
+
+    fn get_height(&self) -> usize {
+        self.height
+    }
+
+    fn get_width_characters(&self) -> usize {
+        self.width
+    }
+
+    fn get_height_characters(&self) -> usize {
+        self.height
+    }
+}
+
+impl ToString for CharacterDisplay<CharacterPixel> {
     fn to_string(&self) -> String {
-        todo!()
+        let mut string_repr = String::new();
+        for y in 0..self.get_height_characters() {
+            for x in 0..self.get_width_characters() {
+                string_repr.push_str(
+                    self.get_data()[x + y * self.get_width_characters()]
+                    .to_string()
+                    .as_str()
+                );
+            }
+            string_repr.push_str("\r\n");
+        }
+        string_repr.pop();
+        string_repr
     }
 }

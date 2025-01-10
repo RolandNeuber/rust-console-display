@@ -57,7 +57,7 @@ impl Color {
         groups
     }
 
-    fn color(text: &str, foreground_color: &Color, background_color: &Color) -> String {
+    pub fn color(text: &str, foreground_color: &Color, background_color: &Color) -> String {
         format!(
             "\x1b[38;2;{};{};{}m\x1b[48;2;{};{};{}m{}\x1b[0m",
             foreground_color.r, foreground_color.g, foreground_color.b, // foreground color

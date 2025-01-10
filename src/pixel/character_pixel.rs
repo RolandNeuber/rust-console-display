@@ -27,3 +27,9 @@ impl CharacterPixel {
         self.background
     }
 }
+
+impl ToString for CharacterPixel {
+    fn to_string(&self) -> String {
+        Color::color(&self.character.to_string().as_str(), &self.foreground, &self.background)
+    }
+}
