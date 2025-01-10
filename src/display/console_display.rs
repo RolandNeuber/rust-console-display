@@ -1,4 +1,4 @@
-use crate::pixel::{character_pixel::CharacterPixel, monochrome_pixel::MultiPixel};
+use crate::pixel::{character_pixel::CharacterPixel, color_pixel::Color, monochrome_pixel::MultiPixel};
 
 pub trait ConsoleDisplay: ToString {
     /// Returns the width of the display in a display specific unit (e.g. pixels).
@@ -201,15 +201,91 @@ impl<T: MultiPixel<T>> ToString for PixelDisplay<T> {
     }
 }
 
-struct CharacterDisplay<CharacterPixel> {
-    data: Vec<CharacterPixel>,
+pub struct CharacterDisplay<CharacterPixel> {
+    data: Vec<Option<CharacterPixel>>,
     width: usize,
     height: usize,
 }
 
 impl CharacterDisplay<CharacterPixel> {
-    fn get_data(&self) -> &Vec<CharacterPixel> {
+    /// Convenience method to build a blank display struct with specified dimensions
+    pub fn build(width: usize, height: usize, fill: CharacterPixel) -> Result<CharacterDisplay<CharacterPixel>, String> {
+        let data: Vec<CharacterPixel> = vec![fill; width * height];
+        Self::build_from_data(width, height, data)
+    }
+
+    /// Builds a display struct with the specified dimensions from the given data.
+    pub fn build_from_data(width: usize, height: usize, data: Vec<CharacterPixel>) -> Result<CharacterDisplay<CharacterPixel>, String> {
+        let mut new_data = Vec::with_capacity(data.capacity());
+        for i in data {
+            new_data.push(Some(i.clone()));
+            for _ in 1..i.get_width() {
+                new_data.push(None);
+            }
+        }
+
+        if new_data.len() / width / height != 1 {
+            return Err(
+                format!(
+                    "Data does not match specified dimensions. Expected length of {}, got {}.", 
+                    width * height, 
+                    new_data.len()
+                )
+            );
+        }
+
+        Ok(CharacterDisplay {
+            width, 
+            height, 
+            data: new_data,
+        })
+    }
+
+    pub fn get_data(&self) -> &Vec<Option<CharacterPixel>> {
         &self.data
+    }
+
+    fn get_data_mut(&mut self) -> &mut Vec<Option<CharacterPixel>> {
+        &mut self.data
+    }
+
+    pub fn get_pixel(&self, x: usize, y: usize) -> Result<&Option<CharacterPixel>, String> {
+        if x >= self.get_width() || y >= self.get_height() {
+            return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
+        }
+
+        Ok(&self.get_data()[x + y * self.get_width()])
+    }
+
+    pub fn set_pixel(&mut self, x: usize, y: usize, value: CharacterPixel) -> Result<(), String> {
+        if x > self.get_width() + value.get_width() || y >= self.get_height() {
+            return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
+        }
+
+        let mut overlap = 0;
+        while let None = self.data[x + y * self.width - overlap] {
+            self.data[x + y * self.width - overlap] = Some(CharacterPixel::build(
+                ' ',
+                Color {
+                    r: 255,
+                    g: 255,
+                    b: 255
+                }, 
+                Color {
+                    r: 0,
+                    g: 0,
+                    b: 0
+                }
+            ).unwrap());
+            overlap += 1;
+        }
+        self.data[x + y * self.width] = Some(value.clone());
+
+        for i in 1..value.get_width() {
+            self.data[x + y * self.width + i] = None;
+        }
+        
+        Ok(())
     }
 }
 
@@ -236,11 +312,16 @@ impl ToString for CharacterDisplay<CharacterPixel> {
         let mut string_repr = String::new();
         for y in 0..self.get_height_characters() {
             for x in 0..self.get_width_characters() {
-                string_repr.push_str(
-                    self.get_data()[x + y * self.get_width_characters()]
-                    .to_string()
-                    .as_str()
-                );
+                let character = &self.get_data()[x + y * self.get_width_characters()];
+                match character {
+                    None => continue,
+                    Some(character) => 
+                        string_repr.push_str(
+                        character
+                        .to_string()
+                        .as_str()
+                    )
+                }
             }
             string_repr.push_str("\r\n");
         }
