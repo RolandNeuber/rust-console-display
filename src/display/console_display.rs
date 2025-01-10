@@ -258,31 +258,44 @@ impl CharacterDisplay<CharacterPixel> {
     }
 
     pub fn set_pixel(&mut self, x: usize, y: usize, value: CharacterPixel) -> Result<(), String> {
+        let default_pixel = Some(CharacterPixel::build(
+            ' ',
+            Color {
+                r: 255,
+                g: 255,
+                b: 255
+            }, 
+            Color {
+                r: 0,
+                g: 0,
+                b: 0
+            }
+        ).unwrap());
+        
         if x > self.get_width() + value.get_width() || y >= self.get_height() {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
 
         let mut overlap = 0;
         while let None = self.data[x + y * self.width - overlap] {
-            self.data[x + y * self.width - overlap] = Some(CharacterPixel::build(
-                ' ',
-                Color {
-                    r: 255,
-                    g: 255,
-                    b: 255
-                }, 
-                Color {
-                    r: 0,
-                    g: 0,
-                    b: 0
-                }
-            ).unwrap());
+            self.data[x + y * self.width - overlap] = default_pixel.clone();
             overlap += 1;
         }
+        self.data[x + y * self.width - overlap] = default_pixel.clone();
+
         self.data[x + y * self.width] = Some(value.clone());
 
+        let overlap = value.get_width();
+        let mut max_overlap = value.get_width();
         for i in 1..value.get_width() {
+            if let Some(character) = &self.data[x + y * self.width + i] {
+                max_overlap = max_overlap.max(i + character.get_width());
+            }
+            
             self.data[x + y * self.width + i] = None;
+        }
+        for i in 0..max_overlap - overlap {
+            self.data[x + y * self.width + value.get_width() - 1 + i] = default_pixel.clone();
         }
         
         Ok(())

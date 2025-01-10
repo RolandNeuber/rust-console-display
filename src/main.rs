@@ -23,7 +23,25 @@ fn main() {
     ).unwrap();
 
     char_disp.set_pixel(
-        20, 
+        19, 
+        10, 
+        CharacterPixel::build( 
+            'あ',
+            Color {
+                r: 255,
+                g: 255,
+                b: 255
+            },
+            Color {
+                r: 0,
+                g: 0,
+                b: 0
+            },
+        ).unwrap()
+    );
+
+    char_disp.set_pixel(
+        21, 
         10, 
         CharacterPixel::build( 
             'あ',
@@ -42,7 +60,7 @@ fn main() {
 
 
     char_disp.set_pixel(
-        23, 
+        20,
         10, 
         CharacterPixel::build( 
             'あ',
