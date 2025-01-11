@@ -1,84 +1,33 @@
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::{console_display::CharacterDisplay, display_driver::DisplayDriver, pixel::{character_pixel::CharacterPixel, color_pixel::Color}, widget::single_widget::NoneWidget};
+use display::{console_display::CharacterDisplay, display_driver::DisplayDriver, pixel::{self, character_pixel::CharacterPixel, color_pixel::{Color, RGBColor}}, widget::single_widget::NoneWidget};
 
 fn main() {
     let mut char_disp = CharacterDisplay::build(
         40, 
         20, 
         CharacterPixel::build(
-            'A',
-            Color {
-                r: 255,
-                g: 255,
-                b: 255
-            },
-            Color {
-                r: 0,
-                g: 0,
-                b: 0
-            }
+            ' ',
+            Color::Default,
+            Color::Default,
         ).unwrap()
     ).unwrap();
 
-    char_disp.set_pixel(
-        19, 
-        10, 
-        CharacterPixel::build( 
-            'あ',
-            Color {
-                r: 255,
-                g: 255,
-                b: 255
-            },
-            Color {
-                r: 0,
-                g: 0,
-                b: 0
-            },
-        ).unwrap()
-    );
-
-    char_disp.set_pixel(
-        21, 
-        10, 
-        CharacterPixel::build( 
-            'あ',
-            Color {
-                r: 255,
-                g: 255,
-                b: 255
-            },
-            Color {
-                r: 0,
-                g: 0,
-                b: 0
-            },
-        ).unwrap()
-    );
-
-
-    char_disp.set_pixel(
-        20,
-        10, 
-        CharacterPixel::build( 
-            'あ',
-            Color {
-                r: 255,
-                g: 255,
-                b: 255
-            },
-            Color {
-                r: 0,
-                g: 0,
-                b: 0
-            },
-        ).unwrap()
-    );
-
-    // println!("{:#?}", char_disp.get_data());
-    // panic!();
+    let mut x = 0;
+    for i in "Hallo World".chars() {
+        let pixel = CharacterPixel::build( 
+            i,
+            Color::Default,
+            Color::Default,
+        ).unwrap();
+        char_disp.set_pixel (
+            x, 
+            0, 
+            pixel.clone()
+        );
+        x += pixel.get_width();
+    }
 
     let display = DisplayDriver::new(
         NoneWidget::new(
@@ -87,7 +36,7 @@ fn main() {
     );
 
     display.initialize().expect("Could not initialize display.");
-    
+
     loop {
         display.print_display().expect("Could not print display.");
         

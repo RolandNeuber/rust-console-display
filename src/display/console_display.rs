@@ -1,4 +1,4 @@
-use crate::pixel::{character_pixel::CharacterPixel, color_pixel::Color, monochrome_pixel::MultiPixel};
+use crate::pixel::{character_pixel::CharacterPixel, color_pixel::{Color, RGBColor}, monochrome_pixel::MultiPixel};
 
 pub trait ConsoleDisplay: ToString {
     /// Returns the width of the display in a display specific unit (e.g. pixels).
@@ -201,6 +201,7 @@ impl<T: MultiPixel<T>> ToString for PixelDisplay<T> {
     }
 }
 
+#[derive(Clone)]
 pub struct CharacterDisplay<CharacterPixel> {
     data: Vec<Option<CharacterPixel>>,
     width: usize,
@@ -249,27 +250,31 @@ impl CharacterDisplay<CharacterPixel> {
         &mut self.data
     }
 
-    pub fn get_pixel(&self, x: usize, y: usize) -> Result<&Option<CharacterPixel>, String> {
+    pub fn get_pixel(&self, x: usize, y: usize) -> Result<&CharacterPixel, String> {
         if x >= self.get_width() || y >= self.get_height() {
             return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
         }
 
-        Ok(&self.get_data()[x + y * self.get_width()])
+        let mut offset = 0;
+        while let None = &self.get_data()[x + y * self.get_width() - offset] {
+            offset += 1;
+        }
+        
+        return match &self.get_data()[x + y * self.get_width() - offset] {
+            Some(val) => Ok(val),
+            None => Err("Data malformed, pixel was None.".to_string())
+        }
     }
 
+    /// Sets a character pixel at a specific x and y coordinate.
+    /// Also works with characters wider than one column extending to the right.
+    /// If a wide character is partially replaced, the rest of the affected character is overwritten with a default narrow character.
+    /// Returns an error if the coordinates are out of bounds. This also applies for wide characters partially out of bounds.
     pub fn set_pixel(&mut self, x: usize, y: usize, value: CharacterPixel) -> Result<(), String> {
         let default_pixel = Some(CharacterPixel::build(
             ' ',
-            Color {
-                r: 255,
-                g: 255,
-                b: 255
-            }, 
-            Color {
-                r: 0,
-                g: 0,
-                b: 0
-            }
+            Color::Default,
+            Color::Default,
         ).unwrap());
         
         if x > self.get_width() + value.get_width() || y >= self.get_height() {

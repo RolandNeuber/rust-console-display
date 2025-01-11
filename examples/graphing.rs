@@ -11,7 +11,7 @@ use display::{
     console_display::PixelDisplay, 
     display_driver::DisplayDriver, 
     pixel::color_pixel::{
-        Color, 
+        RGBColor, 
         ColorOctPixel
     }, 
     widget::single_widget::UvWidget
@@ -32,7 +32,7 @@ fn main() {
             PixelDisplay::<PixelType>::build(
                 dimensions.0 as usize, 
                 dimensions.1 as usize,
-                Color { r: 0, g: 0, b: 0 }
+                RGBColor { r: 0, g: 0, b: 0 }
             ).expect("Could not construct display.")
         )
     );
@@ -48,7 +48,7 @@ fn main() {
 
             let y = function(x);
 
-            display.set_pixel(x, y, Color{ r: 255, g: 255, b: 255 });
+            display.set_pixel(x, y, RGBColor{ r: 255, g: 255, b: 255 });
         }
 
         display.print_display().expect("Could not print display.");

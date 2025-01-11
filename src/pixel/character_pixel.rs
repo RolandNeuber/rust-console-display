@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::pixel::color_pixel::Color;
+use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
 
 #[derive(Clone)]

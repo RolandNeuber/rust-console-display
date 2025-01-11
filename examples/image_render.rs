@@ -13,7 +13,7 @@ use display::{
     display_driver::DisplayDriver, 
     pixel::{
         color_pixel::{
-            Color, 
+            RGBColor, 
             ColorOctPixel
         }, 
         monochrome_pixel::MultiPixel
@@ -46,7 +46,7 @@ fn main() {
     let mut data = Vec::with_capacity((dimensions.0 * dimensions.1) as usize);
     let mut pixel_index = 0;
     for pixel in rgb.pixels() {
-        data.push(Color {
+        data.push(RGBColor {
             r: pixel[0],
             g: pixel[1],
             b: pixel[2]
@@ -54,7 +54,7 @@ fn main() {
         pixel_index += 1;
         if pixel_index == dimensions.0 && padded_dimensions.0 > dimensions.0 {
             for _ in 0..padded_dimensions.0 - dimensions.0 {
-                data.push(Color {
+                data.push(RGBColor {
                     r: 0,
                     g: 0,
                     b: 0
@@ -65,7 +65,7 @@ fn main() {
     }
     for _ in 0..padded_dimensions.1-dimensions.1 {
         for _ in 0..padded_dimensions.0 {
-            data.push(Color {
+            data.push(RGBColor {
                 r: 0,
                 g: 0,
                 b: 0
