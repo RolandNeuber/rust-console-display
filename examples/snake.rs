@@ -1,14 +1,40 @@
 #![feature(generic_const_exprs)]
 
-use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::{color_pixel::{Color, ColorDualPixel, ColorSinglePixel}, widget::{NoneWidget, SingleWidget, TwoWidget, VerticalTilingWidget}, ConsoleDisplay, DisplayDriver, PixelDisplay};
+use crossterm::event::{
+    self, 
+    Event, 
+    KeyCode, 
+    KeyModifiers
+};
+use display::{
+    console_display::{
+        ConsoleDisplay, 
+        PixelDisplay
+    }, 
+    display_driver::DisplayDriver, 
+    pixel::color_pixel::{
+        RGBColor, 
+        ColorDualPixel, 
+        ColorSinglePixel
+    }, 
+    widget::{
+        single_widget::{
+            NoneWidget, 
+            SingleWidget
+        }, 
+        two_widget::{
+            TwoWidget, 
+            VerticalTilingWidget
+        }
+    }
+};
 use rand::Rng;
 use std::{thread, time::Duration};
 
 fn main() {
-    let background_color = Color {r: 0, g: 0, b: 0}; 
-    let snake_color = Color {r: 0, g: 255, b: 0};
-    let apple_color = Color {r: 255, g: 0, b: 0};
+    let background_color = RGBColor {r: 0, g: 0, b: 0}; 
+    let snake_color = RGBColor {r: 0, g: 255, b: 0};
+    let apple_color = RGBColor {r: 255, g: 0, b: 0};
 
     let mut disp = 
     DisplayDriver::new(
@@ -17,14 +43,14 @@ fn main() {
                 PixelDisplay::<ColorSinglePixel>::build(
                     100, 
                     1, 
-                    Color {r: 255, b: 255, g: 255}
+                    RGBColor {r: 255, b: 255, g: 255}
                 ).unwrap()
             ),
             NoneWidget::new(
                 PixelDisplay::<ColorDualPixel>::build(
                     100, 
                     42,
-                    Color {r: 0, b: 0, g: 0}
+                    RGBColor {r: 0, b: 0, g: 0}
                 ).unwrap()
             )
         ).unwrap()
