@@ -1,2 +1,5 @@
 /target
 .vscode/launch.json
+.zed
+*.txt
+examples/images
