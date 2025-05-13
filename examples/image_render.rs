@@ -1,6 +1,6 @@
 #![feature(generic_const_exprs)]
 
-use std::time::Duration;
+use std::{io::{self, Write}, time::Duration};
 
 use crossterm::event::{
     self, 
@@ -30,11 +30,19 @@ fn main() {
     let max_dimensions: (u32, u32) = (200, 160);
     type PixelType = ColorOctPixel;
 
-    let path_in = "examples/image.jpg";
+    let mut path_in = String::new();
+    
+    println!("Input absolute image path:");
+    io::stdout().flush().unwrap();
+    io::stdin()
+        .read_line(&mut path_in)
+        .expect("Failed to read line");
+    let path_in = path_in.trim();
+
+    println!("Loading image...");
     let mut img = 
         ImageReader::open(path_in).expect("File could not be read.")
         .decode().expect("Image could not be decoded.");
-    img = img.rotate90();
     img = img.resize(max_dimensions.0, max_dimensions.1, FilterType::Gaussian);
     
     let dimensions = img.dimensions();
