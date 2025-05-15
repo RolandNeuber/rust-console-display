@@ -1,4 +1,10 @@
-use crate::{console_display::{ConsoleDisplay, PixelDisplay}, pixel::monochrome_pixel::MultiPixel};
+use crate::{
+    console_display::{
+        ConsoleDisplay, 
+        PixelDisplay
+    }, 
+    pixel::monochrome_pixel::MultiPixel
+};
 
 use super::Widget;
 
@@ -46,36 +52,38 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
     }
     
     pub fn get_pixel(&self, x: f32, y: f32) -> Result<S::U, String> where [(); S::WIDTH * S::HEIGHT]: {
+        let display = self.get_child();
         let uv = (
             Self::uv_to_texture(
                 x, 
                 self.uv_x_min, 
                 self.uv_x_max, 
-                self.get_child().get_width()
+                display.get_width()
             ),
             Self::uv_to_texture(
                 y, 
                 self.uv_y_min, 
                 self.uv_y_max, 
-                self.get_child().get_width()
+                display.get_width()
             )
         );
-        self.get_child().get_pixel(uv.0, uv.1)
+        display.get_pixel(uv.0, uv.1)
     }
 
-    pub fn set_pixel(&mut self, x: f32, y: f32, value: S::U) -> Result<(), String> where [(); S::WIDTH * S::HEIGHT]: {        
+    pub fn set_pixel(&mut self, x: f32, y: f32, value: S::U) -> Result<(), String> where [(); S::WIDTH * S::HEIGHT]: {
+        let display = self.get_child();
         let uv = (
             Self::uv_to_texture(
                 x, 
                 self.uv_x_min, 
                 self.uv_x_max, 
-                self.get_child().get_width()
+                display.get_width()
             ),
             Self::uv_to_texture(
                 y, 
                 self.uv_y_min, 
                 self.uv_y_max, 
-                self.get_child().get_width()
+                display.get_width()
             )
         );
         self.get_child_mut().set_pixel(uv.0, uv.1, value)
@@ -98,11 +106,75 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
     }
     
     fn uv_to_texture(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: usize) -> usize {
-        ((uv - uv_min) * (texture_coordinate_max as f32 / (uv_max - uv_min))).round() as usize
+        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max as f32 - 0.5).round() as usize
     }
 
     fn texture_to_uv(texture_coordinate: usize, texture_coordinate_max: usize, uv_min: f32, uv_max: f32) -> f32 {
-        texture_coordinate as f32 / (texture_coordinate_max as f32 / (uv_max - uv_min)) + uv_min
+        (texture_coordinate as f32 + 0.5) / texture_coordinate_max as f32 * (uv_max - uv_min) + uv_min
+    }
+
+    /// Returns an iterator that contains the uv x coordinates of the underlying display in ascending order.
+    /// 
+    /// # Examples
+    /// 
+    /// ``` 
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::{
+    ///     widget::single_widget::UvWidget,
+    ///     console_display::PixelDisplay,
+    ///     pixel::monochrome_pixel::SinglePixel,
+    /// };
+    /// 
+    /// let mut widget = UvWidget::new(
+    ///     PixelDisplay::<SinglePixel>::build(
+    ///         5, 
+    ///         1,
+    ///         false
+    ///     ).expect("Could not construct display.")
+    /// );
+    /// 
+    /// widget.set_uv_x_min(-1.);
+    /// widget.set_uv_x_max(2.);
+    /// 
+    /// assert_eq!(vec![-0.7, -0.1, 0.5, 1.1, 1.7], widget.get_x_values().map(|x| (x * 100.).round() / 100.).collect::<Vec<_>>())
+    /// ```
+    pub fn get_x_values(&self) -> impl Iterator<Item = f32> + use<'_, S> {
+        let width = self.get_child().get_width();
+        (0..width).map(|x| self.texture_to_uv_x(x))
+    }
+
+    /// Returns an iterator that contains the uv y coordinates of the underlying display in ascending order.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::{
+    ///     widget::single_widget::UvWidget,
+    ///     console_display::PixelDisplay,
+    ///     pixel::monochrome_pixel::SinglePixel,
+    /// };
+    /// 
+    /// let mut widget = UvWidget::new(
+    ///     PixelDisplay::<SinglePixel>::build(
+    ///         1, 
+    ///         5,
+    ///         false
+    ///     ).expect("Could not construct display.")
+    /// );
+    /// 
+    /// widget.set_uv_y_min(-1.);
+    /// widget.set_uv_y_max(1.);
+    /// 
+    /// assert_eq!(vec![-0.8, -0.4, 0.0, 0.4, 0.8], widget.get_y_values().map(|y| (y * 100.).round() / 100.).collect::<Vec<_>>())
+    /// ``` 
+    pub fn get_y_values(&self) -> impl Iterator<Item = f32> + use<'_, S> {
+        let height = self.get_child().get_height();
+        (0..height).map(|x| self.texture_to_uv_y(x))
     }
 }
 
@@ -146,7 +218,7 @@ mod tests {
             -0.5, 
             0.5
         );
-        assert_eq!(uv, 0.0);
+        assert_eq!((uv * 10000.).round() / 10000., 0.0005);
     }
 
     #[test]

@@ -43,9 +43,7 @@ fn main() {
 
     display.initialize().expect("Could not initialize display.");
     loop {
-        for x_text in 0..dimensions.0 {
-            let x = display.texture_to_uv_x(x_text);
-
+        for x in display.get_x_values().collect::<Vec<_>>() {
             let y = function(x);
 
             display.set_pixel(x, y, RGBColor{ r: 255, g: 255, b: 255 });
