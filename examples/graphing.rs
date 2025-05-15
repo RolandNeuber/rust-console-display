@@ -1,3 +1,4 @@
+#![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
 use std::time::Duration;
@@ -46,7 +47,7 @@ fn main() {
         for x in display.get_x_values().collect::<Vec<_>>() {
             let y = function(x);
 
-            display.set_pixel(x, y, RGBColor{ r: 255, g: 255, b: 255 });
+            let _ = display.set_pixel(x, y, RGBColor{ r: 255, g: 255, b: 255 });
         }
 
         display.print_display().expect("Could not print display.");

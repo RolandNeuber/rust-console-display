@@ -1,4 +1,11 @@
-use crate::{pixel::{character_pixel::CharacterPixel, color_pixel::{Color, RGBColor}, monochrome_pixel::MultiPixel}, widget::Widget};
+use crate::{
+    pixel::{
+        character_pixel::CharacterPixel, 
+        color_pixel::Color, 
+        monochrome_pixel::MultiPixel
+    }, 
+    widget::Widget
+};
 
 pub trait ConsoleDisplay: Widget {
     /// Returns the width of the display in a display specific, individually addressable unit (e.g. pixels, characters).
@@ -118,22 +125,29 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
     /// # Examples
     /// 
     /// ```
+    /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     /// 
-    /// use display::{DisplayDriver, pixel::SinglePixel};
+    /// use display::{
+    ///     display_driver::DisplayDriver, 
+    ///     pixel::monochrome_pixel::SinglePixel,
+    ///     console_display::PixelDisplay
+    /// };
     /// 
-    /// let disp: DisplayDriver<SinglePixel> = DisplayDriver::build_from_bools(
-    ///     6, 
-    ///     6, 
-    ///     vec![
-    ///         true, true, true, true,  true, true, // 0
-    ///         true, true, true, true,  true, true, // 1
-    ///         true, true, true, false, true, true, //-2-
-    ///         true, true, true, true,  true, true, // 3
-    ///         true, true, true, true,  true, true, // 4
-    ///         true, true, true, true,  true, true, // 5
-    ///     ] //  0     1     2   --3--    4     5
-    /// ).expect("Dimensions of data should match the passed witdh and height");
+    /// let disp: DisplayDriver<PixelDisplay<SinglePixel>> = DisplayDriver::new(
+    ///     PixelDisplay::<SinglePixel>::build_from_data(
+    ///         6, 
+    ///         6, 
+    ///         vec![
+    ///             true, true, true, true,  true, true, // 0
+    ///             true, true, true, true,  true, true, // 1
+    ///             true, true, true, false, true, true, //-2-
+    ///             true, true, true, true,  true, true, // 3
+    ///             true, true, true, true,  true, true, // 4
+    ///             true, true, true, true,  true, true, // 5
+    ///         ] //  0     1     2   --3--    4     5
+    ///     ).expect("Could not construct display.")
+    /// );
     /// // Replace with actual error handling
     /// 
     /// let pixel = disp.get_pixel(3, 2);
@@ -244,6 +258,7 @@ impl CharacterDisplay<CharacterPixel> {
         &self.data
     }
 
+    #[allow(dead_code)]
     fn get_data_mut(&mut self) -> &mut Vec<Option<CharacterPixel>> {
         &mut self.data
     }

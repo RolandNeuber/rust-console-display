@@ -60,22 +60,29 @@ impl SinglePixel {
     /// # Examples
     /// 
     /// ```
-    /// use display::pixel::{MultiPixel, SinglePixel};
-    /// let pixel = SinglePixel::new (
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::pixel::monochrome_pixel::{
+    ///     MultiPixel, 
+    ///     SinglePixel
+    /// };
+    /// 
+    /// let pixel = SinglePixel::new ([
     ///     true,
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, '█');
+    /// assert_eq!(symbol, "█");
     /// 
-    /// let pixel = SinglePixel::new (
+    /// let pixel = SinglePixel::new ([
     ///     false,
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, ' ');
+    /// assert_eq!(symbol, " ");
     /// 
     /// ```
     fn get_char(&self) -> char {
@@ -122,24 +129,30 @@ impl DualPixel {
     /// # Examples
     /// 
     /// ```
-    /// use display::pixel::{MultiPixel, DualPixel};
-    /// let pixel = DualPixel::new (
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::pixel::monochrome_pixel::{
+    ///     MultiPixel, 
+    ///     DualPixel
+    /// };
+    /// let pixel = DualPixel::new ([
     ///     true,  // #
     ///     false, // _
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, '▀');
+    /// assert_eq!(symbol, "▀");
     /// 
-    /// let pixel = DualPixel::new (
+    /// let pixel = DualPixel::new ([
     ///     false, // _
     ///     false, // _
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, ' ');
+    /// assert_eq!(symbol, " ");
     /// 
     /// ```
     fn get_char(&self) -> char {
@@ -191,15 +204,22 @@ impl QuadPixel {
     /// # Examples
     /// 
     /// ```
-    /// use display::pixel::{MultiPixel, QuadPixel};
-    /// let pixel = QuadPixel::new (
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::pixel::monochrome_pixel::{
+    ///     MultiPixel, 
+    ///     QuadPixel
+    /// };
+    /// 
+    /// let pixel = QuadPixel::new ([
     ///     true, false, // #_
     ///     false, true, // _#
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, '▚')
+    /// assert_eq!(symbol, "▚")
     /// ```
     fn get_char(&self) -> char {
         Self::CHARS[self.index()]
@@ -251,16 +271,23 @@ impl HexPixel {
     /// # Examples
     /// 
     /// ```
-    /// use display::pixel::{MultiPixel, HexPixel};
-    /// let pixel = HexPixel::new (
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::pixel::monochrome_pixel::{
+    ///     MultiPixel, 
+    ///     HexPixel
+    /// };
+    /// 
+    /// let pixel = HexPixel::new ([
     ///     true, false, // #_
     ///     false, true, // _#
     ///     true, true,  // ##
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, '🬶')
+    /// assert_eq!(symbol, "🬶")
     /// ```
     fn get_char(&self) -> char {
         Self::CHARS[self.index()]
@@ -326,17 +353,23 @@ impl OctPixel {
     /// # Examples
     /// 
     /// ```
-    /// use display::pixel::{MultiPixel, OctPixel};
-    /// let pixel = OctPixel::new (
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::pixel::monochrome_pixel::{
+    ///     MultiPixel, 
+    ///     OctPixel
+    /// };
+    /// let pixel = OctPixel::new ([
     ///     true, false, // #_
     ///     false, true, // _#
     ///     true, true,  // ##
     ///     false, false // __
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, '𜴰')
+    /// assert_eq!(symbol, "𜴰")
     /// ```
     fn get_char(&self) -> char {
         Self::CHARS[self.index()]
@@ -402,17 +435,24 @@ impl BrailleOctPixel {
     /// # Examples
     /// 
     /// ```
-    /// use display::pixel::{MultiPixel, BrailleOctPixel};
-    /// let pixel = BrailleOctPixel::new (
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// 
+    /// use display::pixel::monochrome_pixel::{
+    ///     MultiPixel, 
+    ///     BrailleOctPixel
+    /// };
+    /// 
+    /// let pixel = BrailleOctPixel::new ([
     ///     true, false, // #_
     ///     false, true, // _#
     ///     true, true,  // ##
     ///     false, false // __
-    /// );
+    /// ]);
     /// 
-    /// let symbol = pixel.get_char();
+    /// let symbol = pixel.to_string();
     /// 
-    /// assert_eq!(symbol, '⠵')
+    /// assert_eq!(symbol, "⠵")
     /// ```
     fn get_char(&self) -> char {
         Self::CHARS[self.index()]
