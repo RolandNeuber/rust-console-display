@@ -1,14 +1,10 @@
-use crate::pixel::{character_pixel::CharacterPixel, color_pixel::{Color, RGBColor}, monochrome_pixel::MultiPixel};
+use crate::{pixel::{character_pixel::CharacterPixel, color_pixel::{Color, RGBColor}, monochrome_pixel::MultiPixel}, widget::Widget};
 
-pub trait ConsoleDisplay: ToString {
-    /// Returns the width of the display in a display specific unit (e.g. pixels).
+pub trait ConsoleDisplay: Widget {
+    /// Returns the width of the display in a display specific, individually addressable unit (e.g. pixels, characters).
     fn get_width(&self) -> usize;
-    /// Returns the height of the display in a display specific unit (e.g. pixels).
+    /// Returns the height of the display in a display specific, individually addressable unit (e.g. pixels, characters).
     fn get_height(&self) -> usize;
-    /// Returns the width of the display in characters.
-    fn get_width_characters(&self) -> usize;
-    /// Returns the height of the display in characters.
-    fn get_height_characters(&self) -> usize;
 }
 
 /// Represents a console display with a width and height in pixels.
@@ -21,20 +17,22 @@ pub struct PixelDisplay<T: MultiPixel<T>> {
 }
 
 impl<T: MultiPixel<T>> ConsoleDisplay for PixelDisplay<T> {
-    fn get_width_characters(&self) -> usize {
-        self.block_count_x
-    }
-    
-    fn get_height_characters(&self) -> usize {
-        self.block_count_y
-    }
-    
     fn get_width(&self) -> usize {
         self.width
     }
     
     fn get_height(&self) -> usize {
         self.height
+    }
+}
+
+impl<T: MultiPixel<T>> Widget for PixelDisplay<T> {
+    fn get_width_characters(&self) -> usize {
+        self.block_count_x
+    }
+    
+    fn get_height_characters(&self) -> usize {
+        self.block_count_y
     }
 }
 
@@ -315,7 +313,9 @@ impl ConsoleDisplay for CharacterDisplay<CharacterPixel> {
     fn get_height(&self) -> usize {
         self.height
     }
+}
 
+impl Widget for CharacterDisplay<CharacterPixel> {
     fn get_width_characters(&self) -> usize {
         self.width
     }

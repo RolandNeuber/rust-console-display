@@ -7,44 +7,6 @@ pub trait SingleWidget<T>: Widget {
     fn get_child_mut(&mut self) -> &mut T;
 }
 
-pub struct NoneWidget<T: ConsoleDisplay> {
-    child: T
-}
-
-impl<T: ConsoleDisplay> NoneWidget<T> {
-    pub fn new(child: T) -> Self {
-        NoneWidget {
-            child
-        }
-    }
-}
-
-impl<T: ConsoleDisplay> Widget for NoneWidget<T> {
-    fn get_width_characters(&self) -> usize {
-        self.get_child().get_width_characters()
-    }
-
-    fn get_height_characters(&self) -> usize {
-        self.get_child().get_height_characters()
-    }
-}
-
-impl<T: ConsoleDisplay> SingleWidget<T> for NoneWidget<T> {
-    fn get_child(&self) -> &T {
-        &self.child
-    }
-    
-    fn get_child_mut(&mut self) -> &mut T {
-        &mut self.child
-    }
-}
-
-impl<T: ConsoleDisplay> ToString for NoneWidget<T> {
-    fn to_string(&self) -> String {
-        self.get_child().to_string()
-    }
-}
-
 pub struct UvWidget<T: ConsoleDisplay> {
     child: T,
     uv_x_min: f32,

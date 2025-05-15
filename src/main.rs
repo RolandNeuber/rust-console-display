@@ -3,15 +3,13 @@
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::{console_display::PixelDisplay, display_driver::DisplayDriver, pixel::color_pixel::{self, ColorOctPixel}, widget::single_widget::NoneWidget};
+use display::{console_display::PixelDisplay, display_driver::DisplayDriver, pixel::color_pixel::{self, ColorOctPixel}};
 
 fn main() {
     let disp: PixelDisplay<ColorOctPixel> = PixelDisplay::<ColorOctPixel>::build(100, 100, color_pixel::RGBColor{ r: 255, g: 0, b: 0 }).unwrap();
 
     let display = DisplayDriver::new(
-        NoneWidget::new(
-            disp
-        )
+        disp
     );
 
     display.initialize().expect("Could not initialize display.");

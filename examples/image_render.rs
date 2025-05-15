@@ -17,8 +17,7 @@ use display::{
             ColorOctPixel
         }, 
         monochrome_pixel::MultiPixel
-    }, 
-    widget::single_widget::NoneWidget
+    }
 };
 use image::{
     imageops::FilterType, 
@@ -83,13 +82,11 @@ fn main() {
     
     let display = 
     DisplayDriver::new(
-        NoneWidget::new(
-            PixelDisplay::<PixelType>::build_from_data(
-                padded_dimensions.0 as usize, 
-                padded_dimensions.1 as usize, 
-                data
-            ).expect("Could not construct display.")
-        )
+        PixelDisplay::<PixelType>::build_from_data(
+            padded_dimensions.0 as usize, 
+            padded_dimensions.1 as usize, 
+            data
+        ).expect("Could not construct display.")
     );
     
     display.initialize().expect("Could not initialize display.");

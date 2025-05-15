@@ -14,8 +14,7 @@ use display::{
     pixel::{
         character_pixel::CharacterPixel, 
         color_pixel::Color
-    }, 
-    widget::{self, single_widget::NoneWidget}
+    }
 };
 
 fn main() {
@@ -63,9 +62,7 @@ fn main() {
     }
 
     let display = DisplayDriver::new(
-        NoneWidget::new(
-            char_disp
-        )
+        char_disp
     );
 
     display.initialize().expect("Could not initialize display.");

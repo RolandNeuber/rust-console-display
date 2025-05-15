@@ -17,15 +17,9 @@ use display::{
         ColorDualPixel, 
         ColorSinglePixel
     }, 
-    widget::{
-        single_widget::{
-            NoneWidget, 
-            SingleWidget
-        }, 
-        two_widget::{
-            TwoWidget, 
-            VerticalTilingWidget
-        }
+    widget::two_widget::{
+        TwoWidget, 
+        VerticalTilingWidget
     }
 };
 use rand::Rng;
@@ -39,20 +33,16 @@ fn main() {
     let mut disp = 
     DisplayDriver::new(
         VerticalTilingWidget::build(
-            NoneWidget::new(
-                PixelDisplay::<ColorSinglePixel>::build(
-                    100, 
-                    1, 
-                    RGBColor {r: 255, b: 255, g: 255}
-                ).unwrap()
-            ),
-            NoneWidget::new(
-                PixelDisplay::<ColorDualPixel>::build(
-                    100, 
-                    42,
-                    RGBColor {r: 0, b: 0, g: 0}
-                ).unwrap()
-            )
+            PixelDisplay::<ColorSinglePixel>::build(
+                100, 
+                1, 
+                RGBColor {r: 255, b: 255, g: 255}
+            ).unwrap(),
+            PixelDisplay::<ColorDualPixel>::build(
+                100, 
+                42,
+                RGBColor {r: 0, b: 0, g: 0}
+            ).unwrap()
         ).unwrap()
     );
     
@@ -64,7 +54,7 @@ fn main() {
     let mut apple;
 
     {
-        let map_display = disp.get_children_mut().1.get_child_mut();
+        let map_display = disp.get_children_mut().1;
 
         snake = vec![(map_display.get_width() / 2, map_display.get_height() / 2)];
 
@@ -139,7 +129,7 @@ fn main() {
             continue;
         }
         
-        let map_display = disp.get_children_mut().1.get_child_mut();
+        let map_display = disp.get_children_mut().1;
         // place new segment in front (direction) of snake head
         snake.insert(0, (
             (snake[0].0 as i32 + direction.0).rem_euclid(map_display.get_width().clone()  as i32) as usize,
