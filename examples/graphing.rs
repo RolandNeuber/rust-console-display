@@ -22,10 +22,10 @@ use display::{
 fn main() {
     let dimensions: (usize, usize) = (200, 200);
     type PixelType = ColorOctPixel;
-    let function = |x: f32| { x };
+    let function = |x: f32| { (x * x).sin() };
 
-    let uv_x = (-1.0, 1.0);
-    let uv_y = (1.0, -1.0);
+    let uv_x = (-10.0, 10.0);
+    let uv_y = (2.0, -2.0);
     
     let mut display = 
     DisplayDriver::new(
@@ -44,10 +44,16 @@ fn main() {
 
     display.initialize().expect("Could not initialize display.");
     loop {
-        for x in display.get_x_values().collect::<Vec<_>>() {
+        let mut xs = display.get_x_values().collect::<Vec<_>>().into_iter();
+        let mut old_x = xs.next().unwrap();
+        let mut old_y = function(old_x);
+        for x in xs {
             let y = function(x);
+            
+            let _ = display.draw_line(old_x, old_y, x, y, RGBColor{ r: 255, g: 255, b: 255 });
 
-            let _ = display.set_pixel(x, y, RGBColor{ r: 255, g: 255, b: 255 });
+            old_x = x;
+            old_y = y;
         }
 
         display.print_display().expect("Could not print display.");

@@ -102,8 +102,37 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
         self.get_child_mut().set_pixel(uv.0, uv.1, value)
     }
     
-    pub fn draw_line() {
-        todo!("Draw line still needs to be implemented.")
+    pub fn draw_line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, value: S::U) where [(); S::WIDTH * S::HEIGHT]: {
+        let display = self.get_child();
+        let uv1 = (
+            Self::uv_to_texture_f32(
+                x1, 
+                self.uv_x_min, 
+                self.uv_x_max, 
+                display.get_width() as f32
+            ),
+            Self::uv_to_texture_f32(
+                y1, 
+                self.uv_y_min, 
+                self.uv_y_max, 
+                display.get_width() as f32
+            )
+        );
+        let uv2 = (
+            Self::uv_to_texture_f32(
+                x2, 
+                self.uv_x_min, 
+                self.uv_x_max, 
+                display.get_width() as f32
+            ),
+            Self::uv_to_texture_f32(
+                y2, 
+                self.uv_y_min, 
+                self.uv_y_max, 
+                display.get_width() as f32
+            )
+        );
+        self.get_child_mut().draw_line(uv1.0, uv1.1, uv2.0, uv2.1, value)
     }
 
     pub fn uv_x_to_texture(&self, x: f32) -> usize {
@@ -124,6 +153,10 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
     
     fn uv_to_texture(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: usize) -> usize {
         ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max as f32 - 0.5).round() as usize
+    }
+
+    fn uv_to_texture_f32(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: f32) -> f32 {
+        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max as f32 - 0.5).round() as f32
     }
 
     fn texture_to_uv(texture_coordinate: usize, texture_coordinate_max: usize, uv_min: f32, uv_max: f32) -> f32 {

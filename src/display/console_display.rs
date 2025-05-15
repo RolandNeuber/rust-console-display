@@ -194,8 +194,24 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
         }
     }
 
-    pub fn draw_line() {
-        todo!("Draw line still needs to be implemented.")
+    pub fn draw_line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, value: T::U) where [(); T::WIDTH * T::HEIGHT]: {
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+        let steps: f32 = dx.abs().max(dy.abs());
+        let x_inc = dx / steps;
+        let y_inc = dy / steps;
+
+        let mut x = x1;
+        let mut y = y1;
+
+        for _ in 0..=steps.round() as usize {
+            if x >= 0. && y >= 0. {
+                let _ = self.set_pixel(x.round() as usize, y.round() as usize, value);
+            }
+            x += x_inc;
+            y += y_inc;
+        }
     }
 }
 
