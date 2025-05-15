@@ -51,6 +51,9 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
        self.uv_y_max = y; 
     }
     
+    /// Gets the pixel at the _uv_ coordinate (x, y). 
+    /// Using coordinates outside the uv mapping is considered 
+    /// undefined behaviour at the moment and is subject to change.
     pub fn get_pixel(&self, x: f32, y: f32) -> Result<S::U, String> where [(); S::WIDTH * S::HEIGHT]: {
         let display = self.get_child();
         let uv = (
@@ -70,8 +73,18 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
         display.get_pixel(uv.0, uv.1)
     }
 
+    /// Sets the pixel at the _uv_ coordinate (x, y). 
+    /// Using coordinates outside the uv mapping sets no pixel.
     pub fn set_pixel(&mut self, x: f32, y: f32, value: S::U) -> Result<(), String> where [(); S::WIDTH * S::HEIGHT]: {
         let display = self.get_child();
+        // Note: Checks need to consider that uv_max < uv_min.
+        // While unintuitive, this is used to flip the uv mapping. (Especially with the y coordinate.)
+        if x < self.uv_x_min.min(self.uv_x_max) || x > self.uv_x_max.max(self.uv_x_min) {
+            return Err("x is outside the uv bounds.".to_owned())
+        }
+        if y < self.uv_y_min.min(self.uv_y_max) || y > self.uv_y_max.max(self.uv_y_min) {
+            return Err("y is outside the uv bounds.".to_owned())
+        }
         let uv = (
             Self::uv_to_texture(
                 x, 
@@ -87,6 +100,10 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
             )
         );
         self.get_child_mut().set_pixel(uv.0, uv.1, value)
+    }
+    
+    pub fn draw_line() {
+        todo!("Draw line still needs to be implemented.")
     }
 
     pub fn uv_x_to_texture(&self, x: f32) -> usize {

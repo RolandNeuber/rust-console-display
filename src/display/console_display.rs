@@ -193,6 +193,10 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
         }
     }
+
+    pub fn draw_line() {
+        todo!("Draw line still needs to be implemented.")
+    }
 }
 
 impl<T: MultiPixel<T>> ToString for PixelDisplay<T> {
