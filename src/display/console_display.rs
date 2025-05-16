@@ -1,14 +1,17 @@
-use crate::pixel::{character_pixel::CharacterPixel, color_pixel::{Color, RGBColor}, monochrome_pixel::MultiPixel};
+use crate::{
+    pixel::{
+        character_pixel::CharacterPixel, 
+        color_pixel::Color, 
+        monochrome_pixel::MultiPixel
+    }, 
+    widget::Widget
+};
 
-pub trait ConsoleDisplay: ToString {
-    /// Returns the width of the display in a display specific unit (e.g. pixels).
+pub trait ConsoleDisplay: Widget {
+    /// Returns the width of the display in a display specific, individually addressable unit (e.g. pixels, characters).
     fn get_width(&self) -> usize;
-    /// Returns the height of the display in a display specific unit (e.g. pixels).
+    /// Returns the height of the display in a display specific, individually addressable unit (e.g. pixels, characters).
     fn get_height(&self) -> usize;
-    /// Returns the width of the display in characters.
-    fn get_width_characters(&self) -> usize;
-    /// Returns the height of the display in characters.
-    fn get_height_characters(&self) -> usize;
 }
 
 /// Represents a console display with a width and height in pixels.
@@ -21,20 +24,22 @@ pub struct PixelDisplay<T: MultiPixel<T>> {
 }
 
 impl<T: MultiPixel<T>> ConsoleDisplay for PixelDisplay<T> {
-    fn get_width_characters(&self) -> usize {
-        self.block_count_x
-    }
-    
-    fn get_height_characters(&self) -> usize {
-        self.block_count_y
-    }
-    
     fn get_width(&self) -> usize {
         self.width
     }
     
     fn get_height(&self) -> usize {
         self.height
+    }
+}
+
+impl<T: MultiPixel<T>> Widget for PixelDisplay<T> {
+    fn get_width_characters(&self) -> usize {
+        self.block_count_x
+    }
+    
+    fn get_height_characters(&self) -> usize {
+        self.block_count_y
     }
 }
 
@@ -120,22 +125,29 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
     /// # Examples
     /// 
     /// ```
+    /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     /// 
-    /// use display::{DisplayDriver, pixel::SinglePixel};
+    /// use display::{
+    ///     display_driver::DisplayDriver, 
+    ///     pixel::monochrome_pixel::SinglePixel,
+    ///     console_display::PixelDisplay
+    /// };
     /// 
-    /// let disp: DisplayDriver<SinglePixel> = DisplayDriver::build_from_bools(
-    ///     6, 
-    ///     6, 
-    ///     vec![
-    ///         true, true, true, true,  true, true, // 0
-    ///         true, true, true, true,  true, true, // 1
-    ///         true, true, true, false, true, true, //-2-
-    ///         true, true, true, true,  true, true, // 3
-    ///         true, true, true, true,  true, true, // 4
-    ///         true, true, true, true,  true, true, // 5
-    ///     ] //  0     1     2   --3--    4     5
-    /// ).expect("Dimensions of data should match the passed witdh and height");
+    /// let disp: DisplayDriver<PixelDisplay<SinglePixel>> = DisplayDriver::new(
+    ///     PixelDisplay::<SinglePixel>::build_from_data(
+    ///         6, 
+    ///         6, 
+    ///         vec![
+    ///             true, true, true, true,  true, true, // 0
+    ///             true, true, true, true,  true, true, // 1
+    ///             true, true, true, false, true, true, //-2-
+    ///             true, true, true, true,  true, true, // 3
+    ///             true, true, true, true,  true, true, // 4
+    ///             true, true, true, true,  true, true, // 5
+    ///         ] //  0     1     2   --3--    4     5
+    ///     ).expect("Could not construct display.")
+    /// );
     /// // Replace with actual error handling
     /// 
     /// let pixel = disp.get_pixel(3, 2);
@@ -179,6 +191,26 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
         match pixel.set_subpixel(offset_x, offset_y, value) {
             Ok(val) => Ok(val),
             Err(_) => Err("Offset should be 0 or 1.".to_string()),
+        }
+    }
+
+    pub fn draw_line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, value: T::U) where [(); T::WIDTH * T::HEIGHT]: {
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+        let steps: f32 = dx.abs().max(dy.abs());
+        let x_inc = dx / steps;
+        let y_inc = dy / steps;
+
+        let mut x = x1;
+        let mut y = y1;
+
+        for _ in 0..=steps.round() as usize {
+            if x >= 0. && y >= 0. {
+                let _ = self.set_pixel(x.round() as usize, y.round() as usize, value);
+            }
+            x += x_inc;
+            y += y_inc;
         }
     }
 }
@@ -246,6 +278,7 @@ impl CharacterDisplay<CharacterPixel> {
         &self.data
     }
 
+    #[allow(dead_code)]
     fn get_data_mut(&mut self) -> &mut Vec<Option<CharacterPixel>> {
         &mut self.data
     }
@@ -315,7 +348,9 @@ impl ConsoleDisplay for CharacterDisplay<CharacterPixel> {
     fn get_height(&self) -> usize {
         self.height
     }
+}
 
+impl Widget for CharacterDisplay<CharacterPixel> {
     fn get_width_characters(&self) -> usize {
         self.width
     }

@@ -1,38 +1,16 @@
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
+
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use display::{console_display::CharacterDisplay, display_driver::DisplayDriver, pixel::{self, character_pixel::CharacterPixel, color_pixel::{Color, RGBColor}}, widget::single_widget::NoneWidget};
+use display::{console_display::PixelDisplay, display_driver::DisplayDriver, pixel::color_pixel::{self, ColorOctPixel}};
 
 fn main() {
-    let mut char_disp = CharacterDisplay::build(
-        40, 
-        20, 
-        CharacterPixel::build(
-            ' ',
-            Color::Default,
-            Color::Default,
-        ).unwrap()
-    ).unwrap();
-
-    let mut x = 0;
-    for i in "Hallo World".chars() {
-        let pixel = CharacterPixel::build( 
-            i,
-            Color::Default,
-            Color::Default,
-        ).unwrap();
-        char_disp.set_pixel (
-            x, 
-            0, 
-            pixel.clone()
-        );
-        x += pixel.get_width();
-    }
+    let disp: PixelDisplay<ColorOctPixel> = PixelDisplay::<ColorOctPixel>::build(100, 100, color_pixel::RGBColor{ r: 255, g: 0, b: 0 }).unwrap();
 
     let display = DisplayDriver::new(
-        NoneWidget::new(
-            char_disp
-        )
+        disp
     );
 
     display.initialize().expect("Could not initialize display.");
