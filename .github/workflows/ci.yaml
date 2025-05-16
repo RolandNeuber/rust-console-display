@@ -1,0 +1,44 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ~/.rustup
+        key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install Rust nightly
+      run: curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+    - name: Add cargo to path
+      run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Show rust version
+      run: rustc --version
+
+    - name: Build
+      run: cargo build
+
+    - name: Run tests
+      run: cargo test
