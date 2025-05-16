@@ -1,14 +1,11 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-use std::{io::{self, Write}, time::Duration};
-
-use crossterm::event::{
+use std::io::{
     self, 
-    Event, 
-    KeyCode, 
-    KeyModifiers
+    Write
 };
+
 use display::{
     console_display::PixelDisplay, 
     display_driver::DisplayDriver, 
@@ -81,7 +78,7 @@ fn main() {
         }
     }
     
-    let display = 
+    let mut display = 
     DisplayDriver::new(
         PixelDisplay::<PixelType>::build_from_data(
             padded_dimensions.0 as usize, 
@@ -91,23 +88,5 @@ fn main() {
     );
     
     display.initialize().expect("Could not initialize display.");
-    loop {
-        display.print_display().expect("Could not print display.");
-        
-        let mut latest_event = None;
-        while event::poll(Duration::from_millis(0)).unwrap() {
-            if let Event::Key(key_event) = event::read().unwrap() {
-                latest_event = Some(key_event);
-            }
-        }
-
-        if let Some(key_event) = latest_event {
-            if 
-                key_event.code == KeyCode::Char('c') && 
-                key_event.modifiers.contains(KeyModifiers::CONTROL)
-            {
-                break; // Exit on Ctrl-C
-            }
-        }
-    }
+    display.update();
 }

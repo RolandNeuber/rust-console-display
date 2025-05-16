@@ -1,18 +1,16 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-use crossterm::event::{
-    self, 
-    Event, 
-    KeyCode, 
-    KeyModifiers
-};
+use crossterm::event::KeyCode;
 use display::{
     console_display::{
         ConsoleDisplay, 
         PixelDisplay
     }, 
-    display_driver::DisplayDriver, 
+    display_driver::{
+        DisplayDriver, 
+        UpdateStatus
+    }, 
     pixel::color_pixel::{
         RGBColor, 
         ColorDualPixel, 
@@ -47,7 +45,6 @@ fn main() {
         ).unwrap()
     );
     
-    disp.initialize().expect("Could not initialize display."); 
     let duration = Duration::from_millis(75);
     let mut score = 1;
     let mut direction = (0, 0);
@@ -76,38 +73,13 @@ fn main() {
         map_display.set_pixel(apple.0, apple.1, apple_color).expect("Could not set pixel.");
     }
 
-    disp.print_display().expect("Could not print display.");
-
     let mut lost = false;
 
-    loop {
-        for i in 1..snake.len() {
-            if snake[0] == snake[i] {
-                lost = true;
-            }
-        }
-
-        thread::sleep(duration);
-        disp.print_display().expect("Could not print display.");
-
-        let mut latest_event = None;
-        // Wait for events (non-blocking, adjust duration as needed)
-        while event::poll(Duration::from_millis(0)).unwrap() {
-            if let Event::Key(key_event) = event::read().unwrap() {
-                latest_event = Some(key_event);
-            }
-        }
-
+    disp.set_on_update(move |disp, latest_event| {
         if let Some(key_event) = latest_event {
-            if 
-                key_event.code == KeyCode::Char('c') && 
-                key_event.modifiers.contains(KeyModifiers::CONTROL)
-            {
-                break; // Exit on Ctrl-C
-            }
             let key = match key_event.code {
                 KeyCode::Char(x) => x,
-                _ => continue,
+                _ => return UpdateStatus::Continue,
             };
 
             let old_direction = direction;
@@ -127,7 +99,7 @@ fn main() {
         }
 
         if lost {
-            continue;
+            return UpdateStatus::Continue;
         }
         
         let map_display = disp.get_children_mut().1;
@@ -140,7 +112,7 @@ fn main() {
         if snake[0] == apple {
             score += 1;
             if score == map_display.get_width().clone() * map_display.get_height().clone() {
-                break;
+                return UpdateStatus::Break;
             }
             // place new apple
             while snake.contains(&apple) {
@@ -160,5 +132,16 @@ fn main() {
 
         // place pixel at snake head
         map_display.set_pixel(snake[0].0, snake[0].1, snake_color).expect("Could not set pixel.");
-    }
+
+        for i in 1..snake.len() {
+            if snake[0] == snake[i] {
+                lost = true;
+            }
+        }
+        thread::sleep(duration);
+        return UpdateStatus::Continue;
+    });
+
+    disp.initialize().expect("Could not initialize display."); 
+    disp.update();
 }

@@ -1,14 +1,40 @@
-use std::{io::{self, Write}, ops::{Deref, DerefMut}};
+use std::{
+    io::{
+        self, 
+        Write
+    }, 
+    ops::{
+        Deref, 
+        DerefMut
+    }, 
+    time::Duration
+};
 
-use crossterm::{cursor, terminal};
+use crossterm::{
+    cursor, 
+    event::{
+        self, 
+        Event, 
+        KeyCode, 
+        KeyEvent, 
+        KeyModifiers
+    }, 
+    terminal
+};
 
 use crate::widget::Widget;
+
+pub enum UpdateStatus {
+    Break,
+    Continue,
+}
 
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
 pub struct DisplayDriver<T: Widget> {
     original_width: u16,
     original_height: u16,
-    display: T
+    display: T,
+    on_update: Option<Box<dyn FnMut(&mut Self, Option<KeyEvent>) -> UpdateStatus>>
 }
 
 impl<T: Widget> DisplayDriver<T> {
@@ -23,7 +49,8 @@ impl<T: Widget> DisplayDriver<T> {
         DisplayDriver {
             original_width,
             original_height,
-            display: widget
+            display: widget,
+            on_update: None
         }
     }
 
@@ -88,6 +115,44 @@ impl<T: Widget> DisplayDriver<T> {
 
     fn get_widget_mut(&mut self) -> &mut T {
         &mut self.display
+    }
+
+    pub fn set_on_update<F>(&mut self, on_update: F)
+        where F: FnMut(&mut Self, Option<KeyEvent>) -> UpdateStatus + 'static
+    {
+        self.on_update = Some(Box::new(on_update));
+    }
+
+    pub fn update(&mut self) {
+        loop {
+            self.print_display().expect("Could not print display.");
+            
+            let mut latest_event = None;
+            while event::poll(Duration::from_millis(0)).unwrap() {
+                if let Event::Key(key_event) = event::read().unwrap() {
+                    latest_event = Some(key_event);
+                }
+            }
+
+            if let Some(key_event) = latest_event {
+                if 
+                    key_event.code == KeyCode::Char('c') && 
+                    key_event.modifiers.contains(KeyModifiers::CONTROL)
+                {
+                    break; // Exit on Ctrl-C
+                }
+            }
+
+            let mut update_status = UpdateStatus::Continue;
+            if let Some(mut callback) = self.on_update.take() {
+                update_status = callback(self, latest_event);
+                self.on_update = Some(callback);
+            }
+            match update_status {
+                UpdateStatus::Break => break,
+                UpdateStatus::Continue => { },
+            }
+        }
     }
 }
 
