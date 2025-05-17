@@ -9,7 +9,7 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn color(text: &str, foreground_color: &Self, background_color: &Self) -> String {
+    #[must_use] pub fn color(text: &str, foreground_color: &Self, background_color: &Self) -> String {
         let mut output = String::new();
 
         if let Self::Color(foreground_color) = foreground_color {
@@ -37,9 +37,9 @@ pub struct RGBColor {
 impl RGBColor {
     fn distance(color1: Self, color2: Self) -> f32 {
         (
-            (color1.r as i32 - color2.r as i32).pow(2) as f32 +
-            (color1.g as i32 - color2.g as i32).pow(2) as f32 +
-            (color1.b as i32 - color2.b as i32).pow(2) as f32
+            (i32::from(color1.r) - i32::from(color2.r)).pow(2) as f32 +
+            (i32::from(color1.g) - i32::from(color2.g)).pow(2) as f32 +
+            (i32::from(color1.b) - i32::from(color2.b)).pow(2) as f32
         ).sqrt()
     }
 
@@ -49,9 +49,9 @@ impl RGBColor {
         }
         let mut sum = (0, 0, 0);
         for color in colors {
-            sum.0 += color.r as u32;
-            sum.1 += color.g as u32;
-            sum.2 += color.b as u32;
+            sum.0 += u32::from(color.r);
+            sum.1 += u32::from(color.g);
+            sum.2 += u32::from(color.b);
         }
         Ok(Self {
             r: (sum.0 / colors.len() as u32) as u8,
@@ -85,7 +85,7 @@ impl RGBColor {
         groups
     }
 
-    pub fn color(text: &str, foreground_color: &Self, background_color: &Self) -> String {
+    #[must_use] pub fn color(text: &str, foreground_color: &Self, background_color: &Self) -> String {
         format!(
             "\x1b[38;2;{};{};{}m\x1b[48;2;{};{};{}m{}\x1b[0m",
             foreground_color.r, foreground_color.g, foreground_color.b, // foreground color

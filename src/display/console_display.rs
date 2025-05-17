@@ -103,7 +103,7 @@ impl<T: MultiPixel> PixelDisplay<T> {
     }
 
 
-    pub const fn get_data(&self) -> &Vec<T> {
+    #[must_use] pub const fn get_data(&self) -> &Vec<T> {
         &self.data
     }
 
@@ -111,11 +111,11 @@ impl<T: MultiPixel> PixelDisplay<T> {
         &mut self.data
     }
 
-    pub const fn get_block_count_x(&self) -> &usize {
+    #[must_use] pub const fn get_block_count_x(&self) -> &usize {
         &self.block_count_x
     }
 
-    pub const fn get_block_count_y(&self) -> &usize {
+    #[must_use] pub const fn get_block_count_y(&self) -> &usize {
         &self.block_count_y
     }
 
@@ -275,7 +275,7 @@ impl CharacterDisplay<CharacterPixel> {
         })
     }
 
-    pub const fn get_data(&self) -> &Vec<Option<CharacterPixel>> {
+    #[must_use] pub const fn get_data(&self) -> &Vec<Option<CharacterPixel>> {
         &self.data
     }
 
@@ -368,7 +368,7 @@ impl Display for CharacterDisplay<CharacterPixel> {
             for x in 0..self.get_width_characters() {
                 let character = &self.get_data()[x + y * self.get_width_characters()];
                 match character {
-                    None => continue,
+                    None => {},
                     Some(character) => 
                         string_repr.push_str(
                         character

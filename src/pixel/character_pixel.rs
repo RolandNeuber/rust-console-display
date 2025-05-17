@@ -24,19 +24,19 @@ impl CharacterPixel {
         })
     }
 
-    pub const fn get_character(&self) -> char {
+    #[must_use] pub const fn get_character(&self) -> char {
         self.character
     }
 
-    pub const fn get_foreground(&self) -> Color {
+    #[must_use] pub const fn get_foreground(&self) -> Color {
         self.foreground
     }
 
-    pub const fn get_background(&self) -> Color {
+    #[must_use] pub const fn get_background(&self) -> Color {
         self.background
     }
 
-    pub const fn get_width(&self) -> usize {
+    #[must_use] pub const fn get_width(&self) -> usize {
         self.width
     }
 }

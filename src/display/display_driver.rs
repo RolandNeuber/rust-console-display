@@ -61,10 +61,10 @@ impl<T: Widget> DisplayDriver<T> {
         
         if let Err(e) = write!(stdout, "\x1B[H") {
             return Err(e.to_string());
-        };
+        }
         if let Err(e) = write!(stdout, "{}", self.get_widget().to_string()) {
             return Err(e.to_string());
-        };
+        }
 
         Ok(())
     }
@@ -80,7 +80,7 @@ impl<T: Widget> DisplayDriver<T> {
         // use alternate screen
         if let Err(e) = crossterm::execute!(stdout, terminal::EnterAlternateScreen) {
             return Err(e.to_string());
-        };
+        }
 
         // set dimensions of screen
         if let Err(e) = crossterm::execute!(stdout, terminal::SetSize(
@@ -88,17 +88,17 @@ impl<T: Widget> DisplayDriver<T> {
             self.get_widget().get_height_characters() as u16
         )) {
             return Err(e.to_string());
-        };
+        }
         
         // clear screen
         if let Err(e) = crossterm::execute!(stdout, terminal::Clear(terminal::ClearType::All)) {
             return Err(e.to_string());
-        };
+        }
 
         // hide cursor blinking
         if let Err(e) = crossterm::execute!(stdout, cursor::Hide) {
             return Err(e.to_string());
-        };
+        }
 
         Ok(())
     }
@@ -136,14 +136,14 @@ impl<T: Widget> DisplayDriver<T> {
                 }
             }
 
-            if let Some(key_event) = latest_event {
-                if 
-                    key_event.code == KeyCode::Char('c') && 
-                    key_event.modifiers.contains(KeyModifiers::CONTROL)
-                {
-                    break; // Exit on Ctrl-C
-                }
+            if let 
+                Some(key_event) = latest_event &&
+                key_event.code == KeyCode::Char('c') && 
+                key_event.modifiers.contains(KeyModifiers::CONTROL)
+            {
+                break; // Exit on Ctrl-C
             }
+            
 
             let mut update_status = UpdateStatus::Continue;
             if let Some(mut callback) = self.on_update.take() {

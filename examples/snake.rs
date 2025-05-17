@@ -77,9 +77,9 @@ fn main() {
 
     disp.set_on_update(move |disp, latest_event| {
         if let Some(key_event) = latest_event {
-            let key = match key_event.code {
-                KeyCode::Char(x) => x,
-                _ => return UpdateStatus::Continue,
+            let KeyCode::Char(key) = key_event.code 
+            else { 
+                return UpdateStatus::Continue 
             };
 
             let old_direction = direction;
@@ -89,7 +89,7 @@ fn main() {
                 'w' => direction = ( 0, -1),
                 's' => direction = ( 0,  1),
                 _ => (),
-            };
+            }
             if 
                 old_direction.0 + direction.0 == 0 &&
                 old_direction.1 + direction.1 == 0 

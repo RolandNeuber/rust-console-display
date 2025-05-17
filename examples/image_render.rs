@@ -24,8 +24,8 @@ use image::{
 };
 
 fn main() {
-    let max_dimensions: (u32, u32) = (200, 160);
     type PixelType = ColorOctPixel;
+    let max_dimensions: (u32, u32) = (200, 160);
 
     let mut path_in = String::new();
     
@@ -74,7 +74,7 @@ fn main() {
                 r: 0,
                 g: 0,
                 b: 0
-            })
+            });
         }
     }
     

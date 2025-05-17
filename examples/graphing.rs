@@ -11,8 +11,8 @@ use display::{
 };
 
 fn main() {
-    let dimensions: (usize, usize) = (200, 200);
     type PixelType = ColorOctPixel;
+    let dimensions: (usize, usize) = (200, 200);
 
     let uv_x = (-10.0, 10.0);
     let uv_y = (2.0, -2.0);

@@ -134,22 +134,22 @@ impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
                 display.get_width() as f32
             )
         );
-        self.get_child_mut().draw_line(uv1.0, uv1.1, uv2.0, uv2.1, value)
+        self.get_child_mut().draw_line(uv1.0, uv1.1, uv2.0, uv2.1, value);
     }
 
-    pub fn uv_x_to_texture(&self, x: f32) -> usize {
+    #[must_use] pub fn uv_x_to_texture(&self, x: f32) -> usize {
         Self::uv_to_texture(x, self.uv_x_min, self.uv_x_max, self.get_child().get_width())
     }
 
-    pub fn uv_y_to_texture(&self, y: f32) -> usize {
+    #[must_use] pub fn uv_y_to_texture(&self, y: f32) -> usize {
         Self::uv_to_texture(y, self.uv_y_min, self.uv_y_max, self.get_child().get_height())
     }
 
-    pub fn texture_to_uv_x(&self, x: usize) -> f32 {
+    #[must_use] pub fn texture_to_uv_x(&self, x: usize) -> f32 {
         Self::texture_to_uv(x, self.get_child().get_width(), self.uv_x_min, self.uv_x_max)
     }
 
-    pub fn texture_to_uv_y(&self, y: usize) -> f32 {
+    #[must_use] pub fn texture_to_uv_y(&self, y: usize) -> f32 {
         Self::texture_to_uv(y, self.get_child().get_height(), self.uv_y_min, self.uv_y_max)
     }
     
