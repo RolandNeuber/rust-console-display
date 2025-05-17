@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Display, fmt::Debug};
 
 use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
@@ -41,9 +41,9 @@ impl CharacterPixel {
     }
 }
 
-impl ToString for CharacterPixel {
-    fn to_string(&self) -> String {
-        Color::color(&self.character.to_string().as_str(), &self.foreground, &self.background)
+impl Display for CharacterPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", Color::color(self.character.to_string().as_str(), &self.foreground, &self.background))
     }
 }
 

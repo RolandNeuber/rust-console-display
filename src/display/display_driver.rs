@@ -29,12 +29,14 @@ pub enum UpdateStatus {
     Continue,
 }
 
+type UpdateFunction<T> = dyn FnMut(&mut DisplayDriver<T>, Option<KeyEvent>) -> UpdateStatus;
+
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
 pub struct DisplayDriver<T: Widget> {
     original_width: u16,
     original_height: u16,
     display: T,
-    on_update: Option<Box<dyn FnMut(&mut Self, Option<KeyEvent>) -> UpdateStatus>>
+    on_update: Option<Box<UpdateFunction<T>>>
 }
 
 impl<T: Widget> DisplayDriver<T> {
@@ -183,8 +185,8 @@ impl<T: Widget> Drop for DisplayDriver<T> {
         // reset dimensions of screen
         if *self.get_original_width() != 0 && *self.get_orignal_height() != 0 {
             let _ = crossterm::execute!(stdout, terminal::SetSize(
-                self.get_original_width().clone() as u16, 
-                self.get_orignal_height().clone() as u16
+                *self.get_original_width(), 
+                *self.get_orignal_height()
             ));
         }
 

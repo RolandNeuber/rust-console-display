@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{impl_getters, pixel::monochrome_pixel::{HexPixel, MultiPixel, OctPixel, QuadPixel}};
 
 #[derive(Clone, Copy)]
@@ -22,10 +24,7 @@ impl Color {
                 output, background_color.r, background_color.g, background_color.b, // background color
             );
         }
-        format!(
-            "{}{}\x1b[0m",
-            output, text
-        )
+        format!("{output}{text}\x1b[0m")
     }
 }
 
@@ -45,7 +44,7 @@ impl RGBColor {
     }
 
     fn mix(colors: &[RGBColor]) -> Result<RGBColor, &str> {
-        if colors.len() == 0 {
+        if colors.is_empty() {
             return Err("colors must contain at least one element");
         }
         let mut sum = (0, 0, 0);
@@ -98,7 +97,7 @@ impl RGBColor {
 
 impl Clone for RGBColor {
     fn clone(&self) -> Self {
-        Self { r: self.r.clone(), g: self.g.clone(), b: self.b.clone() }
+        *self
     }
 }
 
@@ -111,7 +110,7 @@ pub struct ColorSinglePixel {
     pixels: [RGBColor; 1],
 }
 
-impl MultiPixel<ColorSinglePixel> for ColorSinglePixel {
+impl MultiPixel for ColorSinglePixel {
     type U = RGBColor;
 
     const WIDTH: usize = 1;
@@ -127,9 +126,9 @@ impl MultiPixel<ColorSinglePixel> for ColorSinglePixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
-impl ToString for ColorSinglePixel {
-    fn to_string(&self) -> String {
-        RGBColor::color("█",&self.pixels[0], &self.pixels[0])
+impl Display for ColorSinglePixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", RGBColor::color("█",&self.pixels[0], &self.pixels[0]))
     }
 }
 
@@ -137,7 +136,7 @@ pub struct ColorDualPixel {
     pixels: [RGBColor; 2]
 }
 
-impl MultiPixel<ColorDualPixel> for ColorDualPixel {
+impl MultiPixel for ColorDualPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 1;
@@ -153,9 +152,9 @@ impl MultiPixel<ColorDualPixel> for ColorDualPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
-impl ToString for ColorDualPixel {
-    fn to_string(&self) -> String {
-        RGBColor::color("▀",&self.pixels[0], &self.pixels[1])
+impl Display for ColorDualPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", RGBColor::color("▀",&self.pixels[0], &self.pixels[1]))
     }
 }
 
@@ -163,7 +162,7 @@ pub struct ColorQuadPixel {
     pixels: [RGBColor; 4]
 }
 
-impl MultiPixel<ColorQuadPixel> for ColorQuadPixel {
+impl MultiPixel for ColorQuadPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 2;
@@ -179,8 +178,8 @@ impl MultiPixel<ColorQuadPixel> for ColorQuadPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
-impl ToString for ColorQuadPixel {
-    fn to_string(&self) -> String {
+impl Display for ColorQuadPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let colors = self.pixels;
         let grouping = RGBColor::group(&colors);
         let symb = QuadPixel::new(
@@ -200,7 +199,7 @@ impl ToString for ColorQuadPixel {
         let col1 = RGBColor::mix(&col1).unwrap_or(RGBColor {r: 0, g: 0, b: 0});
         let col2 = RGBColor::mix(&col2).unwrap_or(RGBColor {r: 0, g: 0, b: 0});
 
-        RGBColor::color(symb.to_string().as_str(), &col1, &col2)
+        write!(f, "{}", RGBColor::color(symb.to_string().as_str(), &col1, &col2))
     }
 }
 
@@ -208,7 +207,7 @@ pub struct ColorHexPixel {
     pixels: [RGBColor; 6]
 }
 
-impl MultiPixel<ColorHexPixel> for ColorHexPixel {
+impl MultiPixel for ColorHexPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 2;
@@ -224,8 +223,8 @@ impl MultiPixel<ColorHexPixel> for ColorHexPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
-impl ToString for ColorHexPixel {
-    fn to_string(&self) -> String {
+impl Display for ColorHexPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let colors = self.pixels;
         let grouping = RGBColor::group(&colors);
         let symb = HexPixel::new(
@@ -245,7 +244,7 @@ impl ToString for ColorHexPixel {
         let col1 = RGBColor::mix(&col1).unwrap_or(RGBColor {r: 0, g: 0, b: 0});
         let col2 = RGBColor::mix(&col2).unwrap_or(RGBColor {r: 0, g: 0, b: 0});
 
-        RGBColor::color(symb.to_string().as_str(), &col1, &col2)
+        write!(f, "{}", RGBColor::color(symb.to_string().as_str(), &col1, &col2))
     }
 }
 
@@ -253,7 +252,7 @@ pub struct ColorOctPixel {
     pixels: [RGBColor; 8]
 }
 
-impl MultiPixel<ColorOctPixel> for ColorOctPixel {
+impl MultiPixel for ColorOctPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 2;
@@ -269,8 +268,8 @@ impl MultiPixel<ColorOctPixel> for ColorOctPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
-impl ToString for ColorOctPixel {
-    fn to_string(&self) -> String {
+impl Display for ColorOctPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let colors = self.pixels;
         let grouping = RGBColor::group(&colors);
         let symb = OctPixel::new(
@@ -290,6 +289,6 @@ impl ToString for ColorOctPixel {
         let col1 = RGBColor::mix(&col1).unwrap_or(RGBColor {r: 0, g: 0, b: 0});
         let col2 = RGBColor::mix(&col2).unwrap_or(RGBColor {r: 0, g: 0, b: 0});
 
-        RGBColor::color(symb.to_string().as_str(), &col1, &col2)
+        write!(f, "{}", RGBColor::color(symb.to_string().as_str(), &col1, &col2))
     }
 }

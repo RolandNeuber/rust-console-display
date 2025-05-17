@@ -1,7 +1,9 @@
+use std::fmt::Display;
+
 use crate::{impl_getters, impl_new};
 
 /// Specifies a block of pixels with specified dimensions.
-pub trait MultiPixel<T>: ToString {
+pub trait MultiPixel: ToString where Self: Sized {
     type U: Copy;
 
     /// The width of the block of pixels.
@@ -9,7 +11,7 @@ pub trait MultiPixel<T>: ToString {
     /// The height of the block of pixels.
     const HEIGHT: usize;
 
-    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> T;
+    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> Self;
 
     fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT];
 
@@ -17,7 +19,7 @@ pub trait MultiPixel<T>: ToString {
 
     /// Builds a block of pixels from a slice of pixels.
     /// Returns an error, if the number of pixels does not match the dimensions of the block.
-    fn build(args: &[Self::U]) -> Result<T, String> where [(); Self::WIDTH * Self::HEIGHT]: {
+    fn build(args: &[Self::U]) -> Result<Self, String> where [(); Self::WIDTH * Self::HEIGHT]: {
         if let Ok(pixels) = <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args) {
             Ok(Self::new(pixels))
         }
@@ -40,7 +42,8 @@ pub trait MultiPixel<T>: ToString {
     fn set_subpixel(&mut self, x: usize, y: usize, value: Self::U) -> Result<(), String> where [(); Self::WIDTH * Self::HEIGHT]: {
         let index = x + y * Self::WIDTH;
         if index < self.get_pixels().len() {
-            Ok(self.get_pixels_mut()[index] = value)
+            self.get_pixels_mut()[index] = value;
+            Ok(())
         }
         else {
             Err("Coordinates out of range.".to_string())
@@ -90,7 +93,7 @@ impl SinglePixel {
     }
 }
 
-impl MultiPixel<SinglePixel> for SinglePixel {
+impl MultiPixel for SinglePixel {
     type U = bool;
 
     const WIDTH: usize = 1;
@@ -102,9 +105,9 @@ impl MultiPixel<SinglePixel> for SinglePixel {
     impl_getters!(pixels: [bool; 1]);
 }
 
-impl ToString for SinglePixel {
-    fn to_string(&self) -> String {
-        self.get_char().to_string()
+impl Display for SinglePixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_char())
     }
 }
 
@@ -160,7 +163,7 @@ impl DualPixel {
     }
 }
 
-impl MultiPixel<DualPixel> for DualPixel {
+impl MultiPixel for DualPixel {
     type U = bool;
 
     const WIDTH: usize = 1;
@@ -172,9 +175,9 @@ impl MultiPixel<DualPixel> for DualPixel {
     impl_getters!(pixels: [bool; 2]);
 }
 
-impl ToString for DualPixel {
-    fn to_string(&self) -> String {
-        self.get_char().to_string()
+impl Display for DualPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_char())
     }
 }
 
@@ -226,13 +229,13 @@ impl QuadPixel {
     }
 }
 
-impl ToString for QuadPixel {
-    fn to_string(&self) -> String {
-        self.get_char().to_string()
+impl Display for QuadPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_char())
     }
 }
 
-impl MultiPixel<QuadPixel> for QuadPixel {
+impl MultiPixel for QuadPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
@@ -294,7 +297,7 @@ impl HexPixel {
     }
 }
 
-impl MultiPixel<HexPixel> for HexPixel {
+impl MultiPixel for HexPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
@@ -306,9 +309,9 @@ impl MultiPixel<HexPixel> for HexPixel {
     impl_getters!(pixels: [bool; 6]);
 }
 
-impl ToString for HexPixel {
-    fn to_string(&self) -> String {
-        self.get_char().to_string()
+impl Display for HexPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_char())
     }
 }
 
@@ -376,7 +379,7 @@ impl OctPixel {
     }
 }
 
-impl MultiPixel<OctPixel> for OctPixel {
+impl MultiPixel for OctPixel {
     type U = bool;
     
     const WIDTH: usize = 2;
@@ -388,9 +391,9 @@ impl MultiPixel<OctPixel> for OctPixel {
     impl_getters!(pixels: [bool; 8]);
 }
 
-impl ToString for OctPixel {
-    fn to_string(&self) -> String {
-        self.get_char().to_string()
+impl Display for OctPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_char())
     }
 }
 
@@ -459,7 +462,7 @@ impl BrailleOctPixel {
     }
 }
 
-impl MultiPixel<BrailleOctPixel> for BrailleOctPixel {
+impl MultiPixel for BrailleOctPixel {
     type U = bool;
     
     const WIDTH: usize = 2;
@@ -471,8 +474,8 @@ impl MultiPixel<BrailleOctPixel> for BrailleOctPixel {
     impl_getters!(pixels: [bool; 8]);
 }
 
-impl ToString for BrailleOctPixel {
-    fn to_string(&self) -> String {
-        self.get_char().to_string()
+impl Display for BrailleOctPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_char())
     }
 }

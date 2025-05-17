@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     console_display::{
         ConsoleDisplay, 
@@ -34,7 +36,7 @@ impl<T: ConsoleDisplay> UvWidget<T> {
     }
 }
 
-impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
+impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
     pub fn set_uv_x_min(&mut self, x: f32) {
        self.uv_x_min = x; 
     }
@@ -156,7 +158,7 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
     }
 
     fn uv_to_texture_f32(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: f32) -> f32 {
-        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max as f32 - 0.5).round() as f32
+        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max - 0.5).round()
     }
 
     fn texture_to_uv(texture_coordinate: usize, texture_coordinate_max: usize, uv_min: f32, uv_max: f32) -> f32 {
@@ -248,9 +250,9 @@ impl<T: ConsoleDisplay> SingleWidget<T> for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay> ToString for UvWidget<T> {
-    fn to_string(&self) -> String {
-        self.get_child().to_string()
+impl<T: ConsoleDisplay> Display for UvWidget<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_child().to_string())
     }
 }
 
