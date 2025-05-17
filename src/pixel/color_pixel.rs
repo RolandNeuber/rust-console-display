@@ -9,16 +9,16 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn color(text: &str, foreground_color: &Color, background_color: &Color) -> String {
+    pub fn color(text: &str, foreground_color: &Self, background_color: &Self) -> String {
         let mut output = String::new();
 
-        if let Color::Color(foreground_color) = foreground_color {
+        if let Self::Color(foreground_color) = foreground_color {
             output = format!(
                 "{}\x1b[38;2;{};{};{}m",
                 output, foreground_color.r, foreground_color.g, foreground_color.b, // foreground color
             );
         }
-        if let Color::Color(background_color) = background_color {
+        if let Self::Color(background_color) = background_color {
             output = format!(
                 "{}\x1b[48;2;{};{};{}m",
                 output, background_color.r, background_color.g, background_color.b, // background color
@@ -35,7 +35,7 @@ pub struct RGBColor {
 }
 
 impl RGBColor {
-    fn distance(color1: RGBColor, color2: RGBColor) -> f32 {
+    fn distance(color1: Self, color2: Self) -> f32 {
         (
             (color1.r as i32 - color2.r as i32).pow(2) as f32 +
             (color1.g as i32 - color2.g as i32).pow(2) as f32 +
@@ -43,7 +43,7 @@ impl RGBColor {
         ).sqrt()
     }
 
-    fn mix(colors: &[RGBColor]) -> Result<RGBColor, &str> {
+    fn mix(colors: &[Self]) -> Result<Self, &str> {
         if colors.is_empty() {
             return Err("colors must contain at least one element");
         }
@@ -53,14 +53,14 @@ impl RGBColor {
             sum.1 += color.g as u32;
             sum.2 += color.b as u32;
         }
-        Ok(RGBColor {
+        Ok(Self {
             r: (sum.0 / colors.len() as u32) as u8,
             g: (sum.1 / colors.len() as u32) as u8,
             b: (sum.2 / colors.len() as u32) as u8,
         })
     }
 
-    fn group<const N: usize>(colors: &[RGBColor; N]) -> [bool; N] {
+    fn group<const N: usize>(colors: &[Self; N]) -> [bool; N] {
         let mut max = 0f32;
         let mut col1 = 0;
         let mut col2 = 0;
@@ -85,7 +85,7 @@ impl RGBColor {
         groups
     }
 
-    pub fn color(text: &str, foreground_color: &RGBColor, background_color: &RGBColor) -> String {
+    pub fn color(text: &str, foreground_color: &Self, background_color: &Self) -> String {
         format!(
             "\x1b[38;2;{};{};{}m\x1b[48;2;{};{};{}m{}\x1b[0m",
             foreground_color.r, foreground_color.g, foreground_color.b, // foreground color
@@ -117,8 +117,8 @@ impl MultiPixel for ColorSinglePixel {
 
     const HEIGHT: usize = 1;
     
-    fn new(pixels: [Self::U; 1]) -> ColorSinglePixel {
-        ColorSinglePixel {
+    fn new(pixels: [Self::U; 1]) -> Self {
+        Self {
             pixels
         }
     }
@@ -143,8 +143,8 @@ impl MultiPixel for ColorDualPixel {
 
     const HEIGHT: usize = 2;
     
-    fn new(pixels: [Self::U; 2]) -> ColorDualPixel {
-        ColorDualPixel {
+    fn new(pixels: [Self::U; 2]) -> Self {
+        Self {
             pixels
         }
     }
@@ -169,8 +169,8 @@ impl MultiPixel for ColorQuadPixel {
 
     const HEIGHT: usize = 2;
     
-    fn new(pixels: [Self::U; 4]) -> ColorQuadPixel {
-        ColorQuadPixel {
+    fn new(pixels: [Self::U; 4]) -> Self {
+        Self {
             pixels
         }
     }
@@ -214,8 +214,8 @@ impl MultiPixel for ColorHexPixel {
 
     const HEIGHT: usize = 3;
     
-    fn new(pixels: [Self::U; 6]) -> ColorHexPixel {
-        ColorHexPixel {
+    fn new(pixels: [Self::U; 6]) -> Self {
+        Self {
             pixels
         }
     }
@@ -259,8 +259,8 @@ impl MultiPixel for ColorOctPixel {
 
     const HEIGHT: usize = 4;
     
-    fn new(pixels: [Self::U; 8]) -> ColorOctPixel {
-        ColorOctPixel {
+    fn new(pixels: [Self::U; 8]) -> Self {
+        Self {
             pixels
         }
     }

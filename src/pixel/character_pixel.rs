@@ -12,8 +12,8 @@ pub struct CharacterPixel {
 }
 
 impl CharacterPixel {
-    pub fn build(character: char, foreground: Color, background: Color) -> Result<CharacterPixel, String> {
-        Ok(CharacterPixel {
+    pub fn build(character: char, foreground: Color, background: Color) -> Result<Self, String> {
+        Ok(Self {
             character,
             foreground,
             background,
@@ -24,19 +24,19 @@ impl CharacterPixel {
         })
     }
 
-    pub fn get_character(&self) -> char {
+    pub const fn get_character(&self) -> char {
         self.character
     }
 
-    pub fn get_foreground(&self) -> Color {
+    pub const fn get_foreground(&self) -> Color {
         self.foreground
     }
 
-    pub fn get_background(&self) -> Color {
+    pub const fn get_background(&self) -> Color {
         self.background
     }
 
-    pub fn get_width(&self) -> usize {
+    pub const fn get_width(&self) -> usize {
         self.width
     }
 }

@@ -26,7 +26,7 @@ pub struct UvWidget<T: ConsoleDisplay> {
 impl<T: ConsoleDisplay> UvWidget<T> {
     pub fn new(child: T) -> Self {
         let (width, height) = (child.get_width(), child.get_height());
-        UvWidget {
+        Self {
             child,
             uv_x_min: 0.0,
             uv_x_max: width as f32,
@@ -37,19 +37,19 @@ impl<T: ConsoleDisplay> UvWidget<T> {
 }
 
 impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
-    pub fn set_uv_x_min(&mut self, x: f32) {
+    pub const fn set_uv_x_min(&mut self, x: f32) {
        self.uv_x_min = x; 
     }
 
-    pub fn set_uv_x_max(&mut self, x: f32) {
+    pub const fn set_uv_x_max(&mut self, x: f32) {
        self.uv_x_max = x; 
     }
     
-    pub fn set_uv_y_min(&mut self, y: f32) {
+    pub const fn set_uv_y_min(&mut self, y: f32) {
        self.uv_y_min = y; 
     }
     
-    pub fn set_uv_y_max(&mut self, y: f32) {
+    pub const fn set_uv_y_max(&mut self, y: f32) {
        self.uv_y_max = y; 
     }
     
@@ -154,15 +154,15 @@ impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
     }
     
     fn uv_to_texture(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: usize) -> usize {
-        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max as f32 - 0.5).round() as usize
+        ((uv - uv_min) / (uv_max - uv_min)).mul_add(texture_coordinate_max as f32, -0.5).round() as usize
     }
 
     fn uv_to_texture_f32(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: f32) -> f32 {
-        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max - 0.5).round()
+        ((uv - uv_min) / (uv_max - uv_min)).mul_add(texture_coordinate_max, -0.5).round()
     }
 
     fn texture_to_uv(texture_coordinate: usize, texture_coordinate_max: usize, uv_min: f32, uv_max: f32) -> f32 {
-        (texture_coordinate as f32 + 0.5) / texture_coordinate_max as f32 * (uv_max - uv_min) + uv_min
+        ((texture_coordinate as f32 + 0.5) / texture_coordinate_max as f32).mul_add(uv_max - uv_min, uv_min)
     }
 
     /// Returns an iterator that contains the uv x coordinates of the underlying display in ascending order.

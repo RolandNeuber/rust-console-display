@@ -42,13 +42,13 @@ pub struct DisplayDriver<T: Widget> {
 impl<T: Widget> DisplayDriver<T> {
 
     /// Convenience method to build a blank display struct with specified dimensions
-    pub fn new(widget: T) -> DisplayDriver<T> {
+    pub fn new(widget: T) -> Self {
         let (original_width, original_height) = match crossterm::terminal::size(){
             Ok((w, h)) => (w, h),
             Err(_) => (0, 0)
         }; 
         
-        DisplayDriver {
+        Self {
             original_width,
             original_height,
             display: widget,
@@ -103,19 +103,19 @@ impl<T: Widget> DisplayDriver<T> {
         Ok(())
     }
 
-    fn get_original_width(&self) -> &u16 {
+    const fn get_original_width(&self) -> &u16 {
         &self.original_width
     }
 
-    fn get_orignal_height(&self) -> &u16 {
+    const fn get_orignal_height(&self) -> &u16 {
         &self.original_height
     }
 
-    fn get_widget(&self) -> &T {
+    const fn get_widget(&self) -> &T {
         &self.display
     }
 
-    fn get_widget_mut(&mut self) -> &mut T {
+    const fn get_widget_mut(&mut self) -> &mut T {
         &mut self.display
     }
 

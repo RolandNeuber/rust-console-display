@@ -20,23 +20,19 @@ pub trait MultiPixel: ToString where Self: Sized {
     /// Builds a block of pixels from a slice of pixels.
     /// Returns an error, if the number of pixels does not match the dimensions of the block.
     fn build(args: &[Self::U]) -> Result<Self, String> where [(); Self::WIDTH * Self::HEIGHT]: {
-        if let Ok(pixels) = <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args) {
-            Ok(Self::new(pixels))
-        }
-        else {
-            Err(format!("Invalid number of arguments. Expected {}, got {}", Self::WIDTH * Self::HEIGHT, args.len()))
-        }        
+        <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args).map_or_else(
+            |_| Err(format!("Invalid number of arguments. Expected {}, got {}", Self::WIDTH * Self::HEIGHT, args.len())), 
+            |pixels| Ok(Self::new(pixels))
+        )
     }
 
     /// Returns the value of the block at the specified coordinates.
     /// Returns an error, if the coordinates are out-of-bounds.
     fn get_subpixel(&self, x: usize, y: usize) -> Result<Self::U, String> where [(); Self::WIDTH * Self::HEIGHT]: {
-        if let Some(subpixel) = self.get_pixels().get(x + y * Self::WIDTH) {
-            Ok(*subpixel)
-        }
-        else {
-            Err("Coordinates out of range.".to_string())
-        }
+        self.get_pixels().get(x + y * Self::WIDTH).map_or_else(
+            || Err("Coordinates out of range.".to_string()), 
+            |subpixel| Ok(*subpixel)
+        )
     }
 
     fn set_subpixel(&mut self, x: usize, y: usize, value: Self::U) -> Result<(), String> where [(); Self::WIDTH * Self::HEIGHT]: {
@@ -88,7 +84,7 @@ impl SinglePixel {
     /// assert_eq!(symbol, " ");
     /// 
     /// ```
-    fn get_char(&self) -> char {
+    const fn get_char(&self) -> char {
         if self.pixels[0] {'█'} else {' '}
     }
 }
@@ -122,7 +118,7 @@ impl DualPixel {
         '▄', '█',
     ];
 
-    fn index(&self) -> usize {
+    const fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
         (self.pixels[1] as usize) << 1
     }
@@ -158,7 +154,7 @@ impl DualPixel {
     /// assert_eq!(symbol, " ");
     /// 
     /// ```
-    fn get_char(&self) -> char {
+    const fn get_char(&self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -195,7 +191,7 @@ impl QuadPixel {
         '▄', '▙', '▟', '█',
     ];
 
-    fn index(&self) -> usize {
+    const fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
         (self.pixels[1] as usize) << 1 | 
         (self.pixels[2] as usize) << 2 | 
@@ -224,7 +220,7 @@ impl QuadPixel {
     /// 
     /// assert_eq!(symbol, "▚")
     /// ```
-    fn get_char(&self) -> char {
+    const fn get_char(&self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -260,7 +256,7 @@ impl HexPixel {
         '🬭', '🬮', '🬯', '🬰', '🬱', '🬲', '🬳', '🬴', '🬵', '🬶', '🬷', '🬸', '🬹', '🬺', '🬻', '█'
     ];
 
-    fn index(&self) -> usize {
+    const fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
         (self.pixels[1] as usize) << 1 | 
         (self.pixels[2] as usize) << 2 | 
@@ -292,7 +288,7 @@ impl HexPixel {
     /// 
     /// assert_eq!(symbol, "🬶")
     /// ```
-    fn get_char(&self) -> char {
+    const fn get_char(&self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -340,7 +336,7 @@ impl OctPixel {
         '▄', '𜷛', '𜷜', '𜷝', '𜷞', '▙', '𜷟', '𜷠', '𜷡', '𜷢', '▟', '𜷣', '▆', '𜷤', '𜷥', '█',
     ];
 
-    fn index(&self) -> usize {
+    const fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
         (self.pixels[1] as usize) << 1 | 
         (self.pixels[2] as usize) << 2 | 
@@ -374,7 +370,7 @@ impl OctPixel {
     /// 
     /// assert_eq!(symbol, "𜴰")
     /// ```
-    fn get_char(&self) -> char {
+    const fn get_char(&self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -422,7 +418,7 @@ impl BrailleOctPixel {
         '⣤', '⣥', '⣬', '⣭', '⣦', '⣧', '⣮', '⣯', '⣴', '⣵', '⣼', '⣽', '⣶', '⣷', '⣾', '⣿',
     ];
 
-    fn index(&self) -> usize {
+    const fn index(&self) -> usize {
         (self.pixels[0] as usize) | 
         (self.pixels[1] as usize) << 1 | 
         (self.pixels[2] as usize) << 2 | 
@@ -457,7 +453,7 @@ impl BrailleOctPixel {
     /// 
     /// assert_eq!(symbol, "⠵")
     /// ```
-    fn get_char(&self) -> char {
+    const fn get_char(&self) -> char {
         Self::CHARS[self.index()]
     }
 }

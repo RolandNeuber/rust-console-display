@@ -59,7 +59,7 @@ impl<S: Widget, T: Widget> HorizontalTilingWidget<S, T> {
                 child2.get_height_characters()
             ));
         }
-        Ok(HorizontalTilingWidget { 
+        Ok(Self { 
             child1,
             child2
         })
@@ -117,7 +117,7 @@ impl<S: Widget, T: Widget> VerticalTilingWidget<S, T> {
                 child2.get_width_characters()
             ));
         }
-        Ok(VerticalTilingWidget { 
+        Ok(Self { 
             child1,
             child2
         })
