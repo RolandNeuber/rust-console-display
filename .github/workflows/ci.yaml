@@ -23,6 +23,7 @@ jobs:
         path: |
           ~/.cargo
           ~/.rustup
+          target
         key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
@@ -47,11 +48,11 @@ jobs:
     - name: Show rust version
       run: rustc --version
 
-    - name: Clippy
-      run: cargo clippy
-
     - name: Build
       run: cargo build
+      
+    - name: Clippy
+      run: cargo clippy
 
     - name: Run tests
       run: cargo test
