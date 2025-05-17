@@ -25,13 +25,12 @@ fn main() {
             }
         }
 
-        if let Some(key_event) = latest_event {
-            if 
-                key_event.code == KeyCode::Char('c') && 
-                key_event.modifiers.contains(KeyModifiers::CONTROL)
-            {
-                break; // Exit on Ctrl-C
-            }
+        if let 
+            Some(key_event) = latest_event && 
+            key_event.code == KeyCode::Char('c') && 
+            key_event.modifiers.contains(KeyModifiers::CONTROL)
+        {
+            break; // Exit on Ctrl-C
         }
     }
 }

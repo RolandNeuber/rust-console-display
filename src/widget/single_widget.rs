@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     console_display::{
         ConsoleDisplay, 
@@ -24,7 +26,7 @@ pub struct UvWidget<T: ConsoleDisplay> {
 impl<T: ConsoleDisplay> UvWidget<T> {
     pub fn new(child: T) -> Self {
         let (width, height) = (child.get_width(), child.get_height());
-        UvWidget {
+        Self {
             child,
             uv_x_min: 0.0,
             uv_x_max: width as f32,
@@ -34,20 +36,20 @@ impl<T: ConsoleDisplay> UvWidget<T> {
     }
 }
 
-impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
-    pub fn set_uv_x_min(&mut self, x: f32) {
+impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
+    pub const fn set_uv_x_min(&mut self, x: f32) {
        self.uv_x_min = x; 
     }
 
-    pub fn set_uv_x_max(&mut self, x: f32) {
+    pub const fn set_uv_x_max(&mut self, x: f32) {
        self.uv_x_max = x; 
     }
     
-    pub fn set_uv_y_min(&mut self, y: f32) {
+    pub const fn set_uv_y_min(&mut self, y: f32) {
        self.uv_y_min = y; 
     }
     
-    pub fn set_uv_y_max(&mut self, y: f32) {
+    pub const fn set_uv_y_max(&mut self, y: f32) {
        self.uv_y_max = y; 
     }
     
@@ -132,35 +134,35 @@ impl<S: MultiPixel<S>> UvWidget<PixelDisplay<S>> {
                 display.get_width() as f32
             )
         );
-        self.get_child_mut().draw_line(uv1.0, uv1.1, uv2.0, uv2.1, value)
+        self.get_child_mut().draw_line(uv1.0, uv1.1, uv2.0, uv2.1, value);
     }
 
-    pub fn uv_x_to_texture(&self, x: f32) -> usize {
+    #[must_use] pub fn uv_x_to_texture(&self, x: f32) -> usize {
         Self::uv_to_texture(x, self.uv_x_min, self.uv_x_max, self.get_child().get_width())
     }
 
-    pub fn uv_y_to_texture(&self, y: f32) -> usize {
+    #[must_use] pub fn uv_y_to_texture(&self, y: f32) -> usize {
         Self::uv_to_texture(y, self.uv_y_min, self.uv_y_max, self.get_child().get_height())
     }
 
-    pub fn texture_to_uv_x(&self, x: usize) -> f32 {
+    #[must_use] pub fn texture_to_uv_x(&self, x: usize) -> f32 {
         Self::texture_to_uv(x, self.get_child().get_width(), self.uv_x_min, self.uv_x_max)
     }
 
-    pub fn texture_to_uv_y(&self, y: usize) -> f32 {
+    #[must_use] pub fn texture_to_uv_y(&self, y: usize) -> f32 {
         Self::texture_to_uv(y, self.get_child().get_height(), self.uv_y_min, self.uv_y_max)
     }
     
     fn uv_to_texture(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: usize) -> usize {
-        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max as f32 - 0.5).round() as usize
+        ((uv - uv_min) / (uv_max - uv_min)).mul_add(texture_coordinate_max as f32, -0.5).round() as usize
     }
 
     fn uv_to_texture_f32(uv: f32, uv_min: f32, uv_max: f32, texture_coordinate_max: f32) -> f32 {
-        ((uv - uv_min) / (uv_max - uv_min) * texture_coordinate_max as f32 - 0.5).round() as f32
+        ((uv - uv_min) / (uv_max - uv_min)).mul_add(texture_coordinate_max, -0.5).round()
     }
 
     fn texture_to_uv(texture_coordinate: usize, texture_coordinate_max: usize, uv_min: f32, uv_max: f32) -> f32 {
-        (texture_coordinate as f32 + 0.5) / texture_coordinate_max as f32 * (uv_max - uv_min) + uv_min
+        ((texture_coordinate as f32 + 0.5) / texture_coordinate_max as f32).mul_add(uv_max - uv_min, uv_min)
     }
 
     /// Returns an iterator that contains the uv x coordinates of the underlying display in ascending order.
@@ -248,9 +250,9 @@ impl<T: ConsoleDisplay> SingleWidget<T> for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay> ToString for UvWidget<T> {
-    fn to_string(&self) -> String {
-        self.get_child().to_string()
+impl<T: ConsoleDisplay> Display for UvWidget<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_child().to_string())
     }
 }
 

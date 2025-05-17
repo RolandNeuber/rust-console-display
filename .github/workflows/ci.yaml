@@ -1,4 +1,4 @@
-name: Rust
+name: Continuous Integration
 
 on:
   push:
@@ -9,10 +9,10 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -22,23 +22,38 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          ~/.cargo/registry
-          ~/.cargo/git
+          ~/.cargo
           ~/.rustup
+          target
         key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
 
+    - name: Add Rust to PATH
+      run: |
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "$HOME/.rustup/bin" >> $GITHUB_PATH
+
     - name: Install Rust nightly
-      run: curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
-    - name: Add cargo to path
-      run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      run: |
+        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ]; then
+            echo "Rust is already installed. Skipping installation."
+            rustup update
+            rustup override set nightly
+            rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy
+        else
+            echo "Rust is not installed. Installing via rustup..."
+            curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+        fi
 
     - name: Show rust version
       run: rustc --version
 
     - name: Build
-      run: cargo build
+      run: cargo build --all-targets --all-features
+      
+    - name: Clippy
+      run: RUSTFLAGS="-Dclippy::all" cargo clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
 
     - name: Run tests
-      run: cargo test
+      run: cargo test  --all-targets --all-features

@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     pixel::{
         character_pixel::CharacterPixel, 
@@ -15,7 +17,7 @@ pub trait ConsoleDisplay: Widget {
 }
 
 /// Represents a console display with a width and height in pixels.
-pub struct PixelDisplay<T: MultiPixel<T>> {
+pub struct PixelDisplay<T: MultiPixel> {
     data: Vec<T>,
     width: usize,
     height: usize,
@@ -23,7 +25,7 @@ pub struct PixelDisplay<T: MultiPixel<T>> {
     block_count_y: usize,
 }
 
-impl<T: MultiPixel<T>> ConsoleDisplay for PixelDisplay<T> {
+impl<T: MultiPixel> ConsoleDisplay for PixelDisplay<T> {
     fn get_width(&self) -> usize {
         self.width
     }
@@ -33,7 +35,7 @@ impl<T: MultiPixel<T>> ConsoleDisplay for PixelDisplay<T> {
     }
 }
 
-impl<T: MultiPixel<T>> Widget for PixelDisplay<T> {
+impl<T: MultiPixel> Widget for PixelDisplay<T> {
     fn get_width_characters(&self) -> usize {
         self.block_count_x
     }
@@ -43,21 +45,19 @@ impl<T: MultiPixel<T>> Widget for PixelDisplay<T> {
     }
 }
 
-impl<T: MultiPixel<T>> PixelDisplay<T> {
+impl<T: MultiPixel> PixelDisplay<T> {
     /// Convenience method to build a blank display struct with specified dimensions
-    pub fn build(width: usize, height: usize, fill: T::U) -> Result<PixelDisplay<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
+    pub fn build(width: usize, height: usize, fill: T::U) -> Result<Self, String> where [(); T::WIDTH * T::HEIGHT]: {
         let data: Vec<T::U> = vec![fill; width * height];
         Self::build_from_data(width, height, data)
     }
 
     /// Builds a display struct with the specified dimensions from the given data.
-    pub fn build_from_data(width: usize, height: usize, data: Vec<T::U>) -> Result<PixelDisplay<T>, String> where [(); T::WIDTH * T::HEIGHT]: {
+    pub fn build_from_data(width: usize, height: usize, data: Vec<T::U>) -> Result<Self, String> where [(); T::WIDTH * T::HEIGHT]: {
         if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
             return Err(
                 format!(
-                    "Width and height must be multiples of multipixel dimensions. Got width = {}, height = {}.", 
-                    width, 
-                    height
+                    "Width and height must be multiples of multipixel dimensions. Got width = {width}, height = {height}."
                 )
             );
         }
@@ -93,7 +93,7 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
             }
         }
 
-        Ok(PixelDisplay {
+        Ok(Self {
             width, 
             height, 
             block_count_x,
@@ -103,19 +103,19 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
     }
 
 
-    pub fn get_data(&self) -> &Vec<T> {
+    #[must_use] pub const fn get_data(&self) -> &Vec<T> {
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut Vec<T> {
+    const fn get_data_mut(&mut self) -> &mut Vec<T> {
         &mut self.data
     }
 
-    pub fn get_block_count_x(&self) -> &usize {
+    #[must_use] pub const fn get_block_count_x(&self) -> &usize {
         &self.block_count_x
     }
 
-    pub fn get_block_count_y(&self) -> &usize {
+    #[must_use] pub const fn get_block_count_y(&self) -> &usize {
         &self.block_count_y
     }
 
@@ -160,7 +160,7 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
     /// ```
     pub fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String> where [(); T::WIDTH * T::HEIGHT]: {
         if x >= self.get_width() || y >= self.get_height() {
-            return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
+            return Err(format!("Pixel coordinates out of bounds. Got x = {x}, y = {y}."))
         }
 
         let block_x: usize = x / T::WIDTH;
@@ -169,15 +169,15 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
         let offset_y: usize = y % T::HEIGHT;
 
         let pixel = &self.get_data()[block_x + block_y * self.get_block_count_x()];
-        match pixel.get_subpixel(offset_x, offset_y) {
-            Ok(val) => Ok(val),
-            Err(_) => Err("Offset should be 0 or 1.".to_string()),
-        }
+        pixel.get_subpixel(offset_x, offset_y).map_or_else(
+            |_| Err("Offset should be 0 or 1.".to_string()), 
+            Ok
+        )
     }
 
     pub fn set_pixel(&mut self, x: usize, y: usize, value: T::U) -> Result<(), String> where [(); T::WIDTH * T::HEIGHT]: {
         if x >= self.get_width() || y >= self.get_height() {
-            return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
+            return Err(format!("Pixel coordinates out of bounds. Got x = {x}, y = {y}."))
         }
 
         let block_x: usize = x / T::WIDTH;
@@ -188,10 +188,10 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
         let block_count_x = *self.get_block_count_x();
 
         let pixel = &mut self.get_data_mut()[block_x + block_y * block_count_x];
-        match pixel.set_subpixel(offset_x, offset_y, value) {
-            Ok(val) => Ok(val),
-            Err(_) => Err("Offset should be 0 or 1.".to_string()),
-        }
+        pixel.set_subpixel(offset_x, offset_y, value).map_or_else(
+            |_| Err("Offset should be 0 or 1.".to_string()), 
+            Ok
+        )
     }
 
     pub fn draw_line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, value: T::U) where [(); T::WIDTH * T::HEIGHT]: {
@@ -215,9 +215,9 @@ impl<T: MultiPixel<T>> PixelDisplay<T> {
     }
 }
 
-impl<T: MultiPixel<T>> ToString for PixelDisplay<T> {
-    fn to_string(&self) -> String {
-        let mut string_repr = String::new();
+impl<T: MultiPixel> Display for PixelDisplay<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let mut string_repr = String::new();
         for y in 0..*self.get_block_count_y() {
             for x in 0..*self.get_block_count_x() {
                 string_repr.push_str(
@@ -229,7 +229,8 @@ impl<T: MultiPixel<T>> ToString for PixelDisplay<T> {
             string_repr.push_str("\r\n");
         }
         string_repr.pop();
-        string_repr
+        
+        write!(f, "{string_repr}")
     }
 }
 
@@ -242,13 +243,13 @@ pub struct CharacterDisplay<CharacterPixel> {
 
 impl CharacterDisplay<CharacterPixel> {
     /// Convenience method to build a blank display struct with specified dimensions
-    pub fn build(width: usize, height: usize, fill: CharacterPixel) -> Result<CharacterDisplay<CharacterPixel>, String> {
+    pub fn build(width: usize, height: usize, fill: CharacterPixel) -> Result<Self, String> {
         let data: Vec<CharacterPixel> = vec![fill; width * height];
         Self::build_from_data(width, height, data)
     }
 
     /// Builds a display struct with the specified dimensions from the given data.
-    pub fn build_from_data(width: usize, height: usize, data: Vec<CharacterPixel>) -> Result<CharacterDisplay<CharacterPixel>, String> {
+    pub fn build_from_data(width: usize, height: usize, data: Vec<CharacterPixel>) -> Result<Self, String> {
         let mut new_data = Vec::with_capacity(data.capacity());
         for i in data {
             new_data.push(Some(i.clone()));
@@ -267,36 +268,36 @@ impl CharacterDisplay<CharacterPixel> {
             );
         }
 
-        Ok(CharacterDisplay {
+        Ok(Self {
             width, 
             height, 
             data: new_data,
         })
     }
 
-    pub fn get_data(&self) -> &Vec<Option<CharacterPixel>> {
+    #[must_use] pub const fn get_data(&self) -> &Vec<Option<CharacterPixel>> {
         &self.data
     }
 
     #[allow(dead_code)]
-    fn get_data_mut(&mut self) -> &mut Vec<Option<CharacterPixel>> {
+    const fn get_data_mut(&mut self) -> &mut Vec<Option<CharacterPixel>> {
         &mut self.data
     }
 
     pub fn get_pixel(&self, x: usize, y: usize) -> Result<&CharacterPixel, String> {
         if x >= self.get_width() || y >= self.get_height() {
-            return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
+            return Err(format!("Pixel coordinates out of bounds. Got x = {x}, y = {y}."))
         }
 
         let mut offset = 0;
-        while let None = &self.get_data()[x + y * self.get_width() - offset] {
+        while self.get_data()[x + y * self.get_width() - offset].is_none() {
             offset += 1;
         }
         
-        return match &self.get_data()[x + y * self.get_width() - offset] {
-            Some(val) => Ok(val),
-            None => Err("Data malformed, pixel was None.".to_string())
-        }
+        self.get_data()[x + y * self.get_width() - offset].as_ref().map_or_else(
+            || Err("Data malformed, pixel was None.".to_string()), 
+            Ok
+        )
     }
 
     /// Sets a character pixel at a specific x and y coordinate.
@@ -311,11 +312,11 @@ impl CharacterDisplay<CharacterPixel> {
         ).unwrap());
         
         if x > self.get_width() + value.get_width() || y >= self.get_height() {
-            return Err(format!("Pixel coordinates out of bounds. Got x = {}, y = {}.", x, y))
+            return Err(format!("Pixel coordinates out of bounds. Got x = {x}, y = {y}."))
         }
 
         let mut overlap = 0;
-        while let None = self.data[x + y * self.width - overlap] {
+        while self.data[x + y * self.width - overlap].is_none() {
             self.data[x + y * self.width - overlap] = default_pixel.clone();
             overlap += 1;
         }
@@ -360,14 +361,14 @@ impl Widget for CharacterDisplay<CharacterPixel> {
     }
 }
 
-impl ToString for CharacterDisplay<CharacterPixel> {
-    fn to_string(&self) -> String {
+impl Display for CharacterDisplay<CharacterPixel> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut string_repr = String::new();
         for y in 0..self.get_height_characters() {
             for x in 0..self.get_width_characters() {
                 let character = &self.get_data()[x + y * self.get_width_characters()];
                 match character {
-                    None => continue,
+                    None => {},
                     Some(character) => 
                         string_repr.push_str(
                         character
@@ -379,6 +380,6 @@ impl ToString for CharacterDisplay<CharacterPixel> {
             string_repr.push_str("\r\n");
         }
         string_repr.pop();
-        string_repr
+        write!(f, "{string_repr}")
     }
 }

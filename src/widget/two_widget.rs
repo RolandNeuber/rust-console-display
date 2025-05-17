@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::Widget;
 
 pub trait TwoWidget<S, T>: Widget {
@@ -57,7 +59,7 @@ impl<S: Widget, T: Widget> HorizontalTilingWidget<S, T> {
                 child2.get_height_characters()
             ));
         }
-        Ok(HorizontalTilingWidget { 
+        Ok(Self { 
             child1,
             child2
         })
@@ -84,8 +86,8 @@ impl<S: Widget, T: Widget> TwoWidget<S, T> for HorizontalTilingWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> ToString for HorizontalTilingWidget<S, T> {
-    fn to_string(&self) -> String {
+impl<S: Widget, T: Widget> Display for HorizontalTilingWidget<S, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str_repr1 = self.child1.to_string();
         let str_repr2 = self.child2.to_string();
         let lines= Iterator::zip(
@@ -97,7 +99,7 @@ impl<S: Widget, T: Widget> ToString for HorizontalTilingWidget<S, T> {
             str_repr.push_str(line_pair.0);
             str_repr.push_str(line_pair.1);
         }
-        str_repr
+        write!(f, "{str_repr}")
     }
 }
 
@@ -115,7 +117,7 @@ impl<S: Widget, T: Widget> VerticalTilingWidget<S, T> {
                 child2.get_width_characters()
             ));
         }
-        Ok(VerticalTilingWidget { 
+        Ok(Self { 
             child1,
             child2
         })
@@ -142,8 +144,8 @@ impl<S: Widget, T: Widget> TwoWidget<S, T> for VerticalTilingWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> ToString for VerticalTilingWidget<S, T> {
-    fn to_string(&self) -> String {
-        format!("{}\n{}", self.child1.to_string(), self.child2.to_string())
+impl<S: Widget, T: Widget> Display for VerticalTilingWidget<S, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}\n{}", self.child1.to_string(), self.child2.to_string())
     }
 }

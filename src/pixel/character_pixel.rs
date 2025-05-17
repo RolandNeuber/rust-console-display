@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Display, fmt::Debug};
 
 use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
@@ -12,8 +12,8 @@ pub struct CharacterPixel {
 }
 
 impl CharacterPixel {
-    pub fn build(character: char, foreground: Color, background: Color) -> Result<CharacterPixel, String> {
-        Ok(CharacterPixel {
+    pub fn build(character: char, foreground: Color, background: Color) -> Result<Self, String> {
+        Ok(Self {
             character,
             foreground,
             background,
@@ -24,26 +24,26 @@ impl CharacterPixel {
         })
     }
 
-    pub fn get_character(&self) -> char {
+    #[must_use] pub const fn get_character(&self) -> char {
         self.character
     }
 
-    pub fn get_foreground(&self) -> Color {
+    #[must_use] pub const fn get_foreground(&self) -> Color {
         self.foreground
     }
 
-    pub fn get_background(&self) -> Color {
+    #[must_use] pub const fn get_background(&self) -> Color {
         self.background
     }
 
-    pub fn get_width(&self) -> usize {
+    #[must_use] pub const fn get_width(&self) -> usize {
         self.width
     }
 }
 
-impl ToString for CharacterPixel {
-    fn to_string(&self) -> String {
-        Color::color(&self.character.to_string().as_str(), &self.foreground, &self.background)
+impl Display for CharacterPixel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", Color::color(self.character.to_string().as_str(), &self.foreground, &self.background))
     }
 }
 

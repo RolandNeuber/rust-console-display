@@ -11,8 +11,8 @@ use display::{
 };
 
 fn main() {
-    let dimensions: (usize, usize) = (200, 200);
     type PixelType = ColorOctPixel;
+    let dimensions: (usize, usize) = (200, 200);
 
     let uv_x = (-10.0, 10.0);
     let uv_y = (2.0, -2.0);
@@ -21,8 +21,8 @@ fn main() {
     DisplayDriver::new(
         UvWidget::new(
             PixelDisplay::<PixelType>::build(
-                dimensions.0 as usize, 
-                dimensions.1 as usize,
+                dimensions.0, 
+                dimensions.1,
                 RGBColor { r: 0, g: 0, b: 0 }
             ).expect("Could not construct display.")
         )
@@ -40,12 +40,12 @@ fn main() {
         for x in xs {
             let y = function(x);
             
-            let _ = this.draw_line(old_x, old_y, x, y, RGBColor{ r: 255, g: 255, b: 255 });
+            this.draw_line(old_x, old_y, x, y, RGBColor{ r: 255, g: 255, b: 255 });
 
             old_x = x;
             old_y = y;
         }
-        return UpdateStatus::Continue;
+        UpdateStatus::Continue
     });
 
     display.initialize().expect("Could not initialize display.");
