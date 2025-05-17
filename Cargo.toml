@@ -1,7 +1,13 @@
 [package]
 name = "display"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A tui library that focuses primarily on providing high resolution display functionality in the console."
+readme = "README.md"
+repository = "https://github.com/RolandNeuber/rust-console-display"
+keywords = ["console", "terminal", "tui", "ui", "widget"]
+categories = ["command-line-interface", "gui", "graphics"]
 
 [dependencies]
 crossterm = "0.28.1"

@@ -59,14 +59,14 @@ fn main() {
         map_display.set_pixel(snake[0].0, snake[0].1, snake_color).expect("Could not set pixel.");
 
         apple = (
-            rand::thread_rng().gen_range(0..map_display.get_width().clone()), 
-            rand::thread_rng().gen_range(0..map_display.get_height().clone())
+            rand::thread_rng().gen_range(0..map_display.get_width()), 
+            rand::thread_rng().gen_range(0..map_display.get_height())
         );
 
         while snake.contains(&apple) {
             apple = (
-                rand::thread_rng().gen_range(0..map_display.get_width().clone()), 
-                rand::thread_rng().gen_range(0..map_display.get_height().clone())
+                rand::thread_rng().gen_range(0..map_display.get_width()), 
+                rand::thread_rng().gen_range(0..map_display.get_height())
             );
         }
 
@@ -105,20 +105,20 @@ fn main() {
         let map_display = disp.get_children_mut().1;
         // place new segment in front (direction) of snake head
         snake.insert(0, (
-            (snake[0].0 as i32 + direction.0).rem_euclid(map_display.get_width().clone()  as i32) as usize,
-            (snake[0].1 as i32 + direction.1).rem_euclid(map_display.get_height().clone() as i32) as usize
+            (snake[0].0 as i32 + direction.0).rem_euclid(map_display.get_width()  as i32) as usize,
+            (snake[0].1 as i32 + direction.1).rem_euclid(map_display.get_height() as i32) as usize
         ));
 
         if snake[0] == apple {
             score += 1;
-            if score == map_display.get_width().clone() * map_display.get_height().clone() {
+            if score == map_display.get_width() * map_display.get_height() {
                 return UpdateStatus::Break;
             }
             // place new apple
             while snake.contains(&apple) {
                 apple = (
-                    rand::thread_rng().gen_range(0..map_display.get_width().clone()), 
-                    rand::thread_rng().gen_range(0..map_display.get_height().clone())
+                    rand::thread_rng().gen_range(0..map_display.get_width()), 
+                    rand::thread_rng().gen_range(0..map_display.get_height())
                 );
             }
             map_display.set_pixel(apple.0, apple.1, apple_color).expect("Could not set pixel.");
@@ -139,7 +139,7 @@ fn main() {
             }
         }
         thread::sleep(duration);
-        return UpdateStatus::Continue;
+        UpdateStatus::Continue
     });
 
     disp.initialize().expect("Could not initialize display."); 
