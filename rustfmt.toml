@@ -1,0 +1,7 @@
+unstable_features = true
+imports_layout = "Vertical"
+control_brace_style = "ClosingNextLine"
+binop_separator = "Back"
+imports_granularity = "Crate"
+newline_style="Unix"
+max_width = 75

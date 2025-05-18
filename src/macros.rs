@@ -5,7 +5,7 @@ macro_rules! impl_getters {
             fn [<get_ $field>](&self) -> &$type {
                 &self.$field
             }
-    
+
             fn [<get_ $field _mut>](&mut self) -> &mut $type {
                 &mut self.$field
             }
