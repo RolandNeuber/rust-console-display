@@ -1,4 +1,7 @@
-use std::{fmt::Display, fmt::Debug};
+use std::fmt::{
+    Debug,
+    Display,
+};
 
 use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
@@ -12,38 +15,58 @@ pub struct CharacterPixel {
 }
 
 impl CharacterPixel {
-    pub fn build(character: char, foreground: Color, background: Color) -> Result<Self, String> {
+    pub fn build(
+        character: char,
+        foreground: Color,
+        background: Color,
+    ) -> Result<Self, String> {
         Ok(Self {
             character,
             foreground,
             background,
             width: match UnicodeWidthChar::width(character) {
                 Some(val) => val,
-                None => return Err("Control characters are not allowed.".to_string())
+                None => {
+                    return Err(
+                        "Control characters are not allowed.".to_string()
+                    );
+                }
             },
         })
     }
 
-    #[must_use] pub const fn get_character(&self) -> char {
+    #[must_use]
+    pub const fn get_character(&self) -> char {
         self.character
     }
 
-    #[must_use] pub const fn get_foreground(&self) -> Color {
+    #[must_use]
+    pub const fn get_foreground(&self) -> Color {
         self.foreground
     }
 
-    #[must_use] pub const fn get_background(&self) -> Color {
+    #[must_use]
+    pub const fn get_background(&self) -> Color {
         self.background
     }
 
-    #[must_use] pub const fn get_width(&self) -> usize {
+    #[must_use]
+    pub const fn get_width(&self) -> usize {
         self.width
     }
 }
 
 impl Display for CharacterPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Color::color(self.character.to_string().as_str(), &self.foreground, &self.background))
+        write!(
+            f,
+            "{}",
+            Color::color(
+                self.character.to_string().as_str(),
+                &self.foreground,
+                &self.background
+            )
+        )
     }
 }
 

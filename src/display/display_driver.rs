@@ -1,25 +1,25 @@
 use std::{
     io::{
-        self, 
-        Write
-    }, 
+        self,
+        Write,
+    },
     ops::{
-        Deref, 
-        DerefMut
-    }, 
-    time::Duration
+        Deref,
+        DerefMut,
+    },
+    time::Duration,
 };
 
 use crossterm::{
-    cursor, 
+    cursor,
     event::{
-        self, 
-        Event, 
-        KeyCode, 
-        KeyEvent, 
-        KeyModifiers
-    }, 
-    terminal
+        self,
+        Event,
+        KeyCode,
+        KeyEvent,
+        KeyModifiers,
+    },
+    terminal,
 };
 
 use crate::widget::Widget;
@@ -29,40 +29,42 @@ pub enum UpdateStatus {
     Continue,
 }
 
-type UpdateFunction<T> = dyn FnMut(&mut DisplayDriver<T>, Option<KeyEvent>) -> UpdateStatus;
+type UpdateFunction<T> =
+    dyn FnMut(&mut DisplayDriver<T>, Option<KeyEvent>) -> UpdateStatus;
 
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
 pub struct DisplayDriver<T: Widget> {
     original_width: u16,
     original_height: u16,
     display: T,
-    on_update: Option<Box<UpdateFunction<T>>>
+    on_update: Option<Box<UpdateFunction<T>>>,
 }
 
 impl<T: Widget> DisplayDriver<T> {
-
     /// Convenience method to build a blank display struct with specified dimensions
     pub fn new(widget: T) -> Self {
-        let (original_width, original_height) = match crossterm::terminal::size(){
-            Ok((w, h)) => (w, h),
-            Err(_) => (0, 0)
-        }; 
-        
+        let (original_width, original_height) =
+            match crossterm::terminal::size() {
+                Ok((w, h)) => (w, h),
+                Err(_) => (0, 0),
+            };
+
         Self {
             original_width,
             original_height,
             display: widget,
-            on_update: None
+            on_update: None,
         }
     }
 
     pub fn print_display(&self) -> Result<(), String> {
         let mut stdout = io::stdout();
-        
+
         if let Err(e) = write!(stdout, "\x1B[H") {
             return Err(e.to_string());
         }
-        if let Err(e) = write!(stdout, "{}", self.get_widget().to_string()) {
+        if let Err(e) = write!(stdout, "{}", self.get_widget().to_string())
+        {
             return Err(e.to_string());
         }
 
@@ -78,20 +80,28 @@ impl<T: Widget> DisplayDriver<T> {
         }
 
         // use alternate screen
-        if let Err(e) = crossterm::execute!(stdout, terminal::EnterAlternateScreen) {
+        if let Err(e) =
+            crossterm::execute!(stdout, terminal::EnterAlternateScreen)
+        {
             return Err(e.to_string());
         }
 
         // set dimensions of screen
-        if let Err(e) = crossterm::execute!(stdout, terminal::SetSize(
-            self.get_widget().get_width_characters() as u16, 
-            self.get_widget().get_height_characters() as u16
-        )) {
+        if let Err(e) = crossterm::execute!(
+            stdout,
+            terminal::SetSize(
+                self.get_widget().get_width_characters() as u16,
+                self.get_widget().get_height_characters() as u16
+            )
+        ) {
             return Err(e.to_string());
         }
-        
+
         // clear screen
-        if let Err(e) = crossterm::execute!(stdout, terminal::Clear(terminal::ClearType::All)) {
+        if let Err(e) = crossterm::execute!(
+            stdout,
+            terminal::Clear(terminal::ClearType::All)
+        ) {
             return Err(e.to_string());
         }
 
@@ -120,7 +130,8 @@ impl<T: Widget> DisplayDriver<T> {
     }
 
     pub fn set_on_update<F>(&mut self, on_update: F)
-        where F: FnMut(&mut Self, Option<KeyEvent>) -> UpdateStatus + 'static
+    where
+        F: FnMut(&mut Self, Option<KeyEvent>) -> UpdateStatus + 'static,
     {
         self.on_update = Some(Box::new(on_update));
     }
@@ -128,7 +139,7 @@ impl<T: Widget> DisplayDriver<T> {
     pub fn update(&mut self) {
         loop {
             self.print_display().expect("Could not print display.");
-            
+
             let mut latest_event = None;
             while event::poll(Duration::from_millis(0)).unwrap() {
                 if let Event::Key(key_event) = event::read().unwrap() {
@@ -136,14 +147,12 @@ impl<T: Widget> DisplayDriver<T> {
                 }
             }
 
-            if let 
-                Some(key_event) = latest_event &&
-                key_event.code == KeyCode::Char('c') && 
+            if let Some(key_event) = latest_event &&
+                key_event.code == KeyCode::Char('c') &&
                 key_event.modifiers.contains(KeyModifiers::CONTROL)
             {
                 break; // Exit on Ctrl-C
             }
-            
 
             let mut update_status = UpdateStatus::Continue;
             if let Some(mut callback) = self.on_update.take() {
@@ -152,7 +161,7 @@ impl<T: Widget> DisplayDriver<T> {
             }
             match update_status {
                 UpdateStatus::Break => break,
-                UpdateStatus::Continue => { },
+                UpdateStatus::Continue => {}
             }
         }
     }
@@ -177,17 +186,23 @@ impl<T: Widget> Drop for DisplayDriver<T> {
         let mut stdout = io::stdout();
 
         // return to previous screen
-        let _ = crossterm::execute!(stdout, terminal::LeaveAlternateScreen);
+        let _ =
+            crossterm::execute!(stdout, terminal::LeaveAlternateScreen);
 
         // show cursor blinking
         let _ = crossterm::execute!(stdout, cursor::Show);
-        
+
         // reset dimensions of screen
-        if *self.get_original_width() != 0 && *self.get_orignal_height() != 0 {
-            let _ = crossterm::execute!(stdout, terminal::SetSize(
-                *self.get_original_width(), 
-                *self.get_orignal_height()
-            ));
+        if *self.get_original_width() != 0 &&
+            *self.get_orignal_height() != 0
+        {
+            let _ = crossterm::execute!(
+                stdout,
+                terminal::SetSize(
+                    *self.get_original_width(),
+                    *self.get_orignal_height()
+                )
+            );
         }
 
         // disable terminal raw mode
