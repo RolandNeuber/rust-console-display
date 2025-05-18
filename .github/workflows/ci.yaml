@@ -38,7 +38,7 @@ jobs:
       run: |
         if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ]; then
             echo "Rust is already installed. Skipping installation."
-            rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy
+            rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt
         else
             echo "Rust is not installed. Installing via rustup..."
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
