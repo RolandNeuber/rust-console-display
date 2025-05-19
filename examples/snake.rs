@@ -1,8 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-use crossterm::event::KeyCode;
-use display::{
+use console_display::{
     console_display::{
         ConsoleDisplay,
         PixelDisplay,
@@ -21,6 +20,7 @@ use display::{
         VerticalTilingWidget,
     },
 };
+use crossterm::event::KeyCode;
 use rand::Rng;
 use std::{
     thread,

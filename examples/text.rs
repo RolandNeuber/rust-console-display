@@ -1,7 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-use display::{
+use console_display::{
     console_display::{
         CharacterDisplay,
         ConsoleDisplay,
