@@ -10,7 +10,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
-  APPLY_FORMAT: "$APPLY_FORMAT"
+  AUTO_FORMAT: "$AUTO_FORMAT"
 
 jobs:
   build:
@@ -49,11 +49,11 @@ jobs:
       run: rustc --version
 
     - name: Format code
-      if: env.APPLY_FORMAT == 'true'
+      if: env.AUTO_FORMAT == 'true'
       run: cargo +nightly fmt --all
 
     - name: Check formatting
-      if: env.APPLY_FORMAT != 'true'
+      if: env.AUTO_FORMAT != 'true'
       run: |
         cargo +nightly fmt --all --check || {
           echo "Formatting failed — please run 'cargo +nightly fmt --all' locally before pushing.";
@@ -62,7 +62,13 @@ jobs:
 
     - name: Build
       run: cargo +nightly build --all-targets --all-features
-      
+    
+    # Allow dirty flag added for convinience. Be careful when auto-formatting is enabled.
+    - name: Clippy apply suggestions
+      if: env.AUTO_FORMAT == 'true'
+      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
+
+    # Still need to run clippy as well, because cargo clippy fix makes errors into warnings. See: https://github.com/rust-lang/rust-clippy/discussions/9979
     - name: Clippy
       run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
 

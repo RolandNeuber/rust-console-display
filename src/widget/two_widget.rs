@@ -32,17 +32,17 @@ impl<S: Widget, T: Widget> OverlayWidget<S, T> {
             ));
         }
         Ok(Self {
+            child1_on_top,
             child1,
             child2,
-            child1_on_top,
         })
     }
 
-    pub fn get_child1_on_top(&self) -> bool {
+    pub const fn get_child1_on_top(&self) -> bool {
         self.child1_on_top
     }
 
-    pub fn set_child1_on_top(&mut self, child1_on_top: bool) {
+    pub const fn set_child1_on_top(&mut self, child1_on_top: bool) {
         self.child1_on_top = child1_on_top;
     }
 }
