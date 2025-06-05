@@ -10,11 +10,12 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
+  APPLY_FORMAT: "$APPLY_FORMAT"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
     - uses: actions/checkout@v4
 
@@ -47,7 +48,12 @@ jobs:
     - name: Show rust version
       run: rustc --version
 
+    - name: Format code
+      if: env.APPLY_FORMAT == 'true'
+      run: cargo +nightly fmt --all
+
     - name: Check formatting
+      if: env.APPLY_FORMAT != 'true'
       run: |
         cargo +nightly fmt --all --check || {
           echo "Formatting failed — please run 'cargo +nightly fmt --all' locally before pushing.";
@@ -55,7 +61,7 @@ jobs:
         }
 
     - name: Build
-      run: cargo build --all-targets --all-features
+      run: cargo +nightly build --all-targets --all-features
       
     - name: Clippy
       run: RUSTFLAGS="-Dclippy::all" cargo clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
