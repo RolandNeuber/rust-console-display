@@ -47,7 +47,7 @@ Here is a minimal example that constructs a 100 by 100 display colored red:
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-use display::{
+use console_display::{
     console_display::PixelDisplay,
     display_driver::DisplayDriver,
     pixel::color_pixel::{

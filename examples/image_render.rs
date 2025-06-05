@@ -6,7 +6,7 @@ use std::io::{
     Write,
 };
 
-use display::{
+use console_display::{
     console_display::PixelDisplay,
     display_driver::DisplayDriver,
     pixel::{
