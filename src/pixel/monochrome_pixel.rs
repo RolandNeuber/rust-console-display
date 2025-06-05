@@ -90,7 +90,7 @@ impl SinglePixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::pixel::monochrome_pixel::{
+    /// use console_display::pixel::monochrome_pixel::{
     ///     MultiPixel,
     ///     SinglePixel
     /// };
@@ -165,7 +165,7 @@ impl DualPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::pixel::monochrome_pixel::{
+    /// use console_display::pixel::monochrome_pixel::{
     ///     MultiPixel,
     ///     DualPixel
     /// };
@@ -246,7 +246,7 @@ impl QuadPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::pixel::monochrome_pixel::{
+    /// use console_display::pixel::monochrome_pixel::{
     ///     MultiPixel,
     ///     QuadPixel
     /// };
@@ -319,7 +319,7 @@ impl HexPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::pixel::monochrome_pixel::{
+    /// use console_display::pixel::monochrome_pixel::{
     ///     MultiPixel,
     ///     HexPixel
     /// };
@@ -407,7 +407,7 @@ impl OctPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::pixel::monochrome_pixel::{
+    /// use console_display::pixel::monochrome_pixel::{
     ///     MultiPixel,
     ///     OctPixel
     /// };
@@ -491,7 +491,7 @@ impl BrailleOctPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::pixel::monochrome_pixel::{
+    /// use console_display::pixel::monochrome_pixel::{
     ///     MultiPixel,
     ///     BrailleOctPixel
     /// };
