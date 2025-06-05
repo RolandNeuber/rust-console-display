@@ -144,7 +144,7 @@ impl<T: MultiPixel> PixelDisplay<T> {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::{
+    /// use console_display::{
     ///     display_driver::DisplayDriver,
     ///     pixel::monochrome_pixel::SinglePixel,
     ///     console_display::PixelDisplay

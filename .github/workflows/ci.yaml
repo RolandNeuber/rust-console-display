@@ -64,7 +64,7 @@ jobs:
       run: cargo +nightly build --all-targets --all-features
       
     - name: Clippy
-      run: RUSTFLAGS="-Dclippy::all" cargo clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
+      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
 
     - name: Run tests
-      run: cargo test  --all-targets --all-features
+      run: cargo +nightly test  --all-targets --all-features

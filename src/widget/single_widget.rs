@@ -242,7 +242,7 @@ impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::{
+    /// use console_display::{
     ///     widget::single_widget::UvWidget,
     ///     console_display::PixelDisplay,
     ///     pixel::monochrome_pixel::SinglePixel,
@@ -274,7 +274,7 @@ impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use display::{
+    /// use console_display::{
     ///     widget::single_widget::UvWidget,
     ///     console_display::PixelDisplay,
     ///     pixel::monochrome_pixel::SinglePixel,
