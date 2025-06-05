@@ -3,6 +3,7 @@
 
 use console_display::{
     console_display::{
+        CharacterDisplay,
         ConsoleDisplay,
         PixelDisplay,
     },
@@ -10,12 +11,17 @@ use console_display::{
         DisplayDriver,
         UpdateStatus,
     },
-    pixel::color_pixel::{
-        ColorDualPixel,
-        ColorSinglePixel,
-        RGBColor,
+    pixel::{
+        character_pixel::CharacterPixel,
+        color_pixel::{
+            Color,
+            ColorDualPixel,
+            ColorSinglePixel,
+            RGBColor,
+        },
     },
     widget::two_widget::{
+        OverlayWidget,
         TwoWidget,
         VerticalTilingWidget,
     },
@@ -44,15 +50,43 @@ fn main() {
                 },
             )
             .unwrap(),
-            PixelDisplay::<ColorDualPixel>::build(
-                100,
-                42,
-                RGBColor { r: 0, b: 0, g: 0 },
+            OverlayWidget::build(
+                PixelDisplay::<ColorDualPixel>::build(
+                    100,
+                    42,
+                    RGBColor { r: 0, b: 0, g: 0 },
+                )
+                .unwrap(),
+                CharacterDisplay::<CharacterPixel>::build(
+                    100,
+                    21,
+                    CharacterPixel::build(
+                        ' ',
+                        Color::Default,
+                        Color::Default,
+                    )
+                    .unwrap(),
+                )
+                .unwrap(),
+                true,
             )
             .unwrap(),
         )
         .unwrap(),
     );
+
+    let endscreen = disp.get_children_mut().1.get_children_mut().1;
+
+    for (i, sym) in "You lost".chars().enumerate() {
+        endscreen
+            .set_pixel(
+                46 + i,
+                10,
+                CharacterPixel::build(sym, Color::Default, Color::Default)
+                    .expect("Could not construct character pixel."),
+            )
+            .expect("Could not set character pixel.");
+    }
 
     let duration = Duration::from_millis(75);
     let mut score = 1;
@@ -64,27 +98,37 @@ fn main() {
         let map_display = disp.get_children_mut().1;
 
         snake = vec![(
-            map_display.get_width() / 2,
-            map_display.get_height() / 2,
+            map_display.get_children().0.get_width() / 2,
+            map_display.get_children().0.get_height() / 2,
         )];
 
         map_display
+            .get_children_mut()
+            .0
             .set_pixel(snake[0].0, snake[0].1, snake_color)
             .expect("Could not set pixel.");
 
         apple = (
-            rand::thread_rng().gen_range(0..map_display.get_width()),
-            rand::thread_rng().gen_range(0..map_display.get_height()),
+            rand::thread_rng()
+                .gen_range(0..map_display.get_children().0.get_width()),
+            rand::thread_rng()
+                .gen_range(0..map_display.get_children().0.get_height()),
         );
 
         while snake.contains(&apple) {
             apple = (
-                rand::thread_rng().gen_range(0..map_display.get_width()),
-                rand::thread_rng().gen_range(0..map_display.get_height()),
+                rand::thread_rng().gen_range(
+                    0..map_display.get_children().0.get_width(),
+                ),
+                rand::thread_rng().gen_range(
+                    0..map_display.get_children().0.get_height(),
+                ),
             );
         }
 
         map_display
+            .get_children_mut()
+            .0
             .set_pixel(apple.0, apple.1, apple_color)
             .expect("Could not set pixel.");
     }
@@ -114,6 +158,7 @@ fn main() {
         }
 
         if lost {
+            disp.get_children_mut().1.set_child1_on_top(false);
             return UpdateStatus::Continue;
         }
 
@@ -122,37 +167,45 @@ fn main() {
         snake.insert(
             0,
             (
-                (snake[0].0 as i32 + direction.0)
-                    .rem_euclid(map_display.get_width() as i32)
-                    as usize,
-                (snake[0].1 as i32 + direction.1)
-                    .rem_euclid(map_display.get_height() as i32)
-                    as usize,
+                (snake[0].0 as i32 + direction.0).rem_euclid(
+                    map_display.get_children().0.get_width() as i32,
+                ) as usize,
+                (snake[0].1 as i32 + direction.1).rem_euclid(
+                    map_display.get_children().0.get_height() as i32,
+                ) as usize,
             ),
         );
 
         if snake[0] == apple {
             score += 1;
-            if score == map_display.get_width() * map_display.get_height()
+            if score ==
+                map_display.get_children().0.get_width() *
+                    map_display.get_children().0.get_height()
             {
                 return UpdateStatus::Break;
             }
             // place new apple
             while snake.contains(&apple) {
                 apple = (
-                    rand::thread_rng()
-                        .gen_range(0..map_display.get_width()),
-                    rand::thread_rng()
-                        .gen_range(0..map_display.get_height()),
+                    rand::thread_rng().gen_range(
+                        0..map_display.get_children().0.get_width(),
+                    ),
+                    rand::thread_rng().gen_range(
+                        0..map_display.get_children().0.get_height(),
+                    ),
                 );
             }
             map_display
+                .get_children_mut()
+                .0
                 .set_pixel(apple.0, apple.1, apple_color)
                 .expect("Could not set pixel.");
         }
         else {
             // remove pixel at last segment of snake
             map_display
+                .get_children_mut()
+                .0
                 .set_pixel(
                     snake.last().unwrap().0,
                     snake.last().unwrap().1,
@@ -165,6 +218,8 @@ fn main() {
 
         // place pixel at snake head
         map_display
+            .get_children_mut()
+            .0
             .set_pixel(snake[0].0, snake[0].1, snake_color)
             .expect("Could not set pixel.");
 

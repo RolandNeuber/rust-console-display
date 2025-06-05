@@ -7,43 +7,76 @@ pub trait TwoWidget<S, T>: Widget {
     fn get_children_mut(&mut self) -> (&mut S, &mut T);
 }
 
-// pub struct OverlayWidget<S, T> {
-//     child1: S,
-//     child2: T
-// }
+pub struct OverlayWidget<S: Widget, T: Widget> {
+    child1_on_top: bool,
+    child1: S,
+    child2: T,
+}
 
-// impl<S, T> Widget for OverlayWidget<S, T> {
-//     fn get_width_characters(&self) -> usize {
-//         todo!()
-//     }
+impl<S: Widget, T: Widget> OverlayWidget<S, T> {
+    pub fn build(
+        child1: S,
+        child2: T,
+        child1_on_top: bool,
+    ) -> Result<Self, String> {
+        if child1.get_width_characters() != child2.get_width_characters() ||
+            child1.get_height_characters() !=
+                child2.get_height_characters()
+        {
+            return Err(format!(
+                "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
+                child1.get_height_characters(),
+                child2.get_height_characters(),
+                child1.get_width_characters(),
+                child2.get_width_characters(),
+            ));
+        }
+        Ok(Self {
+            child1,
+            child2,
+            child1_on_top,
+        })
+    }
 
-//     fn get_height_characters(&self) -> usize {
-//         todo!()
-//     }
-// }
+    pub fn get_child1_on_top(&self) -> bool {
+        self.child1_on_top
+    }
 
-// impl<S, T> TwoWidget<S, T> for OverlayWidget<S, T> {
-//     fn new(child1: S, child2: T) -> Self {
-//         OverlayWidget {
-//             child1,
-//             child2
-//         }
-//     }
+    pub fn set_child1_on_top(&mut self, child1_on_top: bool) {
+        self.child1_on_top = child1_on_top;
+    }
+}
 
-//     fn get_children(&self) -> (&S, &T) {
-//         (&self.child1, &self.child2)
-//     }
+impl<S: Widget, T: Widget> Widget for OverlayWidget<S, T> {
+    fn get_width_characters(&self) -> usize {
+        self.child1.get_width_characters()
+    }
 
-//     fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-//         (&mut self.child1, &mut self.child2)
-//     }
-// }
+    fn get_height_characters(&self) -> usize {
+        self.child1.get_height_characters()
+    }
+}
 
-// impl<S, T> ToString for OverlayWidget<S, T> {
-//     fn to_string(&self) -> String {
-//         todo!()
-//     }
-// }
+impl<S: Widget, T: Widget> TwoWidget<S, T> for OverlayWidget<S, T> {
+    fn get_children(&self) -> (&S, &T) {
+        (&self.child1, &self.child2)
+    }
+
+    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
+        (&mut self.child1, &mut self.child2)
+    }
+}
+
+impl<S: Widget, T: Widget> Display for OverlayWidget<S, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.child1_on_top {
+            write!(f, "{}", self.child1.to_string())
+        }
+        else {
+            write!(f, "{}", self.child2.to_string())
+        }
+    }
+}
 
 pub struct HorizontalTilingWidget<S: Widget, T: Widget> {
     child1: S,
