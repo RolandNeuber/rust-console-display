@@ -16,12 +16,9 @@ fn main() {
     // Set dimensions to 100 by 100 pixels (50 by 25 characters)
     // with a red fill.
     let disp: PixelDisplay<ColorOctPixel> =
-        PixelDisplay::<ColorOctPixel>::build(
-            100,
-            100,
+        PixelDisplay::<ColorOctPixel>::new::<100, 100>(
             color_pixel::RGBColor { r: 255, g: 0, b: 0 },
-        )
-        .unwrap();
+        );
 
     // Wrap the display in a driver to manage interactions with the terminal
     // like resizing, enabling raw mode, providing an update loop.

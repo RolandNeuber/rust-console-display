@@ -40,23 +40,17 @@ fn main() {
 
     let mut disp = DisplayDriver::new(
         VerticalTilingWidget::build(
-            PixelDisplay::<ColorSinglePixel>::build(
-                100,
-                1,
-                RGBColor {
-                    r: 255,
-                    b: 255,
-                    g: 255,
-                },
-            )
-            .unwrap(),
+            PixelDisplay::<ColorSinglePixel>::new::<100, 1>(RGBColor {
+                r: 255,
+                b: 255,
+                g: 255,
+            }),
             OverlayWidget::build(
-                PixelDisplay::<ColorDualPixel>::build(
-                    100,
-                    42,
-                    RGBColor { r: 0, b: 0, g: 0 },
-                )
-                .unwrap(),
+                PixelDisplay::<ColorDualPixel>::new::<100, 42>(RGBColor {
+                    r: 0,
+                    b: 0,
+                    g: 0,
+                }),
                 CharacterDisplay::<CharacterPixel>::build(
                     100,
                     21,
@@ -82,8 +76,12 @@ fn main() {
             .set_pixel(
                 46 + i,
                 10,
-                CharacterPixel::build(sym, Color::Default, Color::Default)
-                    .expect("Could not construct character pixel."),
+                &CharacterPixel::build(
+                    sym,
+                    Color::Default,
+                    Color::Default,
+                )
+                .expect("Could not construct character pixel."),
             )
             .expect("Could not set character pixel.");
     }

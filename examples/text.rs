@@ -39,7 +39,7 @@ fn main() {
         let pixel =
             CharacterPixel::build(i, Color::Default, Color::Default)
                 .unwrap();
-        let _ = char_disp.set_pixel(x, y, pixel.clone());
+        let _ = char_disp.set_pixel(x, y, &pixel);
         if x + pixel.get_width() > char_disp.get_width() {
             y += 1;
             x = 0;

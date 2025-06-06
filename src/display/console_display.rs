@@ -46,7 +46,7 @@ impl<T: MultiPixel> Widget for PixelDisplay<T> {
 }
 
 impl<T: MultiPixel> PixelDisplay<T> {
-    /// Convenience method to build a blank display struct with specified dimensions
+    /// Convenience method to build a blank display struct with specified dimensions.
     pub fn build(
         width: usize,
         height: usize,
@@ -56,14 +56,26 @@ impl<T: MultiPixel> PixelDisplay<T> {
         [(); T::WIDTH * T::HEIGHT]:,
     {
         let data: Vec<T::U> = vec![fill; width * height];
-        Self::build_from_data(width, height, data)
+        Self::build_from_data(width, height, &data)
     }
 
-    /// Builds a display struct with the specified dimensions from the given data.
+    /// Convenience method to create a blank display struct with specified dimensions known at compile time.
+    pub fn new<const WIDTH: usize, const HEIGHT: usize>(fill: T::U) -> Self
+    where
+        [(); T::WIDTH * T::HEIGHT]:,
+        [(); WIDTH * HEIGHT]:,
+        [(); 0 - WIDTH % T::WIDTH]:,
+        [(); 0 - HEIGHT % T::HEIGHT]:,
+    {
+        let data: [T::U; WIDTH * HEIGHT] = [fill; WIDTH * HEIGHT];
+        Self::new_from_data(data)
+    }
+
+    /// Builds a display struct from the given data with the specified dimensions.
     pub fn build_from_data(
         width: usize,
         height: usize,
-        data: Vec<T::U>,
+        data: &[T::U],
     ) -> Result<Self, String>
     where
         [(); T::WIDTH * T::HEIGHT]:,
@@ -114,6 +126,46 @@ impl<T: MultiPixel> PixelDisplay<T> {
             block_count_y,
             data: multi_pixels,
         })
+    }
+
+    /// Creates a display struct from the given data with the specified dimensions known at compile time.
+    pub fn new_from_data<const WIDTH: usize, const HEIGHT: usize>(
+        data: [T::U; WIDTH * HEIGHT],
+    ) -> Self
+    where
+        [(); T::WIDTH * T::HEIGHT]:,
+        [(); 0 - WIDTH % T::WIDTH]:,
+        [(); 0 - HEIGHT % T::HEIGHT]:,
+    {
+        let block_count_x = WIDTH / T::WIDTH;
+        let block_count_y = HEIGHT / T::HEIGHT;
+
+        let mut multi_pixels =
+            Vec::with_capacity(block_count_x * block_count_y);
+
+        for row in 0..block_count_y {
+            for col in 0..block_count_x {
+                let block_x: usize = col * T::WIDTH;
+                let block_y: usize = row * T::HEIGHT;
+
+                let args: [T::U; T::WIDTH * T::HEIGHT] =
+                    core::array::from_fn(|i| {
+                        let x = i % T::WIDTH;
+                        let y = i / T::WIDTH;
+                        data[block_x + x + (block_y + y) * WIDTH]
+                    });
+
+                multi_pixels.push(T::new(args));
+            }
+        }
+
+        Self {
+            width: WIDTH,
+            height: HEIGHT,
+            block_count_x,
+            block_count_y,
+            data: multi_pixels,
+        }
     }
 
     #[must_use]
@@ -370,7 +422,7 @@ impl CharacterDisplay<CharacterPixel> {
         &mut self,
         x: usize,
         y: usize,
-        value: CharacterPixel,
+        value: &CharacterPixel,
     ) -> Result<(), String> {
         let default_pixel = Some(
             CharacterPixel::build(' ', Color::Default, Color::Default)
