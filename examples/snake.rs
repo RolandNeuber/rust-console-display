@@ -5,7 +5,8 @@ use console_display::{
     console_display::{
         CharacterDisplay,
         ConsoleDisplay,
-        PixelDisplay,
+        DynamicPixelDisplay,
+        StaticPixelDisplay,
     },
     display_driver::{
         DisplayDriver,
@@ -38,19 +39,47 @@ fn main() {
     let snake_color = RGBColor { r: 0, g: 255, b: 0 };
     let apple_color = RGBColor { r: 255, g: 0, b: 0 };
 
-    let mut disp = DisplayDriver::new(
-        VerticalTilingWidget::build(
-            PixelDisplay::<ColorSinglePixel, 100, 1>::new(RGBColor {
-                r: 255,
-                b: 255,
-                g: 255,
+    let mut disp = DisplayDriver::new(VerticalTilingWidget::new(
+        StaticPixelDisplay::<ColorSinglePixel, 100, 1>::new(RGBColor {
+            r: 255,
+            b: 255,
+            g: 255,
+        }),
+        OverlayWidget::new(
+            StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(RGBColor {
+                r: 0,
+                b: 0,
+                g: 0,
             }),
+            CharacterDisplay::<CharacterPixel, 100, 21>::build(
+                CharacterPixel::build(' ', Color::Default, Color::Default)
+                    .unwrap(),
+            )
+            .unwrap(),
+            true,
+        ),
+    ));
+
+    // This is bad because you rely on runtime checks.
+    let _ = DisplayDriver::new(
+        VerticalTilingWidget::build(
+            DynamicPixelDisplay::<ColorSinglePixel>::build(
+                100,
+                1,
+                RGBColor {
+                    r: 255,
+                    b: 255,
+                    g: 255,
+                },
+            )
+            .unwrap(),
             OverlayWidget::build(
-                PixelDisplay::<ColorDualPixel, 100, 42>::new(RGBColor {
-                    r: 0,
-                    b: 0,
-                    g: 0,
-                }),
+                DynamicPixelDisplay::<ColorDualPixel>::build(
+                    100,
+                    42,
+                    RGBColor { r: 0, b: 0, g: 0 },
+                )
+                .unwrap(),
                 CharacterDisplay::<CharacterPixel, 100, 21>::build(
                     CharacterPixel::build(
                         ' ',

@@ -2,7 +2,7 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::PixelDisplay,
+    console_display::StaticPixelDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -22,9 +22,15 @@ fn main() {
     let uv_y = (2.0, -2.0);
 
     let mut display =
-        DisplayDriver::new(UvWidget::new(
-            PixelDisplay::<PixelType, { DIMENSIONS.0 }, { DIMENSIONS.1 }>::new(RGBColor { r: 0, g: 0, b: 0 }),
-        ));
+        DisplayDriver::new(UvWidget::new(StaticPixelDisplay::<
+            PixelType,
+            { DIMENSIONS.0 },
+            { DIMENSIONS.1 },
+        >::new(RGBColor {
+            r: 0,
+            g: 0,
+            b: 0,
+        })));
     display.set_uv_x_min(uv_x.0);
     display.set_uv_x_max(uv_x.1);
     display.set_uv_y_min(uv_y.0);

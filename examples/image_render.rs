@@ -7,7 +7,7 @@ use std::io::{
 };
 
 use console_display::{
-    console_display::PixelDisplay,
+    console_display::DynamicPixelDisplay,
     display_driver::DisplayDriver,
     pixel::{
         color_pixel::{
@@ -82,7 +82,7 @@ fn main() {
     }
 
     let mut display = DisplayDriver::new(
-        PixelDisplay::<PixelType>::build_from_data(
+        DynamicPixelDisplay::<PixelType>::build_from_data(
             padded_dimensions.0 as usize,
             padded_dimensions.1 as usize,
             &data,

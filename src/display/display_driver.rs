@@ -22,7 +22,7 @@ use crossterm::{
     terminal,
 };
 
-use crate::widget::Widget;
+use crate::widget::DynamicWidget;
 
 pub enum UpdateStatus {
     Break,
@@ -33,14 +33,14 @@ type UpdateFunction<T> =
     dyn FnMut(&mut DisplayDriver<T>, Option<KeyEvent>) -> UpdateStatus;
 
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
-pub struct DisplayDriver<T: Widget> {
+pub struct DisplayDriver<T: DynamicWidget> {
     original_width: u16,
     original_height: u16,
     display: T,
     on_update: Option<Box<UpdateFunction<T>>>,
 }
 
-impl<T: Widget> DisplayDriver<T> {
+impl<T: DynamicWidget> DisplayDriver<T> {
     /// Convenience method to build a blank display struct with specified dimensions
     pub fn new(widget: T) -> Self {
         let (original_width, original_height) =
@@ -90,8 +90,8 @@ impl<T: Widget> DisplayDriver<T> {
         if let Err(e) = crossterm::execute!(
             stdout,
             terminal::SetSize(
-                T::WIDTH_CHARACTERS as u16,
-                T::HEIGHT_CHARACTERS as u16
+                self.get_widget().get_width_characters() as u16,
+                self.get_widget().get_height_characters() as u16
             )
         ) {
             return Err(e.to_string());
@@ -167,7 +167,7 @@ impl<T: Widget> DisplayDriver<T> {
     }
 }
 
-impl<T: Widget> Deref for DisplayDriver<T> {
+impl<T: DynamicWidget> Deref for DisplayDriver<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -175,13 +175,13 @@ impl<T: Widget> Deref for DisplayDriver<T> {
     }
 }
 
-impl<T: Widget> DerefMut for DisplayDriver<T> {
+impl<T: DynamicWidget> DerefMut for DisplayDriver<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.get_widget_mut()
     }
 }
 
-impl<T: Widget> Drop for DisplayDriver<T> {
+impl<T: DynamicWidget> Drop for DisplayDriver<T> {
     fn drop(&mut self) {
         let mut stdout = io::stdout();
 

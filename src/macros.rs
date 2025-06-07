@@ -23,3 +23,10 @@ macro_rules! impl_new {
         }
     };
 }
+
+#[macro_export]
+macro_rules! eq {
+    ($a:expr, $b:expr) => {
+        [(); 0 - ($a ^ $b)]
+    };
+}
