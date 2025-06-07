@@ -17,50 +17,40 @@ pub trait ConsoleDisplay: Widget {
 }
 
 /// Represents a console display with a width and height in pixels.
-pub struct PixelDisplay<T: MultiPixel> {
+pub struct PixelDisplay<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> {
     data: Vec<T>,
-    width: usize,
-    height: usize,
-    block_count_x: usize,
-    block_count_y: usize,
 }
 
-impl<T: MultiPixel> ConsoleDisplay for PixelDisplay<T> {
+impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> ConsoleDisplay for PixelDisplay<T, WIDTH, HEIGHT> {
     fn get_width(&self) -> usize {
-        self.width
+        WIDTH
     }
 
     fn get_height(&self) -> usize {
-        self.height
+        HEIGHT
     }
 }
 
-impl<T: MultiPixel> Widget for PixelDisplay<T> {
-    fn get_width_characters(&self) -> usize {
-        self.block_count_x
-    }
-
-    fn get_height_characters(&self) -> usize {
-        self.block_count_y
-    }
+impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> Widget for PixelDisplay<T, WIDTH, HEIGHT> {
+    const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
+    
+    const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
 }
 
-impl<T: MultiPixel> PixelDisplay<T> {
+impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> PixelDisplay<T, WIDTH, HEIGHT> {
     /// Convenience method to build a blank display struct with specified dimensions.
     pub fn build(
-        width: usize,
-        height: usize,
         fill: T::U,
     ) -> Result<Self, String>
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        let data: Vec<T::U> = vec![fill; width * height];
-        Self::build_from_data(width, height, &data)
+        let data: Vec<T::U> = vec![fill; WIDTH * HEIGHT];
+        Self::build_from_data(WIDTH, HEIGHT, &data)
     }
 
     /// Convenience method to create a blank display struct with specified dimensions known at compile time.
-    pub fn new<const WIDTH: usize, const HEIGHT: usize>(fill: T::U) -> Self
+    pub fn new(fill: T::U) -> Self
     where
         [(); T::WIDTH * T::HEIGHT]:,
         [(); WIDTH * HEIGHT]:,
@@ -120,16 +110,12 @@ impl<T: MultiPixel> PixelDisplay<T> {
         }
 
         Ok(Self {
-            width,
-            height,
-            block_count_x,
-            block_count_y,
             data: multi_pixels,
         })
     }
 
     /// Creates a display struct from the given data with the specified dimensions known at compile time.
-    pub fn new_from_data<const WIDTH: usize, const HEIGHT: usize>(
+    pub fn new_from_data(
         data: [T::U; WIDTH * HEIGHT],
     ) -> Self
     where
@@ -137,14 +123,11 @@ impl<T: MultiPixel> PixelDisplay<T> {
         [(); 0 - WIDTH % T::WIDTH]:,
         [(); 0 - HEIGHT % T::HEIGHT]:,
     {
-        let block_count_x = WIDTH / T::WIDTH;
-        let block_count_y = HEIGHT / T::HEIGHT;
-
         let mut multi_pixels =
-            Vec::with_capacity(block_count_x * block_count_y);
+            Vec::with_capacity(Self::WIDTH_CHARACTERS * Self::HEIGHT_CHARACTERS);
 
-        for row in 0..block_count_y {
-            for col in 0..block_count_x {
+        for row in 0..Self::HEIGHT_CHARACTERS {
+            for col in 0..Self::WIDTH_CHARACTERS {
                 let block_x: usize = col * T::WIDTH;
                 let block_y: usize = row * T::HEIGHT;
 
@@ -160,10 +143,6 @@ impl<T: MultiPixel> PixelDisplay<T> {
         }
 
         Self {
-            width: WIDTH,
-            height: HEIGHT,
-            block_count_x,
-            block_count_y,
             data: multi_pixels,
         }
     }
@@ -175,16 +154,6 @@ impl<T: MultiPixel> PixelDisplay<T> {
 
     const fn get_data_mut(&mut self) -> &mut Vec<T> {
         &mut self.data
-    }
-
-    #[must_use]
-    pub const fn get_block_count_x(&self) -> &usize {
-        &self.block_count_x
-    }
-
-    #[must_use]
-    pub const fn get_block_count_y(&self) -> &usize {
-        &self.block_count_y
     }
 
     /// Returns a bool representing the state of the pixel at the specified coordinate.
@@ -242,7 +211,7 @@ impl<T: MultiPixel> PixelDisplay<T> {
         let offset_y: usize = y % T::HEIGHT;
 
         let pixel =
-            &self.get_data()[block_x + block_y * self.get_block_count_x()];
+            &self.get_data()[block_x + block_y * Self::WIDTH_CHARACTERS];
         pixel.get_subpixel(offset_x, offset_y).map_or_else(
             |_| Err("Offset should be 0 or 1.".to_string()),
             Ok,
@@ -269,10 +238,8 @@ impl<T: MultiPixel> PixelDisplay<T> {
         let offset_x: usize = x % T::WIDTH;
         let offset_y: usize = y % T::HEIGHT;
 
-        let block_count_x = *self.get_block_count_x();
-
         let pixel =
-            &mut self.get_data_mut()[block_x + block_y * block_count_x];
+            &mut self.get_data_mut()[block_x + block_y * Self::WIDTH_CHARACTERS];
         pixel.set_subpixel(offset_x, offset_y, value).map_or_else(
             |_| Err("Offset should be 0 or 1.".to_string()),
             Ok,
@@ -313,13 +280,13 @@ impl<T: MultiPixel> PixelDisplay<T> {
     }
 }
 
-impl<T: MultiPixel> Display for PixelDisplay<T> {
+impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> Display for PixelDisplay<T, WIDTH, HEIGHT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut string_repr = String::new();
-        for y in 0..*self.get_block_count_y() {
-            for x in 0..*self.get_block_count_x() {
+        for y in 0..Self::HEIGHT_CHARACTERS {
+            for x in 0..Self::WIDTH_CHARACTERS {
                 string_repr.push_str(
-                    self.get_data()[x + y * self.get_block_count_x()]
+                    self.get_data()[x + y * Self::WIDTH_CHARACTERS]
                         .to_string()
                         .as_str(),
                 );
@@ -333,27 +300,21 @@ impl<T: MultiPixel> Display for PixelDisplay<T> {
 }
 
 #[derive(Clone)]
-pub struct CharacterDisplay<CharacterPixel> {
+pub struct CharacterDisplay<CharacterPixel, const WIDTH: usize, const HEIGHT: usize> {
     data: Vec<Option<CharacterPixel>>,
-    width: usize,
-    height: usize,
 }
 
-impl CharacterDisplay<CharacterPixel> {
+impl<const WIDTH: usize, const HEIGHT: usize> CharacterDisplay<CharacterPixel, WIDTH, HEIGHT> {
     /// Convenience method to build a blank display struct with specified dimensions
     pub fn build(
-        width: usize,
-        height: usize,
         fill: CharacterPixel,
     ) -> Result<Self, String> {
-        let data: Vec<CharacterPixel> = vec![fill; width * height];
-        Self::build_from_data(width, height, data)
+        let data: Vec<CharacterPixel> = vec![fill; WIDTH * HEIGHT];
+        Self::build_from_data(data)
     }
 
     /// Builds a display struct with the specified dimensions from the given data.
     pub fn build_from_data(
-        width: usize,
-        height: usize,
         data: Vec<CharacterPixel>,
     ) -> Result<Self, String> {
         let mut new_data = Vec::with_capacity(data.capacity());
@@ -364,17 +325,15 @@ impl CharacterDisplay<CharacterPixel> {
             }
         }
 
-        if new_data.len() / width / height != 1 {
+        if new_data.len() / WIDTH / HEIGHT != 1 {
             return Err(format!(
                 "Data does not match specified dimensions. Expected length of {}, got {}.",
-                width * height,
+                WIDTH * HEIGHT,
                 new_data.len()
             ));
         }
 
         Ok(Self {
-            width,
-            height,
             data: new_data,
         })
     }
@@ -438,26 +397,26 @@ impl CharacterDisplay<CharacterPixel> {
         }
 
         let mut overlap = 0;
-        while self.data[x + y * self.width - overlap].is_none() {
-            self.data[x + y * self.width - overlap] =
+        while self.data[x + y * WIDTH - overlap].is_none() {
+            self.data[x + y * WIDTH - overlap] =
                 default_pixel.clone();
             overlap += 1;
         }
-        self.data[x + y * self.width - overlap] = default_pixel.clone();
+        self.data[x + y * WIDTH - overlap] = default_pixel.clone();
 
-        self.data[x + y * self.width] = Some(value.clone());
+        self.data[x + y * WIDTH] = Some(value.clone());
 
         let overlap = value.get_width();
         let mut max_overlap = value.get_width();
         for i in 1..value.get_width() {
-            if let Some(character) = &self.data[x + y * self.width + i] {
+            if let Some(character) = &self.data[x + y * WIDTH + i] {
                 max_overlap = max_overlap.max(i + character.get_width());
             }
 
-            self.data[x + y * self.width + i] = None;
+            self.data[x + y * WIDTH + i] = None;
         }
         for i in 0..max_overlap - overlap {
-            self.data[x + y * self.width + value.get_width() - 1 + i] =
+            self.data[x + y * WIDTH + value.get_width() - 1 + i] =
                 default_pixel.clone();
         }
 
@@ -465,33 +424,29 @@ impl CharacterDisplay<CharacterPixel> {
     }
 }
 
-impl ConsoleDisplay for CharacterDisplay<CharacterPixel> {
+impl<const WIDTH: usize, const HEIGHT: usize> ConsoleDisplay for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT> {
     fn get_width(&self) -> usize {
-        self.width
+        WIDTH
     }
 
     fn get_height(&self) -> usize {
-        self.height
+        HEIGHT
     }
 }
 
-impl Widget for CharacterDisplay<CharacterPixel> {
-    fn get_width_characters(&self) -> usize {
-        self.width
-    }
-
-    fn get_height_characters(&self) -> usize {
-        self.height
-    }
+impl<const WIDTH: usize, const HEIGHT: usize> Widget for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT> {
+    const WIDTH_CHARACTERS: usize = WIDTH;
+    
+    const HEIGHT_CHARACTERS: usize = HEIGHT;
 }
 
-impl Display for CharacterDisplay<CharacterPixel> {
+impl<const WIDTH: usize, const HEIGHT: usize> Display for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut string_repr = String::new();
-        for y in 0..self.get_height_characters() {
-            for x in 0..self.get_width_characters() {
+        for y in 0..HEIGHT {
+            for x in 0..WIDTH {
                 let character =
-                    &self.get_data()[x + y * self.get_width_characters()];
+                    &self.get_data()[x + y * WIDTH];
                 match character {
                     None => {}
                     Some(character) => string_repr

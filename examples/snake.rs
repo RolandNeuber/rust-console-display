@@ -40,20 +40,18 @@ fn main() {
 
     let mut disp = DisplayDriver::new(
         VerticalTilingWidget::build(
-            PixelDisplay::<ColorSinglePixel>::new::<100, 1>(RGBColor {
+            PixelDisplay::<ColorSinglePixel, 100, 1>::new(RGBColor {
                 r: 255,
                 b: 255,
                 g: 255,
             }),
             OverlayWidget::build(
-                PixelDisplay::<ColorDualPixel>::new::<100, 42>(RGBColor {
+                PixelDisplay::<ColorDualPixel, 100, 42>::new(RGBColor {
                     r: 0,
                     b: 0,
                     g: 0,
                 }),
-                CharacterDisplay::<CharacterPixel>::build(
-                    100,
-                    21,
+                CharacterDisplay::<CharacterPixel, 100, 21>::build(
                     CharacterPixel::build(
                         ' ',
                         Color::Default,

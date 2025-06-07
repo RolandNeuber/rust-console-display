@@ -90,8 +90,8 @@ impl<T: Widget> DisplayDriver<T> {
         if let Err(e) = crossterm::execute!(
             stdout,
             terminal::SetSize(
-                self.get_widget().get_width_characters() as u16,
-                self.get_widget().get_height_characters() as u16
+                T::WIDTH_CHARACTERS as u16,
+                T::HEIGHT_CHARACTERS as u16
             )
         ) {
             return Err(e.to_string());

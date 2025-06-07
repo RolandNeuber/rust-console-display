@@ -19,16 +19,16 @@ impl<S: Widget, T: Widget> OverlayWidget<S, T> {
         child2: T,
         child1_on_top: bool,
     ) -> Result<Self, String> {
-        if child1.get_width_characters() != child2.get_width_characters() ||
-            child1.get_height_characters() !=
-                child2.get_height_characters()
+        if S::WIDTH_CHARACTERS != T::WIDTH_CHARACTERS ||
+            S::HEIGHT_CHARACTERS !=
+                T::HEIGHT_CHARACTERS
         {
             return Err(format!(
                 "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
-                child1.get_height_characters(),
-                child2.get_height_characters(),
-                child1.get_width_characters(),
-                child2.get_width_characters(),
+                S::HEIGHT_CHARACTERS,
+                T::HEIGHT_CHARACTERS,
+                S::WIDTH_CHARACTERS,
+                T::WIDTH_CHARACTERS,
             ));
         }
         Ok(Self {
@@ -36,6 +36,21 @@ impl<S: Widget, T: Widget> OverlayWidget<S, T> {
             child1,
             child2,
         })
+    }
+
+    pub fn new(
+        child1: S,
+        child2: T,
+        child1_on_top: bool,
+    ) -> Self 
+    where 
+        [(); 0 - S::WIDTH_CHARACTERS ^ T::WIDTH_CHARACTERS]:, // check for equality
+    {
+        Self {
+            child1_on_top,
+            child1,
+            child2,
+        }
     }
 
     pub const fn get_child1_on_top(&self) -> bool {
@@ -47,14 +62,10 @@ impl<S: Widget, T: Widget> OverlayWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> Widget for OverlayWidget<S, T> {
-    fn get_width_characters(&self) -> usize {
-        self.child1.get_width_characters()
-    }
-
-    fn get_height_characters(&self) -> usize {
-        self.child1.get_height_characters()
-    }
+impl<S: Widget, T: Widget> Widget for OverlayWidget<S, T> {    
+    const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;
+    
+    const HEIGHT_CHARACTERS: usize = S::HEIGHT_CHARACTERS;
 }
 
 impl<S: Widget, T: Widget> TwoWidget<S, T> for OverlayWidget<S, T> {
@@ -85,12 +96,12 @@ pub struct HorizontalTilingWidget<S: Widget, T: Widget> {
 
 impl<S: Widget, T: Widget> HorizontalTilingWidget<S, T> {
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
-        if child1.get_height_characters() != child2.get_height_characters()
+        if S::HEIGHT_CHARACTERS != T::HEIGHT_CHARACTERS
         {
             return Err(format!(
                 "Height in characters of arguments does not match. {} and {}.",
-                child1.get_height_characters(),
-                child2.get_height_characters()
+                S::HEIGHT_CHARACTERS,
+                T::HEIGHT_CHARACTERS
             ));
         }
         Ok(Self { child1, child2 })
@@ -98,15 +109,9 @@ impl<S: Widget, T: Widget> HorizontalTilingWidget<S, T> {
 }
 
 impl<S: Widget, T: Widget> Widget for HorizontalTilingWidget<S, T> {
-    #[rustfmt::skip]
-    fn get_width_characters(&self) -> usize {
-        self.child1.get_width_characters() +
-        self.child2.get_width_characters()
-    }
-
-    fn get_height_characters(&self) -> usize {
-        self.child1.get_height_characters()
-    }
+    const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS + T::WIDTH_CHARACTERS;
+    
+    const HEIGHT_CHARACTERS: usize = S::HEIGHT_CHARACTERS;
 }
 
 impl<S: Widget, T: Widget> TwoWidget<S, T>
@@ -142,11 +147,11 @@ pub struct VerticalTilingWidget<S: Widget, T: Widget> {
 
 impl<S: Widget, T: Widget> VerticalTilingWidget<S, T> {
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
-        if child1.get_width_characters() != child2.get_width_characters() {
+        if S::WIDTH_CHARACTERS != T::WIDTH_CHARACTERS {
             return Err(format!(
                 "Height in characters of arguments does not match. {} and {}.",
-                child1.get_width_characters(),
-                child2.get_width_characters()
+                S::WIDTH_CHARACTERS,
+                T::WIDTH_CHARACTERS
             ));
         }
         Ok(Self { child1, child2 })
@@ -154,15 +159,9 @@ impl<S: Widget, T: Widget> VerticalTilingWidget<S, T> {
 }
 
 impl<S: Widget, T: Widget> Widget for VerticalTilingWidget<S, T> {
-    fn get_width_characters(&self) -> usize {
-        self.child1.get_width_characters()
-    }
-
-    #[rustfmt::skip]
-    fn get_height_characters(&self) -> usize {
-        self.child1.get_height_characters() +
-        self.child2.get_height_characters()
-    }
+    const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;
+    
+    const HEIGHT_CHARACTERS: usize = S::HEIGHT_CHARACTERS + T::HEIGHT_CHARACTERS;
 }
 
 impl<S: Widget, T: Widget> TwoWidget<S, T> for VerticalTilingWidget<S, T> {

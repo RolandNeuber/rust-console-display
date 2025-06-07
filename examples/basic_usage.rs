@@ -15,8 +15,8 @@ fn main() {
     // (8 pixels per console character, 4 high, 2 wide).
     // Set dimensions to 100 by 100 pixels (50 by 25 characters)
     // with a red fill.
-    let disp: PixelDisplay<ColorOctPixel> =
-        PixelDisplay::<ColorOctPixel>::new::<100, 100>(
+    let disp =
+        PixelDisplay::<ColorOctPixel, 100, 100>::new(
             color_pixel::RGBColor { r: 255, g: 0, b: 0 },
         );
 
