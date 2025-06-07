@@ -7,7 +7,6 @@ use std::io::{
 };
 
 use console_display::{
-    console_display::DynamicPixelDisplay,
     display_driver::DisplayDriver,
     pixel::{
         color_pixel::{
@@ -16,6 +15,7 @@ use console_display::{
         },
         monochrome_pixel::MultiPixel,
     },
+    pixel_display::DynamicPixelDisplay,
 };
 use image::{
     GenericImageView,

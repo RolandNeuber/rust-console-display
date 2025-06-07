@@ -2,12 +2,8 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::{
-        CharacterDisplay,
-        ConsoleDisplay,
-        DynamicPixelDisplay,
-        StaticPixelDisplay,
-    },
+    character_display::CharacterDisplay,
+    console_display::ConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -20,6 +16,10 @@ use console_display::{
             ColorSinglePixel,
             RGBColor,
         },
+    },
+    pixel_display::{
+        DynamicPixelDisplay,
+        StaticPixelDisplay,
     },
     widget::two_widget::{
         OverlayWidget,

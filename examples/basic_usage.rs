@@ -2,12 +2,12 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::StaticPixelDisplay,
     display_driver::DisplayDriver,
     pixel::color_pixel::{
         self,
         ColorOctPixel,
     },
+    pixel_display::StaticPixelDisplay,
 };
 
 fn main() {

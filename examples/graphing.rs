@@ -2,7 +2,6 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::StaticPixelDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -11,6 +10,7 @@ use console_display::{
         ColorOctPixel,
         RGBColor,
     },
+    pixel_display::StaticPixelDisplay,
     widget::single_widget::UvWidget,
 };
 

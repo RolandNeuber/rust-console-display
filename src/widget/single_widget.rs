@@ -1,11 +1,9 @@
 use std::fmt::Display;
 
 use crate::{
-    console_display::{
-        ConsoleDisplay,
-        StaticPixelDisplay,
-    },
+    console_display::ConsoleDisplay,
     pixel::monochrome_pixel::MultiPixel,
+    pixel_display::StaticPixelDisplay,
     widget::DynamicWidget,
 };
 
@@ -340,7 +338,10 @@ impl<T: ConsoleDisplay + StaticWidget> Display for UvWidget<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::pixel::monochrome_pixel::SinglePixel;
+    use crate::{
+        pixel::monochrome_pixel::SinglePixel,
+        pixel_display::StaticPixelDisplay,
+    };
 
     use super::*;
 

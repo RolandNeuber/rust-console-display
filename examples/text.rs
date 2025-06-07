@@ -2,10 +2,8 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::{
-        CharacterDisplay,
-        ConsoleDisplay,
-    },
+    character_display::CharacterDisplay,
+    console_display::ConsoleDisplay,
     display_driver::DisplayDriver,
     pixel::{
         character_pixel::CharacterPixel,
