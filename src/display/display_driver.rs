@@ -2,12 +2,10 @@ use std::{
     io::{
         self,
         Write,
-    },
-    ops::{
+    }, ops::{
         Deref,
         DerefMut,
-    },
-    time::Duration,
+    }, thread, time::{Duration, Instant}
 };
 
 use crossterm::{
@@ -38,6 +36,7 @@ pub struct DisplayDriver<T: DynamicWidget> {
     original_height: u16,
     display: T,
     on_update: Option<Box<UpdateFunction<T>>>,
+    target_frame_time: Duration,
 }
 
 impl<T: DynamicWidget> DisplayDriver<T> {
@@ -53,6 +52,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             original_width,
             original_height,
             display: widget,
+            target_frame_time: Duration::ZERO,
             on_update: None,
         }
     }
@@ -136,8 +136,17 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         self.on_update = Some(Box::new(on_update));
     }
 
+    pub fn set_target_frame_time(&mut self, frame_time: Duration) {
+        self.target_frame_time = frame_time
+    }
+
+    pub fn set_target_frame_rate(&mut self, frame_rate: f32) {
+        self.target_frame_time = Duration::from_secs_f32(1. / frame_rate)
+    }
+
     pub fn update(&mut self) {
         loop {
+            let start = Instant::now();
             self.print_display().expect("Could not print display.");
 
             let mut latest_event = None;
@@ -163,6 +172,8 @@ impl<T: DynamicWidget> DisplayDriver<T> {
                 UpdateStatus::Break => break,
                 UpdateStatus::Continue => {}
             }
+
+            thread::sleep(self.target_frame_time.saturating_sub(start.elapsed()));
         }
     }
 }

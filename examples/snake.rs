@@ -28,10 +28,6 @@ use console_display::{
 };
 use crossterm::event::KeyCode;
 use rand::Rng;
-use std::{
-    thread,
-    time::Duration,
-};
 
 fn main() {
     let background_color = RGBColor { r: 0, g: 0, b: 0 };
@@ -112,7 +108,7 @@ fn main() {
             .expect("Could not set character pixel.");
     }
 
-    let duration = Duration::from_millis(75);
+    let mut fps = 10.;
     let mut score = 1;
     let mut direction = (0, 0);
     let mut snake: Vec<(usize, usize)>;
@@ -152,6 +148,7 @@ fn main() {
 
     let mut lost = false;
 
+    disp.set_target_frame_rate(fps);
     disp.set_on_update(move |disp, latest_event| {
         if let Some(key_event) = latest_event {
             let KeyCode::Char(key) = key_event.code
@@ -179,16 +176,16 @@ fn main() {
             return UpdateStatus::Continue;
         }
 
-        let map_display = &mut disp.1;
+        let map_display = &mut disp.1.0;
         // place new segment in front (direction) of snake head
         snake.insert(
             0,
             (
                 (snake[0].0 as i32 + direction.0)
-                    .rem_euclid(map_display.0.get_width() as i32)
+                    .rem_euclid(map_display.get_width() as i32)
                     as usize,
                 (snake[0].1 as i32 + direction.1)
-                    .rem_euclid(map_display.0.get_height() as i32)
+                    .rem_euclid(map_display.get_height() as i32)
                     as usize,
             ),
         );
@@ -196,7 +193,7 @@ fn main() {
         if snake[0] == apple {
             score += 1;
             if score ==
-                map_display.0.get_width() * map_display.0.get_height()
+                map_display.get_width() * map_display.get_height()
             {
                 return UpdateStatus::Break;
             }
@@ -204,20 +201,21 @@ fn main() {
             while snake.contains(&apple) {
                 apple = (
                     rand::thread_rng()
-                        .gen_range(0..map_display.0.get_width()),
+                        .gen_range(0..map_display.get_width()),
                     rand::thread_rng()
-                        .gen_range(0..map_display.0.get_height()),
+                        .gen_range(0..map_display.get_height()),
                 );
             }
             map_display
-                .0
                 .set_pixel(apple.0, apple.1, apple_color)
                 .expect("Could not set pixel.");
+
+            fps += 1.;
+            disp.set_target_frame_rate(fps);
         }
         else {
             // remove pixel at last segment of snake
             map_display
-                .0
                 .set_pixel(
                     snake.last().unwrap().0,
                     snake.last().unwrap().1,
@@ -228,9 +226,9 @@ fn main() {
             snake.pop();
         }
 
+        let map_display = &mut disp.1.0;
         // place pixel at snake head
         map_display
-            .0
             .set_pixel(snake[0].0, snake[0].1, snake_color)
             .expect("Could not set pixel.");
 
@@ -239,7 +237,6 @@ fn main() {
                 lost = true;
             }
         }
-        thread::sleep(duration);
         UpdateStatus::Continue
     });
 
