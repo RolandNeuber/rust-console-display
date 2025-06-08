@@ -1,4 +1,10 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    ops::{
+        Deref,
+        DerefMut,
+    },
+};
 
 use crate::{
     console_display::ConsoleDisplay,
@@ -9,7 +15,9 @@ use crate::{
 
 use super::StaticWidget;
 
-pub trait SingleWidget<T: DynamicWidget>: DynamicWidget {
+pub trait SingleWidget<T: DynamicWidget>:
+    DynamicWidget + Deref + DerefMut
+{
     fn get_child(&self) -> &T;
     fn get_child_mut(&mut self) -> &mut T;
 }
@@ -333,6 +341,20 @@ impl<T: ConsoleDisplay + StaticWidget> SingleWidget<T> for UvWidget<T> {
 impl<T: ConsoleDisplay + StaticWidget> Display for UvWidget<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.get_child().to_string())
+    }
+}
+
+impl<T: ConsoleDisplay> Deref for UvWidget<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+
+impl<T: ConsoleDisplay> DerefMut for UvWidget<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
     }
 }
 

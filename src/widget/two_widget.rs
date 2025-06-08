@@ -1,4 +1,10 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    ops::{
+        Deref,
+        DerefMut,
+    },
+};
 
 use crate::{
     eq,
@@ -8,7 +14,7 @@ use crate::{
 use super::StaticWidget;
 
 pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
-    DynamicWidget
+    DynamicWidget + Deref + DerefMut
 {
     fn get_children(&self) -> (&S, &T);
     fn get_children_mut(&mut self) -> (&mut S, &mut T);
@@ -16,20 +22,18 @@ pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
 
 pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
     child1_on_top: bool,
-    child1: S,
-    child2: T,
+    children: (S, T),
 }
 
 impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
-    pub fn new(child1: S, child2: T, child1_on_top: bool) -> Self
+    pub const fn new(child1: S, child2: T, child1_on_top: bool) -> Self
     where
         eq!(S::WIDTH_CHARACTERS, T::WIDTH_CHARACTERS):,
         eq!(S::HEIGHT_CHARACTERS, T::HEIGHT_CHARACTERS):,
     {
         Self {
             child1_on_top,
-            child1,
-            child2,
+            children: (child1, child2),
         }
     }
 }
@@ -54,8 +58,7 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
         }
         Ok(Self {
             child1_on_top,
-            child1,
-            child2,
+            children: (child1, child2),
         })
     }
 
@@ -80,11 +83,11 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for OverlayWidget<S, T>
 {
     fn get_width_characters(&self) -> usize {
-        self.child1.get_width_characters()
+        self.children.0.get_width_characters()
     }
 
     fn get_height_characters(&self) -> usize {
-        self.child1.get_height_characters()
+        self.children.1.get_height_characters()
     }
 }
 
@@ -92,28 +95,41 @@ impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
     for OverlayWidget<S, T>
 {
     fn get_children(&self) -> (&S, &T) {
-        (&self.child1, &self.child2)
+        (&self.children.0, &self.children.1)
     }
 
     fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.child1, &mut self.child2)
+        (&mut self.children.0, &mut self.children.1)
     }
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.child1_on_top {
-            write!(f, "{}", self.child1.to_string())
+            write!(f, "{}", self.children.0.to_string())
         }
         else {
-            write!(f, "{}", self.child2.to_string())
+            write!(f, "{}", self.children.1.to_string())
         }
     }
 }
 
+impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
+    type Target = (S, T);
+
+    fn deref(&self) -> &Self::Target {
+        &self.children
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.children
+    }
+}
+
 pub struct HorizontalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
-    child1: S,
-    child2: T,
+    children: (S, T),
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
@@ -126,16 +142,20 @@ impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
                 child2.get_height_characters()
             ));
         }
-        Ok(Self { child1, child2 })
+        Ok(Self {
+            children: (child1, child2),
+        })
     }
 }
 
 impl<S: StaticWidget, T: StaticWidget> HorizontalTilingWidget<S, T> {
-    pub fn new(child1: S, child2: T) -> Self
+    pub const fn new(child1: S, child2: T) -> Self
     where
         eq!(S::HEIGHT_CHARACTERS, T::HEIGHT_CHARACTERS):,
     {
-        Self { child1, child2 }
+        Self {
+            children: (child1, child2),
+        }
     }
 }
 
@@ -152,12 +172,12 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for HorizontalTilingWidget<S, T>
 {
     fn get_width_characters(&self) -> usize {
-        self.child1.get_width_characters() +
-            self.child2.get_width_characters()
+        self.children.0.get_width_characters() +
+            self.children.1.get_width_characters()
     }
 
     fn get_height_characters(&self) -> usize {
-        self.child1.get_height_characters()
+        self.children.0.get_height_characters()
     }
 }
 
@@ -165,11 +185,11 @@ impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
     for HorizontalTilingWidget<S, T>
 {
     fn get_children(&self) -> (&S, &T) {
-        (&self.child1, &self.child2)
+        (&self.children.0, &self.children.1)
     }
 
     fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.child1, &mut self.child2)
+        (&mut self.children.0, &mut self.children.1)
     }
 }
 
@@ -177,8 +197,8 @@ impl<S: DynamicWidget, T: DynamicWidget> Display
     for HorizontalTilingWidget<S, T>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str_repr1 = self.child1.to_string();
-        let str_repr2 = self.child2.to_string();
+        let str_repr1 = self.children.0.to_string();
+        let str_repr2 = self.children.1.to_string();
         let lines = Iterator::zip(str_repr1.lines(), str_repr2.lines());
         let mut str_repr = String::new();
         for line_pair in lines {
@@ -189,9 +209,26 @@ impl<S: DynamicWidget, T: DynamicWidget> Display
     }
 }
 
+impl<S: DynamicWidget, T: DynamicWidget> Deref
+    for HorizontalTilingWidget<S, T>
+{
+    type Target = (S, T);
+
+    fn deref(&self) -> &Self::Target {
+        &self.children
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut
+    for HorizontalTilingWidget<S, T>
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.children
+    }
+}
+
 pub struct VerticalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
-    child1: S,
-    child2: T,
+    children: (S, T),
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
@@ -203,16 +240,20 @@ impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
                 child2.get_width_characters()
             ));
         }
-        Ok(Self { child1, child2 })
+        Ok(Self {
+            children: (child1, child2),
+        })
     }
 }
 
 impl<S: StaticWidget, T: StaticWidget> VerticalTilingWidget<S, T> {
-    pub fn new(child1: S, child2: T) -> Self
+    pub const fn new(child1: S, child2: T) -> Self
     where
         eq!(S::WIDTH_CHARACTERS, T::WIDTH_CHARACTERS):,
     {
-        Self { child1, child2 }
+        Self {
+            children: (child1, child2),
+        }
     }
 }
 
@@ -229,12 +270,12 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for VerticalTilingWidget<S, T>
 {
     fn get_width_characters(&self) -> usize {
-        self.child1.get_width_characters()
+        self.children.0.get_width_characters()
     }
 
     fn get_height_characters(&self) -> usize {
-        self.child1.get_height_characters() +
-            self.child2.get_height_characters()
+        self.children.0.get_height_characters() +
+            self.children.1.get_height_characters()
     }
 }
 
@@ -242,11 +283,11 @@ impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
     for VerticalTilingWidget<S, T>
 {
     fn get_children(&self) -> (&S, &T) {
-        (&self.child1, &self.child2)
+        (&self.children.0, &self.children.1)
     }
 
     fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.child1, &mut self.child2)
+        (&mut self.children.0, &mut self.children.1)
     }
 }
 
@@ -257,8 +298,26 @@ impl<S: DynamicWidget, T: DynamicWidget> Display
         write!(
             f,
             "{}\n{}",
-            self.child1.to_string(),
-            self.child2.to_string()
+            self.children.0.to_string(),
+            self.children.1.to_string()
         )
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> Deref
+    for VerticalTilingWidget<S, T>
+{
+    type Target = (S, T);
+
+    fn deref(&self) -> &Self::Target {
+        &self.children
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut
+    for VerticalTilingWidget<S, T>
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.children
     }
 }
