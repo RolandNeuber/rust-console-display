@@ -2,10 +2,16 @@ use std::{
     io::{
         self,
         Write,
-    }, ops::{
+    },
+    ops::{
         Deref,
         DerefMut,
-    }, thread, time::{Duration, Instant}
+    },
+    thread,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
 use crossterm::{
@@ -79,34 +85,17 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             return Err(e.to_string());
         }
 
-        // use alternate screen
-        if let Err(e) =
-            crossterm::execute!(stdout, terminal::EnterAlternateScreen)
-        {
-            return Err(e.to_string());
-        }
-
-        // set dimensions of screen
         if let Err(e) = crossterm::execute!(
             stdout,
+            terminal::EnterAlternateScreen, // use alternate screen
             terminal::SetSize(
                 self.get_widget().get_width_characters() as u16,
                 self.get_widget().get_height_characters() as u16
-            )
+            ), // set dimensions of screen
+            terminal::DisableLineWrap,      // disable line wrapping
+            terminal::Clear(terminal::ClearType::All), // clear screen
+            cursor::Hide,                   // hide cursor blinking
         ) {
-            return Err(e.to_string());
-        }
-
-        // clear screen
-        if let Err(e) = crossterm::execute!(
-            stdout,
-            terminal::Clear(terminal::ClearType::All)
-        ) {
-            return Err(e.to_string());
-        }
-
-        // hide cursor blinking
-        if let Err(e) = crossterm::execute!(stdout, cursor::Hide) {
             return Err(e.to_string());
         }
 
@@ -173,7 +162,9 @@ impl<T: DynamicWidget> DisplayDriver<T> {
                 UpdateStatus::Continue => {}
             }
 
-            thread::sleep(self.target_frame_time.saturating_sub(start.elapsed()));
+            thread::sleep(
+                self.target_frame_time.saturating_sub(start.elapsed()),
+            );
         }
     }
 }
@@ -196,12 +187,12 @@ impl<T: DynamicWidget> Drop for DisplayDriver<T> {
     fn drop(&mut self) {
         let mut stdout = io::stdout();
 
-        // return to previous screen
-        let _ =
-            crossterm::execute!(stdout, terminal::LeaveAlternateScreen);
-
-        // show cursor blinking
-        let _ = crossterm::execute!(stdout, cursor::Show);
+        let _ = crossterm::execute!(
+            stdout,
+            terminal::EnableLineWrap, // disable line wrapping
+            terminal::LeaveAlternateScreen, // return to previous screen
+            cursor::Show,             // show cursor blinking
+        );
 
         // reset dimensions of screen
         if *self.get_original_width() != 0 &&

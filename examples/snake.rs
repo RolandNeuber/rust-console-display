@@ -192,8 +192,7 @@ fn main() {
 
         if snake[0] == apple {
             score += 1;
-            if score ==
-                map_display.get_width() * map_display.get_height()
+            if score == map_display.get_width() * map_display.get_height()
             {
                 return UpdateStatus::Break;
             }

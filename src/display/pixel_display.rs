@@ -1,3 +1,4 @@
+use core::array;
 use std::fmt::Display;
 
 use crate::{
@@ -104,8 +105,47 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
         })
     }
 
+    // TODO: Add proper double buffering.
+    pub fn get_pixels(&self) -> Vec<T::U>
+    where
+        [(); T::WIDTH * T::HEIGHT]:,
+    {
+        let mut pixels =
+            Vec::with_capacity(self.get_width() * self.get_height());
+        for x in 0..self.get_width() {
+            for y in 0..self.get_height() {
+                pixels.push(self.get_pixel(x, y).expect(
+                    "Invariant violated, pixel index out of range.",
+                ));
+            }
+        }
+        pixels
+    }
+
+    pub fn set_pixels(&mut self, data: &[T::U]) -> Result<(), String>
+    where
+        [(); T::WIDTH * T::HEIGHT]:,
+    {
+        if data.len() != self.get_width() * self.get_height() {
+            return Err(format!(
+                "Data does not match specified dimensions. Expected length of {}, got {}.",
+                self.get_width() * self.get_height(),
+                data.len()
+            ));
+        }
+        for x in 0..self.get_width() {
+            for y in 0..self.get_height() {
+                self.set_pixel(x, y, data[x + y * self.get_width()])
+                    .expect(
+                        "Invariant violated, pixel index out of range.",
+                    );
+            }
+        }
+        Ok(())
+    }
+
     #[must_use]
-    pub const fn get_data(&self) -> &Vec<T> {
+    const fn get_data(&self) -> &Vec<T> {
         &self.data
     }
 
@@ -310,11 +350,11 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         [(); 0 - HEIGHT % T::HEIGHT]:,
     {
         let data: [T::U; WIDTH * HEIGHT] = [fill; WIDTH * HEIGHT];
-        Self::new_from_data(data)
+        Self::new_from_data(&data)
     }
 
     /// Creates a display struct from the given data with the specified dimensions known at compile time.
-    pub fn new_from_data(data: [T::U; WIDTH * HEIGHT]) -> Self
+    pub fn new_from_data(data: &[T::U; WIDTH * HEIGHT]) -> Self
     where
         [(); T::WIDTH * T::HEIGHT]:,
         [(); 0 - WIDTH % T::WIDTH]:,
@@ -330,7 +370,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
                 let block_y: usize = row * T::HEIGHT;
 
                 let args: [T::U; T::WIDTH * T::HEIGHT] =
-                    core::array::from_fn(|i| {
+                    array::from_fn(|i| {
                         let x = i % T::WIDTH;
                         let y = i / T::WIDTH;
                         data[block_x + x + (block_y + y) * WIDTH]
@@ -343,8 +383,35 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         Self { data: multi_pixels }
     }
 
+    // TODO: Add proper double buffering.
+    pub fn get_pixels(&self) -> [T::U; WIDTH * HEIGHT]
+    where
+        [(); T::WIDTH * T::HEIGHT]:,
+    {
+        array::from_fn(|i| {
+            let x = i % self.get_width();
+            let y = i / self.get_width();
+            self.get_pixel(x, y)
+                .expect("Invariant violated, pixel index out of range.")
+        })
+    }
+
+    pub fn set_pixels(&mut self, data: &[T::U; WIDTH * HEIGHT])
+    where
+        [(); T::WIDTH * T::HEIGHT]:,
+    {
+        for x in 0..self.get_width() {
+            for y in 0..self.get_height() {
+                self.set_pixel(x, y, data[x + y * self.get_width()])
+                    .expect(
+                        "Invariant violated, pixel index out of range.",
+                    );
+            }
+        }
+    }
+
     #[must_use]
-    pub const fn get_data(&self) -> &Vec<T> {
+    const fn get_data(&self) -> &Vec<T> {
         &self.data
     }
 
