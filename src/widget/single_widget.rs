@@ -65,6 +65,10 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// Gets the pixel at the _uv_ coordinate (x, y).
     /// Using coordinates outside the uv mapping is considered
     /// undefined behaviour at the moment and is subject to change.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates calculated by the UV mapping are out of bounds.
     pub fn get_pixel(&self, x: f32, y: f32) -> Result<S::U, String>
     where
         [(); S::WIDTH * S::HEIGHT]:,
@@ -88,7 +92,10 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 
     /// Sets the pixel at the _uv_ coordinate (x, y).
-    /// Using coordinates outside the uv mapping sets no pixel.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the coordinates are outside the uv mapping.
     pub fn set_pixel(
         &mut self,
         x: f32,
@@ -253,16 +260,14 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// use console_display::{
     ///     widget::single_widget::UvWidget,
-    ///     console_display::PixelDisplay,
+    ///     pixel_display::StaticPixelDisplay,
     ///     pixel::monochrome_pixel::SinglePixel,
     /// };
     ///
     /// let mut widget = UvWidget::new(
-    ///     PixelDisplay::<SinglePixel>::build(
-    ///         5,
-    ///         1,
+    ///     StaticPixelDisplay::<SinglePixel, 5, 1>::new(
     ///         false
-    ///     ).expect("Could not construct display.")
+    ///     )
     /// );
     ///
     /// widget.set_uv_x_min(-1.);
@@ -287,16 +292,14 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// use console_display::{
     ///     widget::single_widget::UvWidget,
-    ///     console_display::PixelDisplay,
+    ///     pixel_display::StaticPixelDisplay,
     ///     pixel::monochrome_pixel::SinglePixel,
     /// };
     ///
     /// let mut widget = UvWidget::new(
-    ///     PixelDisplay::<SinglePixel>::build(
-    ///         1,
-    ///         5,
+    ///     StaticPixelDisplay::<SinglePixel, 1, 5>::new(
     ///         false
-    ///     ).expect("Could not construct display.")
+    ///     )
     /// );
     ///
     /// widget.set_uv_y_min(-1.);
@@ -369,19 +372,22 @@ mod tests {
 
     #[test]
     fn test_texture_to_uv() {
-        let uv = UvWidget::<StaticPixelDisplay<SinglePixel, 1, 1>>::texture_to_uv(
+        let expected = 0.0005;
+        let actual = UvWidget::<StaticPixelDisplay<SinglePixel, 1, 1>>::texture_to_uv(
             500, 1000, -0.5, 0.5,
         );
-        assert_eq!((uv * 10000.).round() / 10000., 0.0005);
+        let error = expected * 0.0001;
+        assert!((actual - 0.0005).abs() < error);
     }
 
     #[test]
     fn test_uv_to_texture() {
-        let texture_coordinate = UvWidget::<
+        let expected = 1500;
+        let actual = UvWidget::<
             StaticPixelDisplay<SinglePixel, 1, 1>,
         >::uv_to_texture(
             0.5, -1.0, 1.0, 2000
         );
-        assert_eq!(texture_coordinate, 1500);
+        assert_eq!(actual, expected);
     }
 }

@@ -26,6 +26,9 @@ where
     ) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT];
 
     /// Builds a block of pixels from a slice of pixels.
+    ///
+    /// # Errors
+    ///
     /// Returns an error, if the number of pixels does not match the dimensions of the block.
     fn build(args: &[Self::U]) -> Result<Self, String>
     where
@@ -45,7 +48,10 @@ where
     }
 
     /// Returns the value of the block at the specified coordinates.
-    /// Returns an error, if the coordinates are out-of-bounds.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error, if the coordinates are out of bounds.
     fn get_subpixel(&self, x: usize, y: usize) -> Result<Self::U, String>
     where
         [(); Self::WIDTH * Self::HEIGHT]:,
@@ -56,6 +62,11 @@ where
         )
     }
 
+    /// Returns the value of the block at the specified coordinates.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error, if the coordinates are out of bounds.
     fn set_subpixel(
         &mut self,
         x: usize,

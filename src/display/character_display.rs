@@ -36,13 +36,22 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
 impl<const WIDTH: usize, const HEIGHT: usize>
     CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
+    // TODO: Handle double-width characters properly
     /// Convenience method to build a blank display struct with specified dimensions
+    ///
+    /// # Errors
+    /// Returns an error when the fill cannot match the dimensions of the display.
     pub fn build(fill: CharacterPixel) -> Result<Self, String> {
         let data: Vec<CharacterPixel> = vec![fill; WIDTH * HEIGHT];
         Self::build_from_data(data)
     }
 
+    // TODO: Handle double-width characters properly
     /// Builds a display struct with the specified dimensions from the given data.
+    ///
+    /// # Errors
+    /// Returns an error when the data length does not match the dimensions of the display.
+    /// This also applies if double-width characters, like あ, are used and exceed the dimensions of the display.
     pub fn build_from_data(
         data: Vec<CharacterPixel>,
     ) -> Result<Self, String> {
@@ -75,6 +84,11 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         &mut self.data
     }
 
+    /// Returns the pixel value at the specified coordinates.
+    ///
+    /// # Errors
+    ///
+    /// If the coordinates are out of bounds, an error is returned.    
     pub fn get_pixel(
         &self,
         x: usize,
@@ -103,7 +117,15 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     /// Sets a character pixel at a specific x and y coordinate.
     /// Also works with characters wider than one column extending to the right.
     /// If a wide character is partially replaced, the rest of the affected character is overwritten with a default narrow character.
+    ///
+    /// # Errors
+    ///
     /// Returns an error if the coordinates are out of bounds. This also applies for wide characters partially out of bounds.
+    ///
+    /// # Panics
+    ///
+    /// If the default character pixel could not be constructed.
+    /// This should never happen and is subject to change in the future.
     pub fn set_pixel(
         &mut self,
         x: usize,
@@ -112,7 +134,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     ) -> Result<(), String> {
         let default_pixel = Some(
             CharacterPixel::build(' ', Color::Default, Color::Default)
-                .unwrap(),
+                .expect("Invariant violated, character pixel could not be built."),
         );
 
         if x > self.get_width() + value.get_width() ||
@@ -125,10 +147,10 @@ impl<const WIDTH: usize, const HEIGHT: usize>
 
         let mut overlap = 0;
         while self.data[x + y * WIDTH - overlap].is_none() {
-            self.data[x + y * WIDTH - overlap] = default_pixel.clone();
+            self.data[x + y * WIDTH - overlap].clone_from(&default_pixel);
             overlap += 1;
         }
-        self.data[x + y * WIDTH - overlap] = default_pixel.clone();
+        self.data[x + y * WIDTH - overlap].clone_from(&default_pixel);
 
         self.data[x + y * WIDTH] = Some(value.clone());
 
@@ -142,8 +164,8 @@ impl<const WIDTH: usize, const HEIGHT: usize>
             self.data[x + y * WIDTH + i] = None;
         }
         for i in 0..max_overlap - overlap {
-            self.data[x + y * WIDTH + value.get_width() - 1 + i] =
-                default_pixel.clone();
+            self.data[x + y * WIDTH + value.get_width() - 1 + i]
+                .clone_from(&default_pixel);
         }
 
         Ok(())

@@ -47,6 +47,7 @@ impl Color {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct RGBColor {
     pub r: u8,
     pub g: u8,
@@ -124,14 +125,6 @@ impl RGBColor {
         )
     }
 }
-
-impl Clone for RGBColor {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl Copy for RGBColor {}
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
 pub struct ColorSinglePixel {

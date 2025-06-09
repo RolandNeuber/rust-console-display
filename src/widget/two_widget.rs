@@ -39,6 +39,13 @@ impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
+    /// Builds an overlay widget with two children.
+    /// The `child1_on_top` parameter determines whether the first child should be
+    /// on top or below the second child.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dimensions of both children don't match.
     pub fn build(
         child1: S,
         child2: T,
@@ -133,6 +140,12 @@ pub struct HorizontalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
+    /// Builds horizontal tiling widget with two children.
+    /// `child1` will be displayed on the left, `child2` on the right.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the height of both children does not match.
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
         if child1.get_height_characters() != child2.get_height_characters()
         {
@@ -232,10 +245,16 @@ pub struct VerticalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
+    /// Builds vertical tiling widget with two children.
+    /// `child1` will be displayed on the top, `child2` on the bottom.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the width of both children does not match.
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
         if child1.get_width_characters() != child2.get_width_characters() {
             return Err(format!(
-                "Height in characters of arguments does not match. {} and {}.",
+                "Width in characters of arguments does not match. {} and {}.",
                 child1.get_width_characters(),
                 child2.get_width_characters()
             ));

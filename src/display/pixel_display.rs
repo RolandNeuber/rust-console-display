@@ -38,19 +38,26 @@ impl<T: MultiPixel> DynamicWidget for DynamicPixelDisplay<T> {
 
 impl<T: MultiPixel> DynamicPixelDisplay<T> {
     /// Convenience method to build a blank display struct with specified dimensions.
-    pub fn build(
-        width: usize,
-        height: usize,
-        fill: T::U,
-    ) -> Result<Self, String>
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the data generated from the fill does not match the dimensions of the display.
+    /// This should not happen and is subject to change in the future.
+    pub fn build(width: usize, height: usize, fill: T::U) -> Self
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
         let data: Vec<T::U> = vec![fill; width * height];
-        Self::build_from_data(width, height, &data)
+        Self::build_from_data(width, height, &data).expect(
+            "Invariant violated, data does not mach specified dimensions.",
+        )
     }
 
     /// Builds a display struct from the given data with the specified dimensions.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the length of the data does not match the dimensions of the display.
     pub fn build_from_data(
         width: usize,
         height: usize,
@@ -106,6 +113,13 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
     }
 
     // TODO: Add proper double buffering.
+    /// Returns a vector containing all the pixels in the display.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the index of a pixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
+    #[must_use]
     pub fn get_pixels(&self) -> Vec<T::U>
     where
         [(); T::WIDTH * T::HEIGHT]:,
@@ -122,6 +136,16 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
         pixels
     }
 
+    /// Sets the pixels of the display to the provided data.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the provided data does not match the dimensions of the display.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the index of a pixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
     pub fn set_pixels(&mut self, data: &[T::U]) -> Result<(), String>
     where
         [(); T::WIDTH * T::HEIGHT]:,
@@ -154,7 +178,6 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
     }
 
     /// Returns a bool representing the state of the pixel at the specified coordinate.
-    /// Returns an error if the coordinates are out of bounds.
     ///
     /// # Examples
     ///
@@ -165,14 +188,14 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
     /// use console_display::{
     ///     display_driver::DisplayDriver,
     ///     pixel::monochrome_pixel::SinglePixel,
-    ///     console_display::PixelDisplay
+    ///     pixel_display::DynamicPixelDisplay
     /// };
     ///
-    /// let disp: DisplayDriver<PixelDisplay<SinglePixel>> = DisplayDriver::new(
-    ///     PixelDisplay::<SinglePixel>::build_from_data(
+    /// let disp: DisplayDriver<DynamicPixelDisplay<SinglePixel>> = DisplayDriver::new(
+    ///     DynamicPixelDisplay::<SinglePixel>::build_from_data(
     ///         6,
     ///         6,
-    ///         vec![
+    ///         &vec![
     ///             true, true, true, true,  true, true, // 0
     ///             true, true, true, true,  true, true, // 1
     ///             true, true, true, false, true, true, //-2-
@@ -192,6 +215,15 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
     ///
     /// assert!(matches!(pixel, Err(_)));
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates are out of bounds.
+    ///
+    /// # Panics
+    ///
+    /// If the index of a subpixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
     pub fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String>
     where
         [(); T::WIDTH * T::HEIGHT]:,
@@ -209,12 +241,22 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
 
         let pixel = &self.get_data()
             [block_x + block_y * self.get_width_characters()];
-        pixel.get_subpixel(offset_x, offset_y).map_or_else(
-            |_| Err("Offset should be 0 or 1.".to_string()),
-            Ok,
-        )
+
+        Ok(pixel
+            .get_subpixel(offset_x, offset_y)
+            .expect("Offset should be 0 or 1."))
     }
 
+    /// Set a pixel at the specified coordinate with a given value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates are out of bounds.
+    ///
+    /// # Panics
+    ///
+    /// If the index of a subpixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
     pub fn set_pixel(
         &mut self,
         x: usize,
@@ -238,10 +280,11 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
         let width_characters = self.get_width_characters();
         let pixel =
             &mut self.get_data_mut()[block_x + block_y * width_characters];
-        pixel.set_subpixel(offset_x, offset_y, value).map_or_else(
-            |_| Err("Offset should be 0 or 1.".to_string()),
-            Ok,
-        )
+        pixel
+            .set_subpixel(offset_x, offset_y, value)
+            .expect("Offset should be 0 or 1.");
+
+        Ok(())
     }
 
     pub fn draw_line(
@@ -384,6 +427,13 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 
     // TODO: Add proper double buffering.
+    /// Returns a vector containing all the pixels in the display.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the index of a pixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
+    #[must_use]
     pub fn get_pixels(&self) -> [T::U; WIDTH * HEIGHT]
     where
         [(); T::WIDTH * T::HEIGHT]:,
@@ -396,6 +446,12 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         })
     }
 
+    /// Sets the pixels of the display to the provided data.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the index of a pixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
     pub fn set_pixels(&mut self, data: &[T::U; WIDTH * HEIGHT])
     where
         [(); T::WIDTH * T::HEIGHT]:,
@@ -420,7 +476,6 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 
     /// Returns a bool representing the state of the pixel at the specified coordinate.
-    /// Returns an error if the coordinates are out of bounds.
     ///
     /// # Examples
     ///
@@ -431,14 +486,12 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// use console_display::{
     ///     display_driver::DisplayDriver,
     ///     pixel::monochrome_pixel::SinglePixel,
-    ///     console_display::PixelDisplay
+    ///     pixel_display::StaticPixelDisplay
     /// };
     ///
-    /// let disp: DisplayDriver<PixelDisplay<SinglePixel>> = DisplayDriver::new(
-    ///     PixelDisplay::<SinglePixel>::build_from_data(
-    ///         6,
-    ///         6,
-    ///         vec![
+    /// let disp: DisplayDriver<StaticPixelDisplay<SinglePixel, 6, 6>> = DisplayDriver::new(
+    ///     StaticPixelDisplay::<SinglePixel, 6, 6>::new_from_data(
+    ///         &[
     ///             true, true, true, true,  true, true, // 0
     ///             true, true, true, true,  true, true, // 1
     ///             true, true, true, false, true, true, //-2-
@@ -446,7 +499,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///             true, true, true, true,  true, true, // 4
     ///             true, true, true, true,  true, true, // 5
     ///         ] //  0     1     2   --3--    4     5
-    ///     ).expect("Could not construct display.")
+    ///     )
     /// );
     /// // Replace with actual error handling
     ///
@@ -458,6 +511,15 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// assert!(matches!(pixel, Err(_)));
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates are out of bounds.
+    ///
+    /// # Panics
+    ///
+    /// If the index of a subpixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
     pub fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String>
     where
         [(); T::WIDTH * T::HEIGHT]:,
@@ -481,6 +543,16 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         )
     }
 
+    /// Set a pixel at the specified coordinate with a given value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates are out of bounds.
+    ///
+    /// # Panics
+    ///
+    /// If the index of a subpixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
     pub fn set_pixel(
         &mut self,
         x: usize,

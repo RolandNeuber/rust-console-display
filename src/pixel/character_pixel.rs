@@ -15,6 +15,11 @@ pub struct CharacterPixel {
 }
 
 impl CharacterPixel {
+    /// Constructs a character pixel from a char, a foreground and a background color.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the character is a control character.
     pub fn build(
         character: char,
         foreground: Color,
