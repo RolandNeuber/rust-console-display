@@ -1,5 +1,6 @@
 use std::{
     fmt::Display,
+    marker::PhantomData,
     ops::{
         Deref,
         DerefMut,
@@ -22,7 +23,8 @@ pub trait SingleWidget<T: DynamicWidget>:
     fn get_child_mut(&mut self) -> &mut T;
 }
 
-pub struct UvWidget<T: ConsoleDisplay> {
+pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+    pixel_type: PhantomData<S>,
     child: T,
     uv_x_min: f32,
     uv_x_max: f32,
@@ -30,10 +32,11 @@ pub struct UvWidget<T: ConsoleDisplay> {
     uv_y_max: f32,
 }
 
-impl<T: ConsoleDisplay> UvWidget<T> {
+impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
     pub fn new(child: T) -> Self {
         let (width, height) = (child.get_width(), child.get_height());
         Self {
+            pixel_type: PhantomData::<S>,
             child,
             uv_x_min: 0.0,
             uv_x_max: width as f32,
@@ -44,7 +47,7 @@ impl<T: ConsoleDisplay> UvWidget<T> {
 }
 
 impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
-    UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>>
+    UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>, S>
 {
     pub const fn set_uv_x_min(&mut self, x: f32) {
         self.uv_x_min = x;
@@ -315,13 +318,17 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: ConsoleDisplay + StaticWidget> StaticWidget for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> StaticWidget
+    for UvWidget<T, S>
+{
     const WIDTH_CHARACTERS: usize = T::WIDTH_CHARACTERS;
 
     const HEIGHT_CHARACTERS: usize = T::HEIGHT_CHARACTERS;
 }
 
-impl<T: ConsoleDisplay + StaticWidget> DynamicWidget for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> DynamicWidget
+    for UvWidget<T, S>
+{
     fn get_width_characters(&self) -> usize {
         self.child.get_width_characters()
     }
@@ -331,7 +338,9 @@ impl<T: ConsoleDisplay + StaticWidget> DynamicWidget for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay + StaticWidget> SingleWidget<T> for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
+    for UvWidget<T, S>
+{
     fn get_child(&self) -> &T {
         &self.child
     }
@@ -341,13 +350,15 @@ impl<T: ConsoleDisplay + StaticWidget> SingleWidget<T> for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay + StaticWidget> Display for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> Display
+    for UvWidget<T, S>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_child().to_string())
+        write!(f, "{}", self.get_child())
     }
 }
 
-impl<T: ConsoleDisplay> Deref for UvWidget<T> {
+impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -355,7 +366,7 @@ impl<T: ConsoleDisplay> Deref for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay> DerefMut for UvWidget<T> {
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut for UvWidget<T, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }
@@ -373,9 +384,10 @@ mod tests {
     #[test]
     fn test_texture_to_uv() {
         let expected = 0.0005;
-        let actual = UvWidget::<StaticPixelDisplay<SinglePixel, 1, 1>>::texture_to_uv(
-            500, 1000, -0.5, 0.5,
-        );
+        let actual = UvWidget::<
+            StaticPixelDisplay<SinglePixel, 1, 1>,
+            SinglePixel,
+        >::texture_to_uv(500, 1000, -0.5, 0.5);
         let error = expected * 0.0001;
         assert!((actual - 0.0005).abs() < error);
     }
@@ -385,9 +397,8 @@ mod tests {
         let expected = 1500;
         let actual = UvWidget::<
             StaticPixelDisplay<SinglePixel, 1, 1>,
-        >::uv_to_texture(
-            0.5, -1.0, 1.0, 2000
-        );
+            SinglePixel,
+        >::uv_to_texture(0.5, -1.0, 1.0, 2000);
         assert_eq!(actual, expected);
     }
 }

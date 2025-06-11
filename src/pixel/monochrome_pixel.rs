@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
+    constraint,
     impl_getters,
     impl_new,
 };
@@ -62,6 +63,17 @@ where
         )
     }
 
+    fn get_subpixel_static<const X: usize, const Y: usize>(
+        &self,
+    ) -> Self::U
+    where
+        [(); Self::WIDTH * Self::HEIGHT]:,
+        constraint!(X < Self::WIDTH):,
+        constraint!(Y < Self::HEIGHT):,
+    {
+        self.get_pixels()[X + Y * Self::WIDTH]
+    }
+
     /// Returns the value of the block at the specified coordinates.
     ///
     /// # Errors
@@ -84,6 +96,17 @@ where
         else {
             Err("Coordinates out of range.".to_string())
         }
+    }
+
+    fn set_subpixel_static<const X: usize, const Y: usize>(
+        &mut self,
+        value: Self::U,
+    ) where
+        [(); Self::WIDTH * Self::HEIGHT]:,
+        constraint!(X < Self::WIDTH):,
+        constraint!(Y < Self::HEIGHT):,
+    {
+        self.get_pixels_mut()[X + Y * Self::WIDTH] = value;
     }
 }
 

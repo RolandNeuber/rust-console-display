@@ -6,7 +6,7 @@ use std::fmt::{
 use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CharacterPixel {
     character: char,
     foreground: Color,

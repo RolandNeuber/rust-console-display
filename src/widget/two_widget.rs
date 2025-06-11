@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    eq,
+    constraint,
     widget::DynamicWidget,
 };
 
@@ -28,8 +28,8 @@ pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
 impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
     pub const fn new(child1: S, child2: T, child1_on_top: bool) -> Self
     where
-        eq!(S::WIDTH_CHARACTERS, T::WIDTH_CHARACTERS):,
-        eq!(S::HEIGHT_CHARACTERS, T::HEIGHT_CHARACTERS):,
+        constraint!(S::WIDTH_CHARACTERS == T::WIDTH_CHARACTERS):,
+        constraint!(S::HEIGHT_CHARACTERS == T::HEIGHT_CHARACTERS):,
     {
         Self {
             child1_on_top,
@@ -113,10 +113,10 @@ impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
 impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.child1_on_top {
-            write!(f, "{}", self.children.0.to_string())
+            write!(f, "{}", self.children.0)
         }
         else {
-            write!(f, "{}", self.children.1.to_string())
+            write!(f, "{}", self.children.1)
         }
     }
 }
@@ -164,7 +164,7 @@ impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
 impl<S: StaticWidget, T: StaticWidget> HorizontalTilingWidget<S, T> {
     pub const fn new(child1: S, child2: T) -> Self
     where
-        eq!(S::HEIGHT_CHARACTERS, T::HEIGHT_CHARACTERS):,
+        constraint!(S::HEIGHT_CHARACTERS == T::HEIGHT_CHARACTERS):,
     {
         Self {
             children: (child1, child2),
@@ -268,7 +268,7 @@ impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
 impl<S: StaticWidget, T: StaticWidget> VerticalTilingWidget<S, T> {
     pub const fn new(child1: S, child2: T) -> Self
     where
-        eq!(S::WIDTH_CHARACTERS, T::WIDTH_CHARACTERS):,
+        constraint!(S::WIDTH_CHARACTERS == T::WIDTH_CHARACTERS):,
     {
         Self {
             children: (child1, child2),
@@ -314,12 +314,7 @@ impl<S: DynamicWidget, T: DynamicWidget> Display
     for VerticalTilingWidget<S, T>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}\n{}",
-            self.children.0.to_string(),
-            self.children.1.to_string()
-        )
+        write!(f, "{}\n{}", self.children.0, self.children.1)
     }
 }
 

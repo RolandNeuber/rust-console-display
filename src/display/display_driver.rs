@@ -72,7 +72,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         let mut stdout = io::stdout();
 
         write!(stdout, "\x1B[H")?;
-        write!(stdout, "{}", self.get_widget().to_string())?;
+        write!(stdout, "{}", self.get_widget())?;
 
         Ok(())
     }

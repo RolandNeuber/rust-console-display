@@ -3,7 +3,6 @@
 
 use console_display::{
     character_display::CharacterDisplay,
-    console_display::ConsoleDisplay,
     display_driver::DisplayDriver,
     pixel::{
         character_pixel::CharacterPixel,

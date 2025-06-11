@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
 use crate::{
-    console_display::ConsoleDisplay,
     pixel::{
         character_pixel::CharacterPixel,
         color_pixel::Color,
@@ -57,7 +56,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     ) -> Result<Self, String> {
         let mut new_data = Vec::with_capacity(data.capacity());
         for i in data {
-            new_data.push(Some(i.clone()));
+            new_data.push(Some(i));
             for _ in 1..i.get_width() {
                 new_data.push(None);
             }
@@ -82,6 +81,14 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     #[allow(dead_code)]
     const fn get_data_mut(&mut self) -> &mut Vec<Option<CharacterPixel>> {
         &mut self.data
+    }
+
+    pub const fn get_width(&self) -> usize {
+        WIDTH
+    }
+
+    pub const fn get_height(&self) -> usize {
+        HEIGHT
     }
 
     /// Returns the pixel value at the specified coordinates.
@@ -152,7 +159,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         }
         self.data[x + y * WIDTH - overlap].clone_from(&default_pixel);
 
-        self.data[x + y * WIDTH] = Some(value.clone());
+        self.data[x + y * WIDTH] = Some(*value);
 
         let overlap = value.get_width();
         let mut max_overlap = value.get_width();
@@ -169,18 +176,6 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         }
 
         Ok(())
-    }
-}
-
-impl<const WIDTH: usize, const HEIGHT: usize> ConsoleDisplay
-    for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
-{
-    fn get_width(&self) -> usize {
-        WIDTH
-    }
-
-    fn get_height(&self) -> usize {
-        HEIGHT
     }
 }
 
