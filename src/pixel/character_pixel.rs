@@ -3,15 +3,41 @@ use std::fmt::{
     Display,
 };
 
+use crate::pixel::Pixel;
+
 use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct CharacterPixel {
+    data: [CharacterPixelData; 1],
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct CharacterPixelData {
     character: char,
     foreground: Color,
     background: Color,
+    copy: bool,
     width: usize,
+}
+
+impl Pixel for CharacterPixel {
+    type U = CharacterPixelData;
+
+    const WIDTH: usize = 1;
+
+    const HEIGHT: usize = 1;
+
+    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
+        &self.data
+    }
+
+    fn get_pixels_mut(
+        &mut self,
+    ) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
+        &mut self.data
+    }
 }
 
 impl CharacterPixel {
@@ -26,38 +52,55 @@ impl CharacterPixel {
         background: Color,
     ) -> Result<Self, String> {
         Ok(Self {
-            character,
-            foreground,
-            background,
-            width: match UnicodeWidthChar::width(character) {
-                Some(val) => val,
-                None => {
-                    return Err(
-                        "Control characters are not allowed.".to_string()
-                    );
-                }
-            },
+            data: [CharacterPixelData {
+                character,
+                foreground,
+                background,
+                copy: false,
+                width: match UnicodeWidthChar::width(character) {
+                    Some(val) => val,
+                    None => {
+                        return Err("Control characters are not allowed."
+                            .to_string());
+                    }
+                },
+            }],
         })
+    }
+
+    pub fn make_copy(&self) -> Self {
+        let mut clone = *self;
+        clone.set_copy(true);
+        clone
     }
 
     #[must_use]
     pub const fn get_character(&self) -> char {
-        self.character
+        self.data[0].character
     }
 
     #[must_use]
     pub const fn get_foreground(&self) -> Color {
-        self.foreground
+        self.data[0].foreground
     }
 
     #[must_use]
     pub const fn get_background(&self) -> Color {
-        self.background
+        self.data[0].background
+    }
+
+    #[must_use]
+    pub const fn is_copy(&self) -> bool {
+        self.data[0].copy
+    }
+
+    const fn set_copy(&mut self, copy: bool) {
+        self.data[0].copy = copy;
     }
 
     #[must_use]
     pub const fn get_width(&self) -> usize {
-        self.width
+        self.data[0].width
     }
 }
 
@@ -67,9 +110,9 @@ impl Display for CharacterPixel {
             f,
             "{}",
             Color::color(
-                self.character.to_string().as_str(),
-                &self.foreground,
-                &self.background
+                self.get_character().to_string().as_str(),
+                &self.get_foreground(),
+                &self.get_background()
             )
         )
     }
@@ -77,6 +120,6 @@ impl Display for CharacterPixel {
 
 impl Debug for CharacterPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self.character)
+        write!(f, "{}", &self.get_character())
     }
 }

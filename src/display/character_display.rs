@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
+    console_display::ConsoleDisplay,
     pixel::{
         character_pixel::CharacterPixel,
         color_pixel::Color,
@@ -17,7 +18,28 @@ pub struct CharacterDisplay<
     const WIDTH: usize,
     const HEIGHT: usize,
 > {
-    data: Vec<Option<CharacterPixel>>,
+    data: Vec<CharacterPixel>,
+}
+
+impl<const WIDTH: usize, const HEIGHT: usize>
+    ConsoleDisplay<CharacterPixel>
+    for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+{
+    fn get_width(&self) -> usize {
+        WIDTH
+    }
+
+    fn get_height(&self) -> usize {
+        HEIGHT
+    }
+
+    fn get_data(&self) -> &[CharacterPixel] {
+        &self.data
+    }
+
+    fn get_data_mut(&mut self) -> &mut [CharacterPixel] {
+        &mut self.data
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
@@ -35,13 +57,30 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
 impl<const WIDTH: usize, const HEIGHT: usize>
     CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
-    // TODO: Handle double-width characters properly
     /// Convenience method to build a blank display struct with specified dimensions
     ///
     /// # Errors
     /// Returns an error when the fill cannot match the dimensions of the display.
-    pub fn build(fill: CharacterPixel) -> Result<Self, String> {
-        let data: Vec<CharacterPixel> = vec![fill; WIDTH * HEIGHT];
+    pub fn build(fill: CharacterPixel) -> Result<Self, String>
+    where
+        [(); WIDTH * HEIGHT]:,
+    {
+        let character_width = fill.get_width();
+        let full_columns = WIDTH / character_width;
+        let padding = WIDTH % character_width;
+        let total_columns = full_columns + padding;
+
+        let mut data: Vec<CharacterPixel> =
+            vec![fill; total_columns * HEIGHT];
+
+        for i in 0..padding {
+            for y in 0..HEIGHT {
+                let x = full_columns + i;
+                data[x + y * total_columns] = CharacterPixel::build(' ', fill.get_foreground(), fill.get_background())
+                    .expect("Invariant violated. Should not be a control character.");
+            }
+        }
+
         Self::build_from_data(data)
     }
 
@@ -56,9 +95,9 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     ) -> Result<Self, String> {
         let mut new_data = Vec::with_capacity(data.capacity());
         for i in data {
-            new_data.push(Some(i));
+            new_data.push(i);
             for _ in 1..i.get_width() {
-                new_data.push(None);
+                new_data.push(i.make_copy());
             }
         }
 
@@ -71,16 +110,6 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         }
 
         Ok(Self { data: new_data })
-    }
-
-    #[must_use]
-    pub const fn get_data(&self) -> &Vec<Option<CharacterPixel>> {
-        &self.data
-    }
-
-    #[allow(dead_code)]
-    const fn get_data_mut(&mut self) -> &mut Vec<Option<CharacterPixel>> {
-        &mut self.data
     }
 
     pub const fn get_width(&self) -> usize {
@@ -107,18 +136,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
             ));
         }
 
-        let mut offset = 0;
-        while self.get_data()[x + y * self.get_width() - offset].is_none()
-        {
-            offset += 1;
-        }
-
-        self.get_data()[x + y * self.get_width() - offset]
-            .as_ref()
-            .map_or_else(
-                || Err("Data malformed, pixel was None.".to_string()),
-                Ok,
-            )
+        Ok(&self.get_data()[x + y * self.get_width()])
     }
 
     /// Sets a character pixel at a specific x and y coordinate.
@@ -139,11 +157,6 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         y: usize,
         value: &CharacterPixel,
     ) -> Result<(), String> {
-        let default_pixel = Some(
-            CharacterPixel::build(' ', Color::Default, Color::Default)
-                .expect("Invariant violated, character pixel could not be built."),
-        );
-
         if x > self.get_width() + value.get_width() ||
             y >= self.get_height()
         {
@@ -152,29 +165,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
             ));
         }
 
-        let mut overlap = 0;
-        while self.data[x + y * WIDTH - overlap].is_none() {
-            self.data[x + y * WIDTH - overlap].clone_from(&default_pixel);
-            overlap += 1;
-        }
-        self.data[x + y * WIDTH - overlap].clone_from(&default_pixel);
-
-        self.data[x + y * WIDTH] = Some(*value);
-
-        let overlap = value.get_width();
-        let mut max_overlap = value.get_width();
-        for i in 1..value.get_width() {
-            if let Some(character) = &self.data[x + y * WIDTH + i] {
-                max_overlap = max_overlap.max(i + character.get_width());
-            }
-
-            self.data[x + y * WIDTH + i] = None;
-        }
-        for i in 0..max_overlap - overlap {
-            self.data[x + y * WIDTH + value.get_width() - 1 + i]
-                .clone_from(&default_pixel);
-        }
-
+        self.data[x + y * WIDTH] = *value;
         Ok(())
     }
 }
@@ -192,17 +183,30 @@ impl<const WIDTH: usize, const HEIGHT: usize> Display
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut string_repr = String::new();
-        for y in 0..HEIGHT {
-            for x in 0..WIDTH {
-                let character = &self.get_data()[x + y * WIDTH];
-                match character {
-                    None => {}
-                    Some(character) => string_repr
-                        .push_str(character.to_string().as_str()),
-                }
+
+        let mut iter = self.get_data().iter();
+        let mut current_width = 0;
+        while let Some(i) = iter.next() {
+            if current_width >= WIDTH {
+                string_repr.push_str("\r\n");
+                current_width = 0;
             }
-            string_repr.push_str("\r\n");
+            if i.is_copy() {
+                string_repr.push_str(&Color::color(
+                    " ",
+                    &i.get_foreground(),
+                    &i.get_background(),
+                ));
+                current_width += 1;
+                continue;
+            }
+            string_repr.push_str(i.to_string().as_str());
+            current_width += i.get_width();
+            for _ in 0..i.get_width() - 1 {
+                iter.next();
+            }
         }
+        string_repr.pop();
         string_repr.pop();
         write!(f, "{string_repr}")
     }

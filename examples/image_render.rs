@@ -9,11 +9,11 @@ use std::io::{
 use console_display::{
     display_driver::DisplayDriver,
     pixel::{
+        Pixel,
         color_pixel::{
             ColorOctPixel,
             RGBColor,
         },
-        monochrome_pixel::MultiPixel,
     },
     pixel_display::DynamicPixelDisplay,
 };

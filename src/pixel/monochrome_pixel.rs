@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::pixel::Pixel;
+
 use crate::{
     constraint,
     impl_getters,
@@ -7,24 +9,11 @@ use crate::{
 };
 
 /// Specifies a block of pixels with specified dimensions.
-pub trait MultiPixel: ToString
+pub trait MultiPixel: Pixel
 where
     Self: Sized,
 {
-    type U: Copy;
-
-    /// The width of the block of pixels.
-    const WIDTH: usize;
-    /// The height of the block of pixels.
-    const HEIGHT: usize;
-
     fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> Self;
-
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT];
-
-    fn get_pixels_mut(
-        &mut self,
-    ) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT];
 
     /// Builds a block of pixels from a slice of pixels.
     ///
@@ -151,16 +140,18 @@ impl SinglePixel {
     }
 }
 
-impl MultiPixel for SinglePixel {
+impl Pixel for SinglePixel {
     type U = bool;
 
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 1;
 
-    impl_new!(SinglePixel, pixels: [bool; 1]);
-
     impl_getters!(pixels: [bool; 1]);
+}
+
+impl MultiPixel for SinglePixel {
+    impl_new!(SinglePixel, pixels: [bool; 1]);
 }
 
 impl Display for SinglePixel {
@@ -227,16 +218,18 @@ impl DualPixel {
     }
 }
 
-impl MultiPixel for DualPixel {
+impl Pixel for DualPixel {
     type U = bool;
 
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 2;
 
-    impl_new!(DualPixel, pixels: [bool; 2]);
-
     impl_getters!(pixels: [bool; 2]);
+}
+
+impl MultiPixel for DualPixel {
+    impl_new!(DualPixel, pixels: [bool; 2]);
 }
 
 impl Display for DualPixel {
@@ -305,16 +298,18 @@ impl Display for QuadPixel {
     }
 }
 
-impl MultiPixel for QuadPixel {
+impl Pixel for QuadPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 2;
 
-    impl_new!(QuadPixel, pixels: [bool; 4]);
-
     impl_getters!(pixels: [bool; 4]);
+}
+
+impl MultiPixel for QuadPixel {
+    impl_new!(QuadPixel, pixels: [bool; 4]);
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
@@ -373,16 +368,18 @@ impl HexPixel {
     }
 }
 
-impl MultiPixel for HexPixel {
+impl Pixel for HexPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 3;
 
-    impl_new!(HexPixel, pixels: [bool; 6]);
-
     impl_getters!(pixels: [bool; 6]);
+}
+
+impl MultiPixel for HexPixel {
+    impl_new!(HexPixel, pixels: [bool; 6]);
 }
 
 impl Display for HexPixel {
@@ -461,16 +458,18 @@ impl OctPixel {
     }
 }
 
-impl MultiPixel for OctPixel {
+impl Pixel for OctPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 4;
 
-    impl_new!(OctPixel, pixels: [bool; 8]);
-
     impl_getters!(pixels: [bool; 8]);
+}
+
+impl MultiPixel for OctPixel {
+    impl_new!(OctPixel, pixels: [bool; 8]);
 }
 
 impl Display for OctPixel {
@@ -546,16 +545,18 @@ impl BrailleOctPixel {
     }
 }
 
-impl MultiPixel for BrailleOctPixel {
+impl Pixel for BrailleOctPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 4;
 
-    impl_new!(BrailleOctPixel, pixels: [bool; 8]);
-
     impl_getters!(pixels: [bool; 8]);
+}
+
+impl MultiPixel for BrailleOctPixel {
+    impl_new!(BrailleOctPixel, pixels: [bool; 8]);
 }
 
 impl Display for BrailleOctPixel {

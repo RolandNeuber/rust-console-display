@@ -13,7 +13,7 @@ use console_display::{
 fn main() {
     let mut char_disp: CharacterDisplay<CharacterPixel, 40, 20> =
         CharacterDisplay::build(
-            CharacterPixel::build(' ', Color::Default, Color::Default)
+            CharacterPixel::build('あ', Color::Default, Color::Default)
                 .unwrap(),
         )
         .unwrap();
