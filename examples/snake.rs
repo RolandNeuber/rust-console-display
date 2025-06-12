@@ -13,14 +13,10 @@ use console_display::{
         color_pixel::{
             Color,
             ColorDualPixel,
-            ColorSinglePixel,
             RGBColor,
         },
     },
-    pixel_display::{
-        DynamicPixelDisplay,
-        StaticPixelDisplay,
-    },
+    pixel_display::StaticPixelDisplay,
     widget::two_widget::{
         OverlayWidget,
         VerticalTilingWidget,
@@ -35,6 +31,21 @@ fn main() {
     let apple_color = RGBColor { r: 255, g: 0, b: 0 };
 
     let mut disp = construct_display();
+
+    let _ = disp.0.set_pixel(
+        99,
+        0,
+        &CharacterPixel::build(
+            '1',
+            Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
+            Color::Color(RGBColor {
+                r: 255,
+                g: 255,
+                b: 255,
+            }),
+        )
+        .unwrap(),
+    );
 
     let endscreen = &mut disp.1.1;
 
@@ -137,6 +148,24 @@ fn main() {
 
         if snake[0] == apple {
             score += 1;
+            for (i, digit) in score.to_string().chars().rev().enumerate() {
+                let _ = disp.0.set_pixel(
+                    99 - i,
+                    0,
+                    &CharacterPixel::build(
+                        digit,
+                        Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
+                        Color::Color(RGBColor {
+                            r: 255,
+                            g: 255,
+                            b: 255,
+                        }),
+                    )
+                    .unwrap(),
+                );
+            }
+
+            let map_display = &mut disp.1.0;
             if score == map_display.get_width() * map_display.get_height()
             {
                 return UpdateStatus::Break;
@@ -190,7 +219,7 @@ fn main() {
 
 type Display = DisplayDriver<
     VerticalTilingWidget<
-        StaticPixelDisplay<ColorSinglePixel, 100, 1>,
+        CharacterDisplay<CharacterPixel, 100, 1>,
         OverlayWidget<
             StaticPixelDisplay<ColorDualPixel, 100, 42>,
             CharacterDisplay<CharacterPixel, 100, 21>,
@@ -200,11 +229,19 @@ type Display = DisplayDriver<
 
 fn construct_display() -> Display {
     DisplayDriver::new(VerticalTilingWidget::new(
-        StaticPixelDisplay::<ColorSinglePixel, 100, 1>::new(RGBColor {
-            r: 255,
-            b: 255,
-            g: 255,
-        }),
+        CharacterDisplay::<_, 100, 1>::build(
+            CharacterPixel::build(
+                ' ',
+                Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
+                Color::Color(RGBColor {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                }),
+            )
+            .unwrap(),
+        )
+        .unwrap(),
         OverlayWidget::new(
             StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(RGBColor {
                 r: 0,
@@ -219,50 +256,4 @@ fn construct_display() -> Display {
             true,
         ),
     ))
-}
-
-type DisplayBad = DisplayDriver<
-    VerticalTilingWidget<
-        DynamicPixelDisplay<ColorSinglePixel>,
-        OverlayWidget<
-            DynamicPixelDisplay<ColorDualPixel>,
-            CharacterDisplay<CharacterPixel, 100, 21>,
-        >,
-    >,
->;
-
-#[allow(dead_code)]
-fn construct_display_bad() -> DisplayBad {
-    DisplayDriver::new(
-        VerticalTilingWidget::build(
-            DynamicPixelDisplay::<ColorSinglePixel>::build(
-                100,
-                1,
-                RGBColor {
-                    r: 255,
-                    b: 255,
-                    g: 255,
-                },
-            ),
-            OverlayWidget::build(
-                DynamicPixelDisplay::<ColorDualPixel>::build(
-                    100,
-                    42,
-                    RGBColor { r: 0, b: 0, g: 0 },
-                ),
-                CharacterDisplay::<CharacterPixel, 100, 21>::build(
-                    CharacterPixel::build(
-                        ' ',
-                        Color::Default,
-                        Color::Default,
-                    )
-                    .unwrap(),
-                )
-                .unwrap(),
-                true,
-            )
-            .unwrap(),
-        )
-        .unwrap(),
-    )
 }

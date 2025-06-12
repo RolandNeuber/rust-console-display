@@ -206,8 +206,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> Display
                 iter.next();
             }
         }
-        string_repr.pop();
-        string_repr.pop();
-        write!(f, "{string_repr}")
+
+        write!(f, "{}", string_repr.trim_end())
     }
 }

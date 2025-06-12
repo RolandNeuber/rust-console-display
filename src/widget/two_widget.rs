@@ -314,7 +314,7 @@ impl<S: DynamicWidget, T: DynamicWidget> Display
     for VerticalTilingWidget<S, T>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\n{}", self.children.0, self.children.1)
+        write!(f, "{}\r\n{}", self.children.0, self.children.1)
     }
 }
 
