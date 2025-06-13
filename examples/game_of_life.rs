@@ -11,6 +11,7 @@ use console_display::{
     },
     pixel::monochrome_pixel::OctPixel,
     pixel_display::StaticPixelDisplay,
+    widget::single_widget::DoubleBufferWidget,
 };
 use rand::{
     Rng,
@@ -18,12 +19,15 @@ use rand::{
 };
 
 fn main() {
-    let disp = StaticPixelDisplay::<OctPixel, 200, 100>::new_from_data(
-        &array::from_fn::<_, 20_000, _>(|_| {
-            let rng = thread_rng().gen_range(0..=1);
-            rng != 0
-        }),
-    );
+    let disp =
+        DoubleBufferWidget::new(
+            StaticPixelDisplay::<OctPixel, 200, 100>::new_from_data(
+                &array::from_fn::<_, 20_000, _>(|_| {
+                    let rng = thread_rng().gen_range(0..=1);
+                    rng != 2
+                }),
+            ),
+        );
 
     let mut display = DisplayDriver::new(disp);
 
@@ -40,17 +44,14 @@ fn main() {
 
     display.set_target_frame_rate(30.);
     display.set_on_update(move |disp, _| {
-        let mut data = disp.get_pixels();
-        for x in 0..disp.get_width() {
-            for y in 0..disp.get_height() {
+        let width = disp.get_width() as i32;
+        let height = disp.get_height() as i32;
+        for x in 0..width {
+            for y in 0..height {
                 let mut neighbors = 0;
                 for i in offsets {
-                    let x_i = (x as isize + i.0)
-                        .rem_euclid(disp.get_width() as isize)
-                        as usize;
-                    let y_i = (y as isize + i.1)
-                        .rem_euclid(disp.get_height() as isize)
-                        as usize;
+                    let x_i = (x + i.0).rem_euclid(width) as usize;
+                    let y_i = (y + i.1).rem_euclid(height) as usize;
                     if disp
                         .get_pixel(x_i, y_i)
                         .expect("Could not get pixel.")
@@ -58,13 +59,19 @@ fn main() {
                         neighbors += 1;
                     }
                 }
-                data[x + y * disp.get_width()] = neighbors == 3 ||
-                    neighbors == 2 &&
-                        disp.get_pixel(x, y)
-                            .expect("Could not get pixel.");
+                let pixel = disp
+                    .get_pixel(x as usize, y as usize)
+                    .expect("Could not get pixel.");
+
+                let _ = disp.set_pixel(
+                    x as usize,
+                    y as usize,
+                    neighbors == 3 || neighbors == 2 && pixel,
+                );
             }
         }
-        disp.set_pixels(&data);
+        disp.swap_buffers();
+
         UpdateStatus::Continue
     });
 

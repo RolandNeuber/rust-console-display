@@ -131,6 +131,7 @@ impl RGBColor {
 }
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
+#[derive(Clone, Copy)]
 pub struct ColorSinglePixel {
     pixels: [RGBColor; 1],
 }
@@ -161,6 +162,7 @@ impl Display for ColorSinglePixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorDualPixel {
     pixels: [RGBColor; 2],
 }
@@ -191,6 +193,7 @@ impl Display for ColorDualPixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorQuadPixel {
     pixels: [RGBColor; 4],
 }
@@ -241,6 +244,7 @@ impl Display for ColorQuadPixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorHexPixel {
     pixels: [RGBColor; 6],
 }
@@ -291,6 +295,7 @@ impl Display for ColorHexPixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorOctPixel {
     pixels: [RGBColor; 8],
 }

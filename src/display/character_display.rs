@@ -18,7 +18,7 @@ pub struct CharacterDisplay<
     const WIDTH: usize,
     const HEIGHT: usize,
 > {
-    data: Vec<CharacterPixel>,
+    data: Box<[CharacterPixel]>,
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize>
@@ -37,7 +37,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut [CharacterPixel] {
+    fn get_data_mut(&mut self) -> &mut Box<[CharacterPixel]> {
         &mut self.data
     }
 }
@@ -109,14 +109,16 @@ impl<const WIDTH: usize, const HEIGHT: usize>
             ));
         }
 
-        Ok(Self { data: new_data })
+        Ok(Self {
+            data: new_data.into_boxed_slice(),
+        })
     }
 
-    pub const fn get_width(&self) -> usize {
+    #[must_use] pub const fn get_width(&self) -> usize {
         WIDTH
     }
 
-    pub const fn get_height(&self) -> usize {
+    #[must_use] pub const fn get_height(&self) -> usize {
         HEIGHT
     }
 

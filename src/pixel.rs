@@ -4,7 +4,7 @@ pub mod character_pixel;
 pub mod color_pixel;
 pub mod monochrome_pixel;
 
-pub trait Pixel: Display
+pub trait Pixel: Display + Copy
 where
     Self: Sized,
 {

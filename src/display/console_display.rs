@@ -68,7 +68,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     #[must_use]
     fn get_data(&self) -> &[T];
 
-    fn get_data_mut(&mut self) -> &mut [T];
+    fn get_data_mut(&mut self) -> &mut Box<[T]>;
 
     /// Returns a bool representing the state of the pixel at the specified coordinate.
     ///

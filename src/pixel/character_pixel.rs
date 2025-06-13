@@ -68,7 +68,7 @@ impl CharacterPixel {
         })
     }
 
-    pub fn make_copy(&self) -> Self {
+    #[must_use] pub const fn make_copy(&self) -> Self {
         let mut clone = *self;
         clone.set_copy(true);
         clone

@@ -100,6 +100,7 @@ where
 }
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
+#[derive(Clone, Copy)]
 pub struct SinglePixel {
     pixels: [bool; 1],
 }
@@ -161,6 +162,7 @@ impl Display for SinglePixel {
 }
 
 /// Specifies a block of pixels with dimensions 1 (width) by 2 (height).
+#[derive(Clone, Copy)]
 pub struct DualPixel {
     pixels: [bool; 2],
 }
@@ -239,7 +241,7 @@ impl Display for DualPixel {
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 2 (height).
-#[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct QuadPixel {
     pixels: [bool; 4],
 }
@@ -313,6 +315,7 @@ impl MultiPixel for QuadPixel {
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
+#[derive(Clone, Copy)]
 pub struct HexPixel {
     pixels: [bool; 6],
 }
@@ -389,6 +392,7 @@ impl Display for HexPixel {
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height).
+#[derive(Clone, Copy)]
 pub struct OctPixel {
     pixels: [bool; 8],
 }
@@ -479,6 +483,7 @@ impl Display for OctPixel {
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
+#[derive(Clone, Copy)]
 pub struct BrailleOctPixel {
     pixels: [bool; 8],
 }

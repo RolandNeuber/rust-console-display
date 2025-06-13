@@ -1,6 +1,13 @@
 use std::{
+    cell::{
+        Cell,
+        Ref,
+        RefCell,
+        RefMut,
+    },
     fmt::Display,
     marker::PhantomData,
+    mem,
     ops::{
         Deref,
         DerefMut,
@@ -19,8 +26,17 @@ use super::StaticWidget;
 pub trait SingleWidget<T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
-    fn get_child(&self) -> &T;
-    fn get_child_mut(&mut self) -> &mut T;
+    type Borrowed<'a>: Deref<Target = T>
+    where
+        T: 'a,
+        Self: 'a;
+    type BorrowedMut<'a>: DerefMut<Target = T>
+    where
+        T: 'a,
+        Self: 'a;
+
+    fn get_child(&self) -> Self::Borrowed<'_>;
+    fn get_child_mut(&mut self) -> Self::BorrowedMut<'_>;
 }
 
 pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
@@ -341,6 +357,18 @@ impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> DynamicWidget
 impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
     for UvWidget<T, S>
 {
+    type Borrowed<'a>
+        = &'a T
+    where
+        T: 'a,
+        S: 'a;
+
+    type BorrowedMut<'a>
+        = &'a mut T
+    where
+        T: 'a,
+        Self: 'a;
+
     fn get_child(&self) -> &T {
         &self.child
     }
@@ -369,6 +397,119 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
 impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut for UvWidget<T, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
+    }
+}
+
+pub struct DoubleBufferWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+    pixel_type: PhantomData<S>,
+    child: RefCell<T>,
+    backbuffer: RefCell<Box<[S]>>,
+    is_write: Cell<bool>,
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
+    pub fn new(child: T) -> Self
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let pixels = child.get_data().to_vec().into_boxed_slice();
+        Self {
+            pixel_type: PhantomData::<S>,
+            child: RefCell::new(child),
+            backbuffer: RefCell::new(pixels),
+            is_write: false.into(),
+        }
+    }
+
+    #[allow(clippy::swap_with_temporary)]
+    pub fn swap_buffers(&self) {
+        mem::swap(
+            self.child.borrow_mut().get_data_mut(),
+            &mut self.backbuffer.borrow_mut(),
+        );
+    }
+}
+
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> StaticWidget
+    for DoubleBufferWidget<T, S>
+{
+    const WIDTH_CHARACTERS: usize = T::WIDTH_CHARACTERS;
+
+    const HEIGHT_CHARACTERS: usize = T::HEIGHT_CHARACTERS;
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
+    for DoubleBufferWidget<T, S>
+{
+    fn get_width_characters(&self) -> usize {
+        self.child.borrow().get_width_characters()
+    }
+
+    fn get_height_characters(&self) -> usize {
+        self.child.borrow().get_height_characters()
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
+    for DoubleBufferWidget<T, S>
+{
+    type Borrowed<'a>
+        = Ref<'a, T>
+    where
+        T: 'a,
+        Self: 'a;
+
+    type BorrowedMut<'a>
+        = RefMut<'a, T>
+    where
+        T: 'a,
+        Self: 'a;
+
+    fn get_child(&self) -> Ref<'_, T> {
+        self.child.borrow()
+    }
+
+    fn get_child_mut(&mut self) -> RefMut<'_, T> {
+        self.child.borrow_mut()
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> Display
+    for DoubleBufferWidget<T, S>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_write.get() {
+            self.swap_buffers();
+            self.is_write.set(false);
+        }
+        self.child.borrow().fmt(f)
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref
+    for DoubleBufferWidget<T, S>
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        if self.is_write.get() {
+            self.swap_buffers();
+            self.is_write.set(false);
+        }
+        // TODO: Make this implementation safe
+        unsafe { &*self.child.as_ptr() }
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut
+    for DoubleBufferWidget<T, S>
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        if !self.is_write.get() {
+            self.swap_buffers();
+            self.is_write.set(true);
+        }
+        self.child.get_mut()
     }
 }
 

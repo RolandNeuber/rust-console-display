@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub struct DynamicPixelDisplay<T: MultiPixel> {
-    data: Vec<T>,
+    data: Box<[T]>,
     width: usize,
     height: usize,
 }
@@ -91,7 +91,7 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
         Ok(Self {
             width,
             height,
-            data: multi_pixels,
+            data: multi_pixels.into_boxed_slice(),
         })
     }
 }
@@ -109,7 +109,7 @@ impl<T: MultiPixel> ConsoleDisplay<T> for DynamicPixelDisplay<T> {
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut [T] {
+    fn get_data_mut(&mut self) -> &mut Box<[T]> {
         &mut self.data
     }
 }
@@ -149,7 +149,7 @@ pub struct StaticPixelDisplay<
     const WIDTH: usize,
     const HEIGHT: usize,
 > {
-    data: Vec<T>,
+    data: Box<[T]>,
 }
 
 impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
@@ -194,7 +194,9 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
             }
         }
 
-        Self { data: multi_pixels }
+        Self {
+            data: multi_pixels.into_boxed_slice(),
+        }
     }
 
     // TODO: Add proper double buffering.
@@ -283,7 +285,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// If the index of a subpixel is out of bounds.
     /// This should not happen and is subject to change in the future.
-    pub fn get_pixel_static<const X: usize, const Y: usize>(&self) -> T::U
+    #[must_use] pub fn get_pixel_static<const X: usize, const Y: usize>(&self) -> T::U
     where
         constraint!(X <= WIDTH):,
         constraint!(Y <= HEIGHT):,
@@ -340,7 +342,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut [T] {
+    fn get_data_mut(&mut self) -> &mut Box<[T]> {
         &mut self.data
     }
 }
