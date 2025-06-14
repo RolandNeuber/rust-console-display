@@ -285,7 +285,8 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// If the index of a subpixel is out of bounds.
     /// This should not happen and is subject to change in the future.
-    #[must_use] pub fn get_pixel_static<const X: usize, const Y: usize>(&self) -> T::U
+    #[must_use]
+    pub fn get_pixel_static<const X: usize, const Y: usize>(&self) -> T::U
     where
         constraint!(X <= WIDTH):,
         constraint!(Y <= HEIGHT):,

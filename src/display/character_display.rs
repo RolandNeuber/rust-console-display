@@ -114,11 +114,13 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         })
     }
 
-    #[must_use] pub const fn get_width(&self) -> usize {
+    #[must_use]
+    pub const fn get_width(&self) -> usize {
         WIDTH
     }
 
-    #[must_use] pub const fn get_height(&self) -> usize {
+    #[must_use]
+    pub const fn get_height(&self) -> usize {
         HEIGHT
     }
 
