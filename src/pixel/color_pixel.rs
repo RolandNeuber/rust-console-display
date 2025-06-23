@@ -2,16 +2,20 @@ use std::fmt::Display;
 
 use crate::{
     impl_getters,
-    pixel::monochrome_pixel::{
-        HexPixel,
-        MultiPixel,
-        OctPixel,
-        QuadPixel,
+    pixel::{
+        Pixel,
+        monochrome_pixel::{
+            HexPixel,
+            MultiPixel,
+            OctPixel,
+            QuadPixel,
+        },
     },
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum Color {
+    #[default]
     Default,
     Color(RGBColor),
 }
@@ -47,6 +51,7 @@ impl Color {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct RGBColor {
     pub r: u8,
     pub g: u8,
@@ -125,31 +130,26 @@ impl RGBColor {
     }
 }
 
-impl Clone for RGBColor {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl Copy for RGBColor {}
-
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
+#[derive(Clone, Copy)]
 pub struct ColorSinglePixel {
     pixels: [RGBColor; 1],
 }
 
-impl MultiPixel for ColorSinglePixel {
+impl Pixel for ColorSinglePixel {
     type U = RGBColor;
 
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 1;
 
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+}
+
+impl MultiPixel for ColorSinglePixel {
     fn new(pixels: [Self::U; 1]) -> Self {
         Self { pixels }
     }
-
-    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl Display for ColorSinglePixel {
@@ -162,22 +162,25 @@ impl Display for ColorSinglePixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorDualPixel {
     pixels: [RGBColor; 2],
 }
 
-impl MultiPixel for ColorDualPixel {
+impl Pixel for ColorDualPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 1;
 
     const HEIGHT: usize = 2;
 
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+}
+
+impl MultiPixel for ColorDualPixel {
     fn new(pixels: [Self::U; 2]) -> Self {
         Self { pixels }
     }
-
-    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl Display for ColorDualPixel {
@@ -190,22 +193,25 @@ impl Display for ColorDualPixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorQuadPixel {
     pixels: [RGBColor; 4],
 }
 
-impl MultiPixel for ColorQuadPixel {
+impl Pixel for ColorQuadPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 2;
 
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+}
+
+impl MultiPixel for ColorQuadPixel {
     fn new(pixels: [Self::U; 4]) -> Self {
         Self { pixels }
     }
-
-    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl Display for ColorQuadPixel {
@@ -238,22 +244,25 @@ impl Display for ColorQuadPixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorHexPixel {
     pixels: [RGBColor; 6],
 }
 
-impl MultiPixel for ColorHexPixel {
+impl Pixel for ColorHexPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 3;
 
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+}
+
+impl MultiPixel for ColorHexPixel {
     fn new(pixels: [Self::U; 6]) -> Self {
         Self { pixels }
     }
-
-    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl Display for ColorHexPixel {
@@ -286,22 +295,25 @@ impl Display for ColorHexPixel {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ColorOctPixel {
     pixels: [RGBColor; 8],
 }
 
-impl MultiPixel for ColorOctPixel {
+impl Pixel for ColorOctPixel {
     type U = RGBColor;
 
     const WIDTH: usize = 2;
 
     const HEIGHT: usize = 4;
 
+    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+}
+
+impl MultiPixel for ColorOctPixel {
     fn new(pixels: [Self::U; 8]) -> Self {
         Self { pixels }
     }
-
-    impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl Display for ColorOctPixel {

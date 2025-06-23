@@ -1,4 +1,18 @@
-use std::fmt::Display;
+use std::{
+    cell::{
+        Cell,
+        Ref,
+        RefCell,
+        RefMut,
+    },
+    fmt::Display,
+    marker::PhantomData,
+    mem,
+    ops::{
+        Deref,
+        DerefMut,
+    },
+};
 
 use crate::{
     console_display::ConsoleDisplay,
@@ -9,12 +23,24 @@ use crate::{
 
 use super::StaticWidget;
 
-pub trait SingleWidget<T: DynamicWidget>: DynamicWidget {
-    fn get_child(&self) -> &T;
-    fn get_child_mut(&mut self) -> &mut T;
+pub trait SingleWidget<T: DynamicWidget>:
+    DynamicWidget + Deref + DerefMut
+{
+    type Borrowed<'a>: Deref<Target = T>
+    where
+        T: 'a,
+        Self: 'a;
+    type BorrowedMut<'a>: DerefMut<Target = T>
+    where
+        T: 'a,
+        Self: 'a;
+
+    fn get_child(&self) -> Self::Borrowed<'_>;
+    fn get_child_mut(&mut self) -> Self::BorrowedMut<'_>;
 }
 
-pub struct UvWidget<T: ConsoleDisplay> {
+pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+    pixel_type: PhantomData<S>,
     child: T,
     uv_x_min: f32,
     uv_x_max: f32,
@@ -22,10 +48,11 @@ pub struct UvWidget<T: ConsoleDisplay> {
     uv_y_max: f32,
 }
 
-impl<T: ConsoleDisplay> UvWidget<T> {
+impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
     pub fn new(child: T) -> Self {
         let (width, height) = (child.get_width(), child.get_height());
         Self {
+            pixel_type: PhantomData::<S>,
             child,
             uv_x_min: 0.0,
             uv_x_max: width as f32,
@@ -36,7 +63,7 @@ impl<T: ConsoleDisplay> UvWidget<T> {
 }
 
 impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
-    UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>>
+    UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>, S>
 {
     pub const fn set_uv_x_min(&mut self, x: f32) {
         self.uv_x_min = x;
@@ -57,6 +84,10 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// Gets the pixel at the _uv_ coordinate (x, y).
     /// Using coordinates outside the uv mapping is considered
     /// undefined behaviour at the moment and is subject to change.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates calculated by the UV mapping are out of bounds.
     pub fn get_pixel(&self, x: f32, y: f32) -> Result<S::U, String>
     where
         [(); S::WIDTH * S::HEIGHT]:,
@@ -80,7 +111,10 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 
     /// Sets the pixel at the _uv_ coordinate (x, y).
-    /// Using coordinates outside the uv mapping sets no pixel.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the coordinates are outside the uv mapping.
     pub fn set_pixel(
         &mut self,
         x: f32,
@@ -245,16 +279,14 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// use console_display::{
     ///     widget::single_widget::UvWidget,
-    ///     console_display::PixelDisplay,
+    ///     pixel_display::StaticPixelDisplay,
     ///     pixel::monochrome_pixel::SinglePixel,
     /// };
     ///
     /// let mut widget = UvWidget::new(
-    ///     PixelDisplay::<SinglePixel>::build(
-    ///         5,
-    ///         1,
+    ///     StaticPixelDisplay::<SinglePixel, 5, 1>::new(
     ///         false
-    ///     ).expect("Could not construct display.")
+    ///     )
     /// );
     ///
     /// widget.set_uv_x_min(-1.);
@@ -279,16 +311,14 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// use console_display::{
     ///     widget::single_widget::UvWidget,
-    ///     console_display::PixelDisplay,
+    ///     pixel_display::StaticPixelDisplay,
     ///     pixel::monochrome_pixel::SinglePixel,
     /// };
     ///
     /// let mut widget = UvWidget::new(
-    ///     PixelDisplay::<SinglePixel>::build(
-    ///         1,
-    ///         5,
+    ///     StaticPixelDisplay::<SinglePixel, 1, 5>::new(
     ///         false
-    ///     ).expect("Could not construct display.")
+    ///     )
     /// );
     ///
     /// widget.set_uv_y_min(-1.);
@@ -304,13 +334,17 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: ConsoleDisplay + StaticWidget> StaticWidget for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> StaticWidget
+    for UvWidget<T, S>
+{
     const WIDTH_CHARACTERS: usize = T::WIDTH_CHARACTERS;
 
     const HEIGHT_CHARACTERS: usize = T::HEIGHT_CHARACTERS;
 }
 
-impl<T: ConsoleDisplay + StaticWidget> DynamicWidget for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> DynamicWidget
+    for UvWidget<T, S>
+{
     fn get_width_characters(&self) -> usize {
         self.child.get_width_characters()
     }
@@ -320,7 +354,21 @@ impl<T: ConsoleDisplay + StaticWidget> DynamicWidget for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay + StaticWidget> SingleWidget<T> for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
+    for UvWidget<T, S>
+{
+    type Borrowed<'a>
+        = &'a T
+    where
+        T: 'a,
+        S: 'a;
+
+    type BorrowedMut<'a>
+        = &'a mut T
+    where
+        T: 'a,
+        Self: 'a;
+
     fn get_child(&self) -> &T {
         &self.child
     }
@@ -330,9 +378,138 @@ impl<T: ConsoleDisplay + StaticWidget> SingleWidget<T> for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay + StaticWidget> Display for UvWidget<T> {
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> Display
+    for UvWidget<T, S>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_child().to_string())
+        write!(f, "{}", self.get_child())
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut for UvWidget<T, S> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
+    }
+}
+
+pub struct DoubleBufferWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+    pixel_type: PhantomData<S>,
+    child: RefCell<T>,
+    backbuffer: RefCell<Box<[S]>>,
+    is_write: Cell<bool>,
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
+    pub fn new(child: T) -> Self
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let pixels = child.get_data().to_vec().into_boxed_slice();
+        Self {
+            pixel_type: PhantomData::<S>,
+            child: RefCell::new(child),
+            backbuffer: RefCell::new(pixels),
+            is_write: false.into(),
+        }
+    }
+
+    #[allow(clippy::swap_with_temporary)]
+    pub fn swap_buffers(&self) {
+        mem::swap(
+            self.child.borrow_mut().get_data_mut(),
+            &mut self.backbuffer.borrow_mut(),
+        );
+    }
+}
+
+impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> StaticWidget
+    for DoubleBufferWidget<T, S>
+{
+    const WIDTH_CHARACTERS: usize = T::WIDTH_CHARACTERS;
+
+    const HEIGHT_CHARACTERS: usize = T::HEIGHT_CHARACTERS;
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
+    for DoubleBufferWidget<T, S>
+{
+    fn get_width_characters(&self) -> usize {
+        self.child.borrow().get_width_characters()
+    }
+
+    fn get_height_characters(&self) -> usize {
+        self.child.borrow().get_height_characters()
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
+    for DoubleBufferWidget<T, S>
+{
+    type Borrowed<'a>
+        = Ref<'a, T>
+    where
+        T: 'a,
+        Self: 'a;
+
+    type BorrowedMut<'a>
+        = RefMut<'a, T>
+    where
+        T: 'a,
+        Self: 'a;
+
+    fn get_child(&self) -> Ref<'_, T> {
+        self.child.borrow()
+    }
+
+    fn get_child_mut(&mut self) -> RefMut<'_, T> {
+        self.child.borrow_mut()
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> Display
+    for DoubleBufferWidget<T, S>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_write.get() {
+            self.swap_buffers();
+            self.is_write.set(false);
+        }
+        self.child.borrow().fmt(f)
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref
+    for DoubleBufferWidget<T, S>
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        if self.is_write.get() {
+            self.swap_buffers();
+            self.is_write.set(false);
+        }
+        // TODO: Make this implementation safe
+        unsafe { &*self.child.as_ptr() }
+    }
+}
+
+impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut
+    for DoubleBufferWidget<T, S>
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        if !self.is_write.get() {
+            self.swap_buffers();
+            self.is_write.set(true);
+        }
+        self.child.get_mut()
     }
 }
 
@@ -347,19 +524,22 @@ mod tests {
 
     #[test]
     fn test_texture_to_uv() {
-        let uv = UvWidget::<StaticPixelDisplay<SinglePixel, 1, 1>>::texture_to_uv(
-            500, 1000, -0.5, 0.5,
-        );
-        assert_eq!((uv * 10000.).round() / 10000., 0.0005);
+        let expected = 0.0005;
+        let actual = UvWidget::<
+            StaticPixelDisplay<SinglePixel, 1, 1>,
+            SinglePixel,
+        >::texture_to_uv(500, 1000, -0.5, 0.5);
+        let error = expected * 0.0001;
+        assert!((actual - 0.0005).abs() < error);
     }
 
     #[test]
     fn test_uv_to_texture() {
-        let texture_coordinate = UvWidget::<
+        let expected = 1500;
+        let actual = UvWidget::<
             StaticPixelDisplay<SinglePixel, 1, 1>,
-        >::uv_to_texture(
-            0.5, -1.0, 1.0, 2000
-        );
-        assert_eq!(texture_coordinate, 1500);
+            SinglePixel,
+        >::uv_to_texture(0.5, -1.0, 1.0, 2000);
+        assert_eq!(actual, expected);
     }
 }
