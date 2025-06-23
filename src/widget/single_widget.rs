@@ -513,6 +513,120 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut
     }
 }
 
+pub struct PaddingWidget<T: DynamicWidget> {
+    child: T,
+    padding_left: usize,
+    padding_right: usize,
+    padding_top: usize,
+    padding_bottom: usize,
+}
+
+impl<T: DynamicWidget> PaddingWidget<T> {
+    pub fn new(
+        child: T,
+        padding_left: usize,
+        padding_right: usize,
+        padding_top: usize,
+        padding_bottom: usize,
+    ) -> PaddingWidget<T> {
+        PaddingWidget {
+            child,
+            padding_left,
+            padding_right,
+            padding_top,
+            padding_bottom,
+        }
+    }
+
+    pub fn set_padding_left(&mut self, padding: usize) {
+        self.padding_left = padding;
+    }
+
+    pub fn set_padding_right(&mut self, padding: usize) {
+        self.padding_right = padding;
+    }
+
+    pub fn set_padding_top(&mut self, padding: usize) {
+        self.padding_top = padding;
+    }
+
+    pub fn set_padding_bottom(&mut self, padding: usize) {
+        self.padding_bottom = padding;
+    }
+}
+
+impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
+    fn get_width_characters(&self) -> usize {
+        self.child.get_width_characters() +
+            self.padding_left +
+            self.padding_right
+    }
+
+    fn get_height_characters(&self) -> usize {
+        self.child.get_height_characters() +
+            self.padding_top +
+            self.padding_bottom
+    }
+}
+
+impl<T: DynamicWidget> SingleWidget<T> for PaddingWidget<T> {
+    type Borrowed<'a>
+        = &'a T
+    where
+        T: 'a,
+        Self: 'a;
+
+    type BorrowedMut<'a>
+        = &'a mut T
+    where
+        T: 'a,
+        Self: 'a;
+
+    fn get_child(&self) -> Self::Borrowed<'_> {
+        &self.child
+    }
+
+    fn get_child_mut(&mut self) -> Self::BorrowedMut<'_> {
+        &mut self.child
+    }
+}
+
+impl<T: DynamicWidget> Display for PaddingWidget<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for _ in 0..self.padding_top {
+            writeln!(f)?;
+        }
+        // self.child.fmt(f)?;
+        let str_repr_child = self.child.to_string();
+        let mut str_repr = String::new();
+        for line_child in str_repr_child.lines() {
+            str_repr.push_str(&" ".repeat(self.padding_left));
+            str_repr.push_str(line_child);
+            str_repr.push_str(&" ".repeat(self.padding_right));
+            str_repr.push_str("\r\n");
+        }
+        write!(f, "{str_repr}")?;
+        for _ in 0..self.padding_bottom {
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
+impl<T: DynamicWidget> Deref for PaddingWidget<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.get_child()
+    }
+}
+
+impl<T: DynamicWidget> DerefMut for PaddingWidget<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.get_child_mut()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{

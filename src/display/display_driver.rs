@@ -26,7 +26,10 @@ use crossterm::{
     terminal,
 };
 
-use crate::widget::DynamicWidget;
+use crate::widget::{
+    DynamicWidget,
+    single_widget::PaddingWidget,
+};
 
 pub enum UpdateStatus {
     Break,
@@ -40,7 +43,7 @@ type UpdateFunction<T> =
 pub struct DisplayDriver<T: DynamicWidget> {
     original_width: u16,
     original_height: u16,
-    display: T,
+    display: PaddingWidget<T>,
     on_update: Option<Box<UpdateFunction<T>>>,
     target_frame_time: Duration,
 }
@@ -57,7 +60,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         Self {
             original_width,
             original_height,
-            display: widget,
+            display: PaddingWidget::new(widget, 0, 0, 0, 0),
             target_frame_time: Duration::ZERO,
             on_update: None,
         }
@@ -72,7 +75,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         let mut stdout = io::stdout();
 
         write!(stdout, "\x1B[H")?;
-        write!(stdout, "{}", self.get_widget())?;
+        write!(stdout, "{}", self.display)?;
 
         Ok(())
     }
@@ -87,7 +90,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     ///
     /// Returns an error when any on the actions above fail.
     /// Note that resizing the terminal does not fail, if the terminal does not support it.
-    pub fn initialize(&self) -> Result<(), io::Error> {
+    pub fn initialize(&mut self) -> Result<(), io::Error> {
         let mut stdout = io::stdout();
 
         // enables terminal raw mode
@@ -105,6 +108,19 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             cursor::Hide,                   // hide cursor blinking
         )?;
 
+        let (width, height) = match crossterm::terminal::size() {
+            Ok((w, h)) => (w, h),
+            Err(_) => (0, 0),
+        };
+
+        let padding_vertical =
+            width as usize - self.get_width_characters();
+        let padding_horizontal =
+            height as usize - self.get_height_characters();
+
+        self.display.set_padding_left(padding_vertical / 2);
+        self.display.set_padding_top(padding_horizontal / 2);
+
         Ok(())
     }
 
@@ -116,11 +132,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         &self.original_height
     }
 
-    const fn get_widget(&self) -> &T {
+    fn get_widget(&self) -> &T {
         &self.display
     }
 
-    const fn get_widget_mut(&mut self) -> &mut T {
+    fn get_widget_mut(&mut self) -> &mut T {
         &mut self.display
     }
 
