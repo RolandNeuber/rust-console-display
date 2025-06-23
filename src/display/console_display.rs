@@ -79,6 +79,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     /// #![feature(generic_const_exprs)]
     ///
     /// use console_display::{
+    ///     console_display::ConsoleDisplay,
     ///     display_driver::DisplayDriver,
     ///     pixel::monochrome_pixel::SinglePixel,
     ///     pixel_display::DynamicPixelDisplay
