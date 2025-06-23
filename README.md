@@ -42,7 +42,7 @@ console-display = "0.1.0"
 
 Here is a minimal example that constructs a 100 by 100 display colored red:
 
-```rust
+```rust, no_run
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
