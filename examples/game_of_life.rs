@@ -24,7 +24,7 @@ fn main() {
             StaticPixelDisplay::<OctPixel, 200, 100>::new_from_data(
                 &array::from_fn::<_, 20_000, _>(|_| {
                     let rng = thread_rng().gen_range(0..=1);
-                    rng != 2
+                    rng != 0
                 }),
             ),
         );

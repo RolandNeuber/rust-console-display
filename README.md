@@ -32,8 +32,7 @@ This is a hard/required dependency, without it you may get cryptic compiler erro
 
 # Using this crate
 
-To add this crate as dependency, add this line to your `cargo.toml` under `
-[dependencies]`.
+To add this crate as dependency, add this line to your `cargo.toml` under `[dependencies]`.
 ```toml
 console-display = "0.1.0"
 ```
@@ -43,12 +42,15 @@ console-display = "0.1.0"
 
 Here is a minimal example that constructs a 100 by 100 display colored red:
 
-```rust
+```rust, no_run
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    display_driver::DisplayDriver,
+    display_driver::{
+        DisplayDriver,
+        UpdateStatus,
+    },
     pixel::color_pixel::{
         self,
         ColorOctPixel,
@@ -56,24 +58,28 @@ use console_display::{
     pixel_display::StaticPixelDisplay,
 };
 
-fn main() {
-    // Construct the display with the ColorOctPixel Type
-    // (8 pixels per console character, 4 high, 2 wide).
-    // Set dimensions to 100 by 100 pixels (50 by 25 characters)
-    // with a red fill.
-    let disp = StaticPixelDisplay::<ColorOctPixel, 100, 100>::new(
-        color_pixel::RGBColor { r: 255, g: 0, b: 0 },
-    );
+// Construct the display with the ColorOctPixel Type
+// (8 pixels per console character, 4 high, 2 wide).
+// Set dimensions to 100 by 100 pixels (50 by 25 characters)
+// with a red fill.
+let disp = StaticPixelDisplay::<ColorOctPixel, 100, 100>::new(
+    color_pixel::RGBColor { r: 255, g: 0, b: 0 },
+);
 
-    // Wrap the display in a driver to manage interactions with the terminal
-    // like resizing, enabling raw mode, providing an update loop.
-    let mut display = DisplayDriver::new(disp);
+// Wrap the display in a driver to manage interactions with the terminal
+// like resizing, enabling raw mode, providing an update loop.
+let mut display = DisplayDriver::new(disp);
 
-    // Initialize an alternate terminal screen and resize.
-    display.initialize().expect("Could not initialize display.");
-    // Run the default update loop.
-    display.update();
-}
+// Initialize an alternate terminal screen and resize.
+display.initialize().expect("Could not initialize display.");
+// Set the update function (in this case instantly terminate the update loop)
+display.set_on_update(
+    move |_ /* display instance */, _ /* key events */| {
+        UpdateStatus::Break
+    },
+);
+// Run the default update loop.
+display.update();
 ```
 
 More in depth examples can be found in the [examples](examples/) folder.

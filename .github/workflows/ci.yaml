@@ -72,5 +72,8 @@ jobs:
     - name: Clippy
       run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
 
+    # Still need to run cargo +nightly test --doc as this is not included in the regular test command. See: https://github.com/rust-lang/cargo/issues/6669
     - name: Run tests
-      run: cargo +nightly test  --all-targets --all-features
+      run: |
+        cargo +nightly test --all-targets --all-features; 
+        cargo +nightly test --doc;
