@@ -1,16 +1,15 @@
 use std::fmt::Display;
 
 use crate::{
-    console_display::{
-        ConsoleDisplay,
-        PixelDisplay,
-    },
+    console_display::ConsoleDisplay,
     pixel::monochrome_pixel::MultiPixel,
+    pixel_display::StaticPixelDisplay,
+    widget::DynamicWidget,
 };
 
-use super::Widget;
+use super::StaticWidget;
 
-pub trait SingleWidget<T>: Widget {
+pub trait SingleWidget<T: DynamicWidget>: DynamicWidget {
     fn get_child(&self) -> &T;
     fn get_child_mut(&mut self) -> &mut T;
 }
@@ -36,7 +35,9 @@ impl<T: ConsoleDisplay> UvWidget<T> {
     }
 }
 
-impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
+impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
+    UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>>
+{
     pub const fn set_uv_x_min(&mut self, x: f32) {
         self.uv_x_min = x;
     }
@@ -261,7 +262,9 @@ impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
     ///
     /// assert_eq!(vec![-0.7, -0.1, 0.5, 1.1, 1.7], widget.get_x_values().map(|x| (x * 100.).round() / 100.).collect::<Vec<_>>())
     /// ```
-    pub fn get_x_values(&self) -> impl Iterator<Item = f32> + use<'_, S> {
+    pub fn get_x_values(
+        &self,
+    ) -> impl Iterator<Item = f32> + use<'_, S, WIDTH, HEIGHT> {
         let width = self.get_child().get_width();
         (0..width).map(|x| self.texture_to_uv_x(x))
     }
@@ -293,23 +296,31 @@ impl<S: MultiPixel> UvWidget<PixelDisplay<S>> {
     ///
     /// assert_eq!(vec![-0.8, -0.4, 0.0, 0.4, 0.8], widget.get_y_values().map(|y| (y * 100.).round() / 100.).collect::<Vec<_>>())
     /// ```
-    pub fn get_y_values(&self) -> impl Iterator<Item = f32> + use<'_, S> {
+    pub fn get_y_values(
+        &self,
+    ) -> impl Iterator<Item = f32> + use<'_, S, WIDTH, HEIGHT> {
         let height = self.get_child().get_height();
         (0..height).map(|x| self.texture_to_uv_y(x))
     }
 }
 
-impl<T: ConsoleDisplay> Widget for UvWidget<T> {
+impl<T: ConsoleDisplay + StaticWidget> StaticWidget for UvWidget<T> {
+    const WIDTH_CHARACTERS: usize = T::WIDTH_CHARACTERS;
+
+    const HEIGHT_CHARACTERS: usize = T::HEIGHT_CHARACTERS;
+}
+
+impl<T: ConsoleDisplay + StaticWidget> DynamicWidget for UvWidget<T> {
     fn get_width_characters(&self) -> usize {
-        self.get_child().get_width_characters()
+        self.child.get_width_characters()
     }
 
     fn get_height_characters(&self) -> usize {
-        self.get_child().get_height_characters()
+        self.child.get_width_characters()
     }
 }
 
-impl<T: ConsoleDisplay> SingleWidget<T> for UvWidget<T> {
+impl<T: ConsoleDisplay + StaticWidget> SingleWidget<T> for UvWidget<T> {
     fn get_child(&self) -> &T {
         &self.child
     }
@@ -319,7 +330,7 @@ impl<T: ConsoleDisplay> SingleWidget<T> for UvWidget<T> {
     }
 }
 
-impl<T: ConsoleDisplay> Display for UvWidget<T> {
+impl<T: ConsoleDisplay + StaticWidget> Display for UvWidget<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.get_child().to_string())
     }
@@ -327,13 +338,16 @@ impl<T: ConsoleDisplay> Display for UvWidget<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::pixel::monochrome_pixel::SinglePixel;
+    use crate::{
+        pixel::monochrome_pixel::SinglePixel,
+        pixel_display::StaticPixelDisplay,
+    };
 
     use super::*;
 
     #[test]
     fn test_texture_to_uv() {
-        let uv = UvWidget::<PixelDisplay<SinglePixel>>::texture_to_uv(
+        let uv = UvWidget::<StaticPixelDisplay<SinglePixel, 1, 1>>::texture_to_uv(
             500, 1000, -0.5, 0.5,
         );
         assert_eq!((uv * 10000.).round() / 10000., 0.0005);
@@ -341,10 +355,11 @@ mod tests {
 
     #[test]
     fn test_uv_to_texture() {
-        let texture_coordinate =
-            UvWidget::<PixelDisplay<SinglePixel>>::uv_to_texture(
-                0.5, -1.0, 1.0, 2000,
-            );
+        let texture_coordinate = UvWidget::<
+            StaticPixelDisplay<SinglePixel, 1, 1>,
+        >::uv_to_texture(
+            0.5, -1.0, 1.0, 2000
+        );
         assert_eq!(texture_coordinate, 1500);
     }
 }

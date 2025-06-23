@@ -7,7 +7,6 @@ use std::io::{
 };
 
 use console_display::{
-    console_display::PixelDisplay,
     display_driver::DisplayDriver,
     pixel::{
         color_pixel::{
@@ -16,6 +15,7 @@ use console_display::{
         },
         monochrome_pixel::MultiPixel,
     },
+    pixel_display::DynamicPixelDisplay,
 };
 use image::{
     GenericImageView,
@@ -25,6 +25,9 @@ use image::{
 
 fn main() {
     type PixelType = ColorOctPixel;
+    const WIDTH: u32 = PixelType::WIDTH as u32;
+    const HEIGHT: u32 = PixelType::HEIGHT as u32;
+
     let max_dimensions: (u32, u32) = (200, 160);
 
     let mut path_in = String::new();
@@ -48,11 +51,9 @@ fn main() {
     );
 
     let dimensions = img.dimensions();
-    let width = PixelType::WIDTH as u32;
-    let height = PixelType::HEIGHT as u32;
     let padded_dimensions = (
-        dimensions.0 + (width - dimensions.0 % width) % width,
-        dimensions.1 + (height - dimensions.1 % height) % height,
+        dimensions.0 + (WIDTH - dimensions.0 % WIDTH) % WIDTH,
+        dimensions.1 + (HEIGHT - dimensions.1 % HEIGHT) % HEIGHT,
     );
     let rgb = img.as_rgb8().expect("Could not extract rgb data.");
     let mut data =
@@ -81,10 +82,10 @@ fn main() {
     }
 
     let mut display = DisplayDriver::new(
-        PixelDisplay::<PixelType>::build_from_data(
+        DynamicPixelDisplay::<PixelType>::build_from_data(
             padded_dimensions.0 as usize,
             padded_dimensions.1 as usize,
-            data,
+            &data,
         )
         .expect("Could not construct display."),
     );

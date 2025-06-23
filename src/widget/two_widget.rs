@@ -1,19 +1,40 @@
 use std::fmt::Display;
 
-use super::Widget;
+use crate::{
+    eq,
+    widget::DynamicWidget,
+};
 
-pub trait TwoWidget<S, T>: Widget {
+use super::StaticWidget;
+
+pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
+    DynamicWidget
+{
     fn get_children(&self) -> (&S, &T);
     fn get_children_mut(&mut self) -> (&mut S, &mut T);
 }
 
-pub struct OverlayWidget<S: Widget, T: Widget> {
+pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
     child1_on_top: bool,
     child1: S,
     child2: T,
 }
 
-impl<S: Widget, T: Widget> OverlayWidget<S, T> {
+impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
+    pub fn new(child1: S, child2: T, child1_on_top: bool) -> Self
+    where
+        eq!(S::WIDTH_CHARACTERS, T::WIDTH_CHARACTERS):,
+        eq!(S::HEIGHT_CHARACTERS, T::HEIGHT_CHARACTERS):,
+    {
+        Self {
+            child1_on_top,
+            child1,
+            child2,
+        }
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
     pub fn build(
         child1: S,
         child2: T,
@@ -47,7 +68,17 @@ impl<S: Widget, T: Widget> OverlayWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> Widget for OverlayWidget<S, T> {
+impl<S: StaticWidget, T: StaticWidget> StaticWidget
+    for OverlayWidget<S, T>
+{
+    const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;
+
+    const HEIGHT_CHARACTERS: usize = S::HEIGHT_CHARACTERS;
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
+    for OverlayWidget<S, T>
+{
     fn get_width_characters(&self) -> usize {
         self.child1.get_width_characters()
     }
@@ -57,7 +88,9 @@ impl<S: Widget, T: Widget> Widget for OverlayWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> TwoWidget<S, T> for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
+    for OverlayWidget<S, T>
+{
     fn get_children(&self) -> (&S, &T) {
         (&self.child1, &self.child2)
     }
@@ -67,7 +100,7 @@ impl<S: Widget, T: Widget> TwoWidget<S, T> for OverlayWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> Display for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.child1_on_top {
             write!(f, "{}", self.child1.to_string())
@@ -78,12 +111,12 @@ impl<S: Widget, T: Widget> Display for OverlayWidget<S, T> {
     }
 }
 
-pub struct HorizontalTilingWidget<S: Widget, T: Widget> {
+pub struct HorizontalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     child1: S,
     child2: T,
 }
 
-impl<S: Widget, T: Widget> HorizontalTilingWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
         if child1.get_height_characters() != child2.get_height_characters()
         {
@@ -97,11 +130,30 @@ impl<S: Widget, T: Widget> HorizontalTilingWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> Widget for HorizontalTilingWidget<S, T> {
-    #[rustfmt::skip]
+impl<S: StaticWidget, T: StaticWidget> HorizontalTilingWidget<S, T> {
+    pub fn new(child1: S, child2: T) -> Self
+    where
+        eq!(S::HEIGHT_CHARACTERS, T::HEIGHT_CHARACTERS):,
+    {
+        Self { child1, child2 }
+    }
+}
+
+impl<S: StaticWidget, T: StaticWidget> StaticWidget
+    for HorizontalTilingWidget<S, T>
+{
+    const WIDTH_CHARACTERS: usize =
+        S::WIDTH_CHARACTERS + T::WIDTH_CHARACTERS;
+
+    const HEIGHT_CHARACTERS: usize = S::HEIGHT_CHARACTERS;
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
+    for HorizontalTilingWidget<S, T>
+{
     fn get_width_characters(&self) -> usize {
         self.child1.get_width_characters() +
-        self.child2.get_width_characters()
+            self.child2.get_width_characters()
     }
 
     fn get_height_characters(&self) -> usize {
@@ -109,7 +161,7 @@ impl<S: Widget, T: Widget> Widget for HorizontalTilingWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> TwoWidget<S, T>
+impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
     for HorizontalTilingWidget<S, T>
 {
     fn get_children(&self) -> (&S, &T) {
@@ -121,7 +173,9 @@ impl<S: Widget, T: Widget> TwoWidget<S, T>
     }
 }
 
-impl<S: Widget, T: Widget> Display for HorizontalTilingWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Display
+    for HorizontalTilingWidget<S, T>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str_repr1 = self.child1.to_string();
         let str_repr2 = self.child2.to_string();
@@ -135,12 +189,12 @@ impl<S: Widget, T: Widget> Display for HorizontalTilingWidget<S, T> {
     }
 }
 
-pub struct VerticalTilingWidget<S: Widget, T: Widget> {
+pub struct VerticalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     child1: S,
     child2: T,
 }
 
-impl<S: Widget, T: Widget> VerticalTilingWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
         if child1.get_width_characters() != child2.get_width_characters() {
             return Err(format!(
@@ -153,19 +207,40 @@ impl<S: Widget, T: Widget> VerticalTilingWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> Widget for VerticalTilingWidget<S, T> {
+impl<S: StaticWidget, T: StaticWidget> VerticalTilingWidget<S, T> {
+    pub fn new(child1: S, child2: T) -> Self
+    where
+        eq!(S::WIDTH_CHARACTERS, T::WIDTH_CHARACTERS):,
+    {
+        Self { child1, child2 }
+    }
+}
+
+impl<S: StaticWidget, T: StaticWidget> StaticWidget
+    for VerticalTilingWidget<S, T>
+{
+    const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;
+
+    const HEIGHT_CHARACTERS: usize =
+        S::HEIGHT_CHARACTERS + T::HEIGHT_CHARACTERS;
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
+    for VerticalTilingWidget<S, T>
+{
     fn get_width_characters(&self) -> usize {
         self.child1.get_width_characters()
     }
 
-    #[rustfmt::skip]
     fn get_height_characters(&self) -> usize {
         self.child1.get_height_characters() +
-        self.child2.get_height_characters()
+            self.child2.get_height_characters()
     }
 }
 
-impl<S: Widget, T: Widget> TwoWidget<S, T> for VerticalTilingWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
+    for VerticalTilingWidget<S, T>
+{
     fn get_children(&self) -> (&S, &T) {
         (&self.child1, &self.child2)
     }
@@ -175,7 +250,9 @@ impl<S: Widget, T: Widget> TwoWidget<S, T> for VerticalTilingWidget<S, T> {
     }
 }
 
-impl<S: Widget, T: Widget> Display for VerticalTilingWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Display
+    for VerticalTilingWidget<S, T>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

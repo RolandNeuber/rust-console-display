@@ -2,7 +2,6 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::PixelDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -11,24 +10,27 @@ use console_display::{
         ColorOctPixel,
         RGBColor,
     },
+    pixel_display::StaticPixelDisplay,
     widget::single_widget::UvWidget,
 };
 
 fn main() {
     type PixelType = ColorOctPixel;
-    let dimensions: (usize, usize) = (200, 200);
+    const DIMENSIONS: (usize, usize) = (200, 200);
 
     let uv_x = (-10.0, 10.0);
     let uv_y = (2.0, -2.0);
 
-    let mut display = DisplayDriver::new(UvWidget::new(
-        PixelDisplay::<PixelType>::build(
-            dimensions.0,
-            dimensions.1,
-            RGBColor { r: 0, g: 0, b: 0 },
-        )
-        .expect("Could not construct display."),
-    ));
+    let mut display =
+        DisplayDriver::new(UvWidget::new(StaticPixelDisplay::<
+            PixelType,
+            { DIMENSIONS.0 },
+            { DIMENSIONS.1 },
+        >::new(RGBColor {
+            r: 0,
+            g: 0,
+            b: 0,
+        })));
     display.set_uv_x_min(uv_x.0);
     display.set_uv_x_max(uv_x.1);
     display.set_uv_y_min(uv_y.0);

@@ -2,11 +2,8 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::{
-        CharacterDisplay,
-        ConsoleDisplay,
-        PixelDisplay,
-    },
+    character_display::CharacterDisplay,
+    console_display::ConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -19,6 +16,10 @@ use console_display::{
             ColorSinglePixel,
             RGBColor,
         },
+    },
+    pixel_display::{
+        DynamicPixelDisplay,
+        StaticPixelDisplay,
     },
     widget::two_widget::{
         OverlayWidget,
@@ -38,9 +39,31 @@ fn main() {
     let snake_color = RGBColor { r: 0, g: 255, b: 0 };
     let apple_color = RGBColor { r: 255, g: 0, b: 0 };
 
-    let mut disp = DisplayDriver::new(
+    let mut disp = DisplayDriver::new(VerticalTilingWidget::new(
+        StaticPixelDisplay::<ColorSinglePixel, 100, 1>::new(RGBColor {
+            r: 255,
+            b: 255,
+            g: 255,
+        }),
+        OverlayWidget::new(
+            StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(RGBColor {
+                r: 0,
+                b: 0,
+                g: 0,
+            }),
+            CharacterDisplay::<CharacterPixel, 100, 21>::build(
+                CharacterPixel::build(' ', Color::Default, Color::Default)
+                    .unwrap(),
+            )
+            .unwrap(),
+            true,
+        ),
+    ));
+
+    // This is bad because you rely on runtime checks.
+    let _ = DisplayDriver::new(
         VerticalTilingWidget::build(
-            PixelDisplay::<ColorSinglePixel>::build(
+            DynamicPixelDisplay::<ColorSinglePixel>::build(
                 100,
                 1,
                 RGBColor {
@@ -51,15 +74,13 @@ fn main() {
             )
             .unwrap(),
             OverlayWidget::build(
-                PixelDisplay::<ColorDualPixel>::build(
+                DynamicPixelDisplay::<ColorDualPixel>::build(
                     100,
                     42,
                     RGBColor { r: 0, b: 0, g: 0 },
                 )
                 .unwrap(),
-                CharacterDisplay::<CharacterPixel>::build(
-                    100,
-                    21,
+                CharacterDisplay::<CharacterPixel, 100, 21>::build(
                     CharacterPixel::build(
                         ' ',
                         Color::Default,
@@ -82,8 +103,12 @@ fn main() {
             .set_pixel(
                 46 + i,
                 10,
-                CharacterPixel::build(sym, Color::Default, Color::Default)
-                    .expect("Could not construct character pixel."),
+                &CharacterPixel::build(
+                    sym,
+                    Color::Default,
+                    Color::Default,
+                )
+                .expect("Could not construct character pixel."),
             )
             .expect("Could not set character pixel.");
     }

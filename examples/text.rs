@@ -2,10 +2,8 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    console_display::{
-        CharacterDisplay,
-        ConsoleDisplay,
-    },
+    character_display::CharacterDisplay,
+    console_display::ConsoleDisplay,
     display_driver::DisplayDriver,
     pixel::{
         character_pixel::CharacterPixel,
@@ -14,13 +12,12 @@ use console_display::{
 };
 
 fn main() {
-    let mut char_disp = CharacterDisplay::build(
-        40,
-        20,
-        CharacterPixel::build(' ', Color::Default, Color::Default)
-            .unwrap(),
-    )
-    .unwrap();
+    let mut char_disp: CharacterDisplay<CharacterPixel, 40, 20> =
+        CharacterDisplay::build(
+            CharacterPixel::build(' ', Color::Default, Color::Default)
+                .unwrap(),
+        )
+        .unwrap();
 
     let mut x = 0;
     let mut y = 0;
@@ -39,7 +36,7 @@ fn main() {
         let pixel =
             CharacterPixel::build(i, Color::Default, Color::Default)
                 .unwrap();
-        let _ = char_disp.set_pixel(x, y, pixel.clone());
+        let _ = char_disp.set_pixel(x, y, &pixel);
         if x + pixel.get_width() > char_disp.get_width() {
             y += 1;
             x = 0;
