@@ -97,4 +97,5 @@ Make sure you have run formatting, building, linting and testing.
 
 # License
 
-Licensed under MIT or Apache-2.0.
+All source code in this repository is dual-licensed under either the MIT or Apache 2.0 licenses. You may choose either license.
+By contributing to this repository, you agree to license your contributions under the same terms.
