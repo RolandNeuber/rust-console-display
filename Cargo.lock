@@ -167,6 +167,7 @@ dependencies = [
  "image",
  "paste",
  "rand",
+ "rust-console-display-macros",
  "unicode-width",
 ]
 

@@ -29,11 +29,11 @@ impl Pixel for CharacterPixel {
 
     const HEIGHT: usize = 1;
 
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
+    fn pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
         &self.data
     }
 
-    fn get_pixels_mut(
+    fn pixels_mut(
         &mut self,
     ) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
         &mut self.data
