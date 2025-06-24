@@ -1,3 +1,6 @@
+[workspace]
+members = ["rust-console-display-macros"]
+
 [package]
 name = "console-display"
 version = "0.1.0"
