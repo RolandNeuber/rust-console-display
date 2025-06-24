@@ -6,8 +6,15 @@ use std::{
     },
 };
 
+use rust_console_display_macros::{
+    StaticWidget,
+    TwoWidget,
+};
+
 use crate::{
     constraint,
+    impl_getters,
+    impl_setters,
     widget::DynamicWidget,
 };
 
@@ -20,6 +27,7 @@ pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
     fn get_children_mut(&mut self) -> (&mut S, &mut T);
 }
 
+#[derive(StaticWidget, TwoWidget)]
 pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
     child1_on_top: bool,
     children: (S, T),
@@ -69,21 +77,9 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
         })
     }
 
-    pub const fn get_child1_on_top(&self) -> bool {
-        self.child1_on_top
-    }
+    impl_getters!(pub child1_on_top: bool);
 
-    pub const fn set_child1_on_top(&mut self, child1_on_top: bool) {
-        self.child1_on_top = child1_on_top;
-    }
-}
-
-impl<S: StaticWidget, T: StaticWidget> StaticWidget
-    for OverlayWidget<S, T>
-{
-    const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;
-
-    const HEIGHT_CHARACTERS: usize = S::HEIGHT_CHARACTERS;
+    impl_setters!(pub child1_on_top: bool);
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
@@ -94,19 +90,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 
     fn get_height_characters(&self) -> usize {
-        self.children.1.get_height_characters()
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
-    for OverlayWidget<S, T>
-{
-    fn get_children(&self) -> (&S, &T) {
-        (&self.children.0, &self.children.1)
-    }
-
-    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.children.0, &mut self.children.1)
+        self.children.0.get_height_characters()
     }
 }
 
@@ -135,6 +119,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
     }
 }
 
+#[derive(TwoWidget)]
 pub struct HorizontalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }
@@ -194,18 +179,6 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
-    for HorizontalTilingWidget<S, T>
-{
-    fn get_children(&self) -> (&S, &T) {
-        (&self.children.0, &self.children.1)
-    }
-
-    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.children.0, &mut self.children.1)
-    }
-}
-
 impl<S: DynamicWidget, T: DynamicWidget> Display
     for HorizontalTilingWidget<S, T>
 {
@@ -240,6 +213,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut
     }
 }
 
+#[derive(TwoWidget)]
 pub struct VerticalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }
@@ -295,18 +269,6 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     fn get_height_characters(&self) -> usize {
         self.children.0.get_height_characters() +
             self.children.1.get_height_characters()
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
-    for VerticalTilingWidget<S, T>
-{
-    fn get_children(&self) -> (&S, &T) {
-        (&self.children.0, &self.children.1)
-    }
-
-    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.children.0, &mut self.children.1)
     }
 }
 

@@ -14,8 +14,16 @@ use std::{
     },
 };
 
+use rust_console_display_macros::{
+    DynamicWidget,
+    SingleWidget,
+    StaticWidget,
+};
+
 use crate::{
     console_display::ConsoleDisplay,
+    impl_new,
+    impl_setters,
     pixel::monochrome_pixel::MultiPixel,
     pixel_display::StaticPixelDisplay,
     widget::DynamicWidget,
@@ -39,6 +47,7 @@ pub trait SingleWidget<T: DynamicWidget>:
     fn get_child_mut(&mut self) -> Self::BorrowedMut<'_>;
 }
 
+#[derive(StaticWidget, DynamicWidget)]
 pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
     pixel_type: PhantomData<S>,
     child: T,
@@ -65,21 +74,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
 impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>, S>
 {
-    pub const fn set_uv_x_min(&mut self, x: f32) {
-        self.uv_x_min = x;
-    }
-
-    pub const fn set_uv_x_max(&mut self, x: f32) {
-        self.uv_x_max = x;
-    }
-
-    pub const fn set_uv_y_min(&mut self, y: f32) {
-        self.uv_y_min = y;
-    }
-
-    pub const fn set_uv_y_max(&mut self, y: f32) {
-        self.uv_y_max = y;
-    }
+    impl_setters!(pub uv_x_min: f32, pub uv_x_max: f32, pub uv_y_min: f32, pub uv_y_max: f32);
 
     /// Gets the pixel at the _uv_ coordinate (x, y).
     /// Using coordinates outside the uv mapping is considered
@@ -334,26 +329,6 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> StaticWidget
-    for UvWidget<T, S>
-{
-    const WIDTH_CHARACTERS: usize = T::WIDTH_CHARACTERS;
-
-    const HEIGHT_CHARACTERS: usize = T::HEIGHT_CHARACTERS;
-}
-
-impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> DynamicWidget
-    for UvWidget<T, S>
-{
-    fn get_width_characters(&self) -> usize {
-        self.child.get_width_characters()
-    }
-
-    fn get_height_characters(&self) -> usize {
-        self.child.get_width_characters()
-    }
-}
-
 impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
     for UvWidget<T, S>
 {
@@ -400,6 +375,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut for UvWidget<T, S> {
     }
 }
 
+#[derive(StaticWidget)]
 pub struct DoubleBufferWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
     pixel_type: PhantomData<S>,
     child: RefCell<T>,
@@ -428,14 +404,6 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
             &mut self.backbuffer.borrow_mut(),
         );
     }
-}
-
-impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> StaticWidget
-    for DoubleBufferWidget<T, S>
-{
-    const WIDTH_CHARACTERS: usize = T::WIDTH_CHARACTERS;
-
-    const HEIGHT_CHARACTERS: usize = T::HEIGHT_CHARACTERS;
 }
 
 impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
@@ -513,6 +481,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut
     }
 }
 
+#[derive(SingleWidget)]
 pub struct PaddingWidget<T: DynamicWidget> {
     child: T,
     padding_left: usize,
@@ -522,37 +491,9 @@ pub struct PaddingWidget<T: DynamicWidget> {
 }
 
 impl<T: DynamicWidget> PaddingWidget<T> {
-    pub fn new(
-        child: T,
-        padding_left: usize,
-        padding_right: usize,
-        padding_top: usize,
-        padding_bottom: usize,
-    ) -> PaddingWidget<T> {
-        PaddingWidget {
-            child,
-            padding_left,
-            padding_right,
-            padding_top,
-            padding_bottom,
-        }
-    }
+    impl_new!(pub PaddingWidget, <, T, >, child: T, padding_left: usize, padding_right: usize, padding_top: usize, padding_bottom: usize);
 
-    pub fn set_padding_left(&mut self, padding: usize) {
-        self.padding_left = padding;
-    }
-
-    pub fn set_padding_right(&mut self, padding: usize) {
-        self.padding_right = padding;
-    }
-
-    pub fn set_padding_top(&mut self, padding: usize) {
-        self.padding_top = padding;
-    }
-
-    pub fn set_padding_bottom(&mut self, padding: usize) {
-        self.padding_bottom = padding;
-    }
+    impl_setters!(pub padding_left: usize, pub padding_right: usize, pub padding_top: usize, pub padding_bottom: usize);
 }
 
 impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
@@ -566,28 +507,6 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
         self.child.get_height_characters() +
             self.padding_top +
             self.padding_bottom
-    }
-}
-
-impl<T: DynamicWidget> SingleWidget<T> for PaddingWidget<T> {
-    type Borrowed<'a>
-        = &'a T
-    where
-        T: 'a,
-        Self: 'a;
-
-    type BorrowedMut<'a>
-        = &'a mut T
-    where
-        T: 'a,
-        Self: 'a;
-
-    fn get_child(&self) -> Self::Borrowed<'_> {
-        &self.child
-    }
-
-    fn get_child_mut(&mut self) -> Self::BorrowedMut<'_> {
-        &mut self.child
     }
 }
 

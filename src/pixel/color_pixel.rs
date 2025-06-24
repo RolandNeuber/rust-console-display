@@ -2,6 +2,8 @@ use std::fmt::Display;
 
 use crate::{
     impl_getters,
+    impl_getters_mut,
+    impl_new,
     pixel::{
         Pixel,
         monochrome_pixel::{
@@ -144,12 +146,12 @@ impl Pixel for ColorSinglePixel {
     const HEIGHT: usize = 1;
 
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+
+    impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl MultiPixel for ColorSinglePixel {
-    fn new(pixels: [Self::U; 1]) -> Self {
-        Self { pixels }
-    }
+    impl_new!(Self, pixels: [Self::U; 1]);
 }
 
 impl Display for ColorSinglePixel {
@@ -175,12 +177,12 @@ impl Pixel for ColorDualPixel {
     const HEIGHT: usize = 2;
 
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+
+    impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl MultiPixel for ColorDualPixel {
-    fn new(pixels: [Self::U; 2]) -> Self {
-        Self { pixels }
-    }
+    impl_new!(Self, pixels: [Self::U; 2]);
 }
 
 impl Display for ColorDualPixel {
@@ -206,12 +208,12 @@ impl Pixel for ColorQuadPixel {
     const HEIGHT: usize = 2;
 
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+
+    impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl MultiPixel for ColorQuadPixel {
-    fn new(pixels: [Self::U; 4]) -> Self {
-        Self { pixels }
-    }
+    impl_new!(Self, pixels: [Self::U; 4]);
 }
 
 impl Display for ColorQuadPixel {
@@ -257,12 +259,12 @@ impl Pixel for ColorHexPixel {
     const HEIGHT: usize = 3;
 
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+
+    impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl MultiPixel for ColorHexPixel {
-    fn new(pixels: [Self::U; 6]) -> Self {
-        Self { pixels }
-    }
+    impl_new!(Self, pixels: [Self::U; 6]);
 }
 
 impl Display for ColorHexPixel {
@@ -308,12 +310,12 @@ impl Pixel for ColorOctPixel {
     const HEIGHT: usize = 4;
 
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
+
+    impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 }
 
 impl MultiPixel for ColorOctPixel {
-    fn new(pixels: [Self::U; 8]) -> Self {
-        Self { pixels }
-    }
+    impl_new!(Self, pixels: [Self::U; 8]);
 }
 
 impl Display for ColorOctPixel {

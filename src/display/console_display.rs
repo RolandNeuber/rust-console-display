@@ -137,7 +137,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
             [block_x + block_y * self.get_width_characters()];
 
         Ok(pixel
-            .get_subpixel(offset_x, offset_y)
+            .subpixel(offset_x, offset_y)
             .expect("Offset should be 0 or 1."))
     }
 

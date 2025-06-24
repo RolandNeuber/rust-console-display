@@ -297,7 +297,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     {
         let pixel = &self.get_data()
             [X / T::WIDTH + Y / T::HEIGHT * Self::WIDTH_CHARACTERS];
-        pixel.get_subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>()
+        pixel.subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>()
     }
 
     // TODO: Update docs

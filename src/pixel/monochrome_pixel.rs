@@ -5,6 +5,7 @@ use crate::pixel::Pixel;
 use crate::{
     constraint,
     impl_getters,
+    impl_getters_mut,
     impl_new,
 };
 
@@ -42,25 +43,23 @@ where
     /// # Errors
     ///
     /// Returns an error, if the coordinates are out of bounds.
-    fn get_subpixel(&self, x: usize, y: usize) -> Result<Self::U, String>
+    fn subpixel(&self, x: usize, y: usize) -> Result<Self::U, String>
     where
         [(); Self::WIDTH * Self::HEIGHT]:,
     {
-        self.get_pixels().get(x + y * Self::WIDTH).map_or_else(
+        self.pixels().get(x + y * Self::WIDTH).map_or_else(
             || Err("Coordinates out of range.".to_string()),
             |subpixel| Ok(*subpixel),
         )
     }
 
-    fn get_subpixel_static<const X: usize, const Y: usize>(
-        &self,
-    ) -> Self::U
+    fn subpixel_static<const X: usize, const Y: usize>(&self) -> Self::U
     where
         [(); Self::WIDTH * Self::HEIGHT]:,
         constraint!(X < Self::WIDTH):,
         constraint!(Y < Self::HEIGHT):,
     {
-        self.get_pixels()[X + Y * Self::WIDTH]
+        self.pixels()[X + Y * Self::WIDTH]
     }
 
     /// Returns the value of the block at the specified coordinates.
@@ -78,8 +77,8 @@ where
         [(); Self::WIDTH * Self::HEIGHT]:,
     {
         let index = x + y * Self::WIDTH;
-        if index < self.get_pixels().len() {
-            self.get_pixels_mut()[index] = value;
+        if index < self.pixels().len() {
+            self.pixels_mut()[index] = value;
             Ok(())
         }
         else {
@@ -95,7 +94,7 @@ where
         constraint!(X < Self::WIDTH):,
         constraint!(Y < Self::HEIGHT):,
     {
-        self.get_pixels_mut()[X + Y * Self::WIDTH] = value;
+        self.pixels_mut()[X + Y * Self::WIDTH] = value;
     }
 }
 
@@ -149,6 +148,8 @@ impl Pixel for SinglePixel {
     const HEIGHT: usize = 1;
 
     impl_getters!(pixels: [bool; 1]);
+
+    impl_getters_mut!(pixels: [bool; 1]);
 }
 
 impl MultiPixel for SinglePixel {
@@ -228,6 +229,8 @@ impl Pixel for DualPixel {
     const HEIGHT: usize = 2;
 
     impl_getters!(pixels: [bool; 2]);
+
+    impl_getters_mut!(pixels: [bool; 2]);
 }
 
 impl MultiPixel for DualPixel {
@@ -308,6 +311,8 @@ impl Pixel for QuadPixel {
     const HEIGHT: usize = 2;
 
     impl_getters!(pixels: [bool; 4]);
+
+    impl_getters_mut!(pixels: [bool; 4]);
 }
 
 impl MultiPixel for QuadPixel {
@@ -379,6 +384,8 @@ impl Pixel for HexPixel {
     const HEIGHT: usize = 3;
 
     impl_getters!(pixels: [bool; 6]);
+
+    impl_getters_mut!(pixels: [bool; 6]);
 }
 
 impl MultiPixel for HexPixel {
@@ -470,6 +477,8 @@ impl Pixel for OctPixel {
     const HEIGHT: usize = 4;
 
     impl_getters!(pixels: [bool; 8]);
+
+    impl_getters_mut!(pixels: [bool; 8]);
 }
 
 impl MultiPixel for OctPixel {
@@ -558,6 +567,8 @@ impl Pixel for BrailleOctPixel {
     const HEIGHT: usize = 4;
 
     impl_getters!(pixels: [bool; 8]);
+
+    impl_getters_mut!(pixels: [bool; 8]);
 }
 
 impl MultiPixel for BrailleOctPixel {
