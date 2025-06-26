@@ -16,6 +16,7 @@ use console_display::{
         },
     },
     pixel_display::DynamicPixelDisplay,
+    widget::DynamicWidget,
 };
 use image::{
     GenericImageView,

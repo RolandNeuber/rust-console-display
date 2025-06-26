@@ -26,9 +26,12 @@ use crossterm::{
     terminal,
 };
 
-use crate::widget::{
-    DynamicWidget,
-    single_widget::PaddingWidget,
+use crate::{
+    pixel::monochrome_pixel::SinglePixel,
+    widget::{
+        DynamicWidget,
+        single_widget::PaddingWidget,
+    },
 };
 
 pub enum UpdateStatus {
@@ -100,26 +103,13 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             stdout,
             terminal::EnterAlternateScreen, // use alternate screen
             terminal::SetSize(
-                self.get_widget().get_width_characters() as u16,
-                self.get_widget().get_height_characters() as u16
+                self.get_child().get_width_characters() as u16,
+                self.get_child().get_height_characters() as u16
             ), // set dimensions of screen
             terminal::DisableLineWrap,      // disable line wrapping
             terminal::Clear(terminal::ClearType::All), // clear screen
             cursor::Hide,                   // hide cursor blinking
         )?;
-
-        let (width, height) = match crossterm::terminal::size() {
-            Ok((w, h)) => (w, h),
-            Err(_) => (0, 0),
-        };
-
-        let padding_vertical =
-            width as usize - self.get_width_characters();
-        let padding_horizontal =
-            height as usize - self.get_height_characters();
-
-        self.display.set_padding_left(padding_vertical / 2);
-        self.display.set_padding_top(padding_horizontal / 2);
 
         Ok(())
     }
@@ -132,11 +122,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         &self.original_height
     }
 
-    fn get_widget(&self) -> &T {
+    fn get_child(&self) -> &T {
         &self.display
     }
 
-    fn get_widget_mut(&mut self) -> &mut T {
+    fn get_child_mut(&mut self) -> &mut T {
         &mut self.display
     }
 
@@ -169,6 +159,22 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     pub fn update(&mut self) {
         loop {
             let start = Instant::now();
+
+            let (width, height) = match crossterm::terminal::size() {
+                Ok((w, h)) => (w, h),
+                Err(_) => (0, 0),
+            };
+
+            let padding_vertical = (height as usize)
+                .saturating_sub(self.get_height_characters());
+            let padding_horizontal = (width as usize)
+                .saturating_sub(self.get_width_characters());
+
+            self.display.set_padding_left(padding_horizontal / 2);
+            self.display.set_padding_top(padding_vertical / 2);
+            self.display.set_padding_right(padding_horizontal / 2);
+            self.display.set_padding_bottom(padding_vertical / 2);
+
             self.print_display().expect("Could not print display.");
 
             let mut latest_event = None;
@@ -206,13 +212,13 @@ impl<T: DynamicWidget> Deref for DisplayDriver<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.get_widget()
+        self.get_child()
     }
 }
 
 impl<T: DynamicWidget> DerefMut for DisplayDriver<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.get_widget_mut()
+        self.get_child_mut()
     }
 }
 
