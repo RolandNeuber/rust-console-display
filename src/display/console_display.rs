@@ -9,7 +9,6 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     /// Returns the height of the display in a display specific, individually addressable unit (e.g. pixels, characters).
     fn get_height(&self) -> usize;
 
-    // TODO: Add proper double buffering.
     /// Returns a vector containing all the pixels in the display.
     ///
     /// # Panics

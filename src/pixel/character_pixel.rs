@@ -8,12 +8,12 @@ use crate::pixel::Pixel;
 use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct CharacterPixel {
     data: [CharacterPixelData; 1],
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct CharacterPixelData {
     character: char,
     foreground: Color,

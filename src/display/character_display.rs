@@ -59,9 +59,11 @@ impl<const WIDTH: usize, const HEIGHT: usize>
 {
     /// Convenience method to build a blank display struct with specified dimensions
     ///
-    /// # Errors
-    /// Returns an error when the fill cannot match the dimensions of the display.
-    pub fn build(fill: CharacterPixel) -> Result<Self, String>
+    /// # Panics
+    ///
+    /// This function panics if the data generated from the fill does not match the dimensions of the display.
+    /// This should not happen and is subject to change in the future.
+    pub fn new(fill: CharacterPixel) -> Self
     where
         [(); WIDTH * HEIGHT]:,
     {
@@ -81,10 +83,11 @@ impl<const WIDTH: usize, const HEIGHT: usize>
             }
         }
 
-        Self::build_from_data(data)
+        Self::build_from_data(data).expect(
+            "Invariant violated, data does not mach specified dimensions.",
+        )
     }
 
-    // TODO: Handle double-width characters properly
     /// Builds a display struct with the specified dimensions from the given data.
     ///
     /// # Errors
@@ -94,14 +97,25 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         data: Vec<CharacterPixel>,
     ) -> Result<Self, String> {
         let mut new_data = Vec::with_capacity(data.capacity());
+        let mut row_length = 0;
         for i in data {
             new_data.push(i);
             for _ in 1..i.get_width() {
                 new_data.push(i.make_copy());
             }
+            row_length += i.get_width();
+            if row_length > WIDTH && row_length - i.get_width() < WIDTH {
+                return Err(
+                    "Data is malformed, character spans multiple rows."
+                        .to_string(),
+                );
+            }
+            if row_length >= WIDTH {
+                row_length = 0;
+            }
         }
 
-        if new_data.len() / WIDTH / HEIGHT != 1 {
+        if new_data.len() != WIDTH * HEIGHT {
             return Err(format!(
                 "Data does not match specified dimensions. Expected length of {}, got {}.",
                 WIDTH * HEIGHT,
@@ -212,5 +226,60 @@ impl<const WIDTH: usize, const HEIGHT: usize> Display
         }
 
         write!(f, "{}", string_repr.trim_end())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_from_data_success() {
+        let character_display =
+            CharacterDisplay::<CharacterPixel, 1, 1>::build_from_data(
+                vec![
+                    CharacterPixel::build(
+                        ' ',
+                        Color::Default,
+                        Color::Default,
+                    )
+                    .unwrap(),
+                ],
+            );
+        assert!(character_display.is_ok());
+    }
+
+    #[test]
+    fn build_from_data_failure_dimensions() {
+        let character_display =
+            CharacterDisplay::<CharacterPixel, 8, 10>::build_from_data(
+                vec![
+                    CharacterPixel::build(
+                        ' ',
+                        Color::Default,
+                        Color::Default,
+                    )
+                    .unwrap();
+                    8 * 10 - 1
+                ],
+            );
+        assert!(character_display.is_err());
+    }
+
+    #[test]
+    fn build_from_data_failure_fit() {
+        let character_display =
+            CharacterDisplay::<CharacterPixel, 9, 10>::build_from_data(
+                vec![
+                    CharacterPixel::build(
+                        'あ',
+                        Color::Default,
+                        Color::Default,
+                    )
+                    .unwrap();
+                    9 * 10 / 2
+                ],
+            );
+        assert!(character_display.is_err());
     }
 }

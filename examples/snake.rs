@@ -229,7 +229,7 @@ type Display = DisplayDriver<
 
 fn construct_display() -> Display {
     DisplayDriver::new(VerticalTilingWidget::new(
-        CharacterDisplay::<_, 100, 1>::build(
+        CharacterDisplay::<_, 100, 1>::new(
             CharacterPixel::build(
                 ' ',
                 Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
@@ -240,19 +240,17 @@ fn construct_display() -> Display {
                 }),
             )
             .unwrap(),
-        )
-        .unwrap(),
+        ),
         OverlayWidget::new(
             StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(RGBColor {
                 r: 0,
                 b: 0,
                 g: 0,
             }),
-            CharacterDisplay::<CharacterPixel, 100, 21>::build(
+            CharacterDisplay::<CharacterPixel, 100, 21>::new(
                 CharacterPixel::build(' ', Color::Default, Color::Default)
                     .unwrap(),
-            )
-            .unwrap(),
+            ),
             true,
         ),
     ))
