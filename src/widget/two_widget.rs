@@ -297,3 +297,100 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut
         &mut self.children
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        pixel::monochrome_pixel::SinglePixel,
+        pixel_display::StaticPixelDisplay,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_overlay_build_success() {
+        let overlay = OverlayWidget::build(
+            StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+            StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+            true,
+        );
+        assert!(overlay.is_ok());
+    }
+
+    #[test]
+    fn test_overlay_build_failure() {
+        let overlay = OverlayWidget::build(
+            StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+            StaticPixelDisplay::<SinglePixel, 1, 2>::new(true),
+            true,
+        );
+        assert!(overlay.is_err());
+    }
+
+    #[test]
+    fn test_overlay_dimensions() {
+        let overlay = OverlayWidget::new(
+            StaticPixelDisplay::<SinglePixel, 37, 63>::new(false),
+            StaticPixelDisplay::<SinglePixel, 37, 63>::new(true),
+            true,
+        );
+        assert_eq!(overlay.get_width_characters(), 37);
+        assert_eq!(overlay.get_height_characters(), 63);
+    }
+
+    #[test]
+    fn test_horizontal_tiling_build_success() {
+        let overlay = HorizontalTilingWidget::build(
+            StaticPixelDisplay::<SinglePixel, 3, 10>::new(false),
+            StaticPixelDisplay::<SinglePixel, 2, 10>::new(true),
+        );
+        assert!(overlay.is_ok());
+    }
+
+    #[test]
+    fn test_horizontal_tiling_build_failure() {
+        let overlay = HorizontalTilingWidget::build(
+            StaticPixelDisplay::<SinglePixel, 10, 3>::new(false),
+            StaticPixelDisplay::<SinglePixel, 10, 2>::new(true),
+        );
+        assert!(overlay.is_err());
+    }
+
+    #[test]
+    fn test_horizontal_tiling_dimensions() {
+        let overlay = HorizontalTilingWidget::new(
+            StaticPixelDisplay::<SinglePixel, 37, 20>::new(false),
+            StaticPixelDisplay::<SinglePixel, 63, 20>::new(true),
+        );
+        assert_eq!(overlay.get_width_characters(), 100);
+        assert_eq!(overlay.get_height_characters(), 20);
+    }
+
+    #[test]
+    fn test_vertical_tiling_build_success() {
+        let overlay = VerticalTilingWidget::build(
+            StaticPixelDisplay::<SinglePixel, 20, 5>::new(false),
+            StaticPixelDisplay::<SinglePixel, 20, 4>::new(true),
+        );
+        assert!(overlay.is_ok());
+    }
+
+    #[test]
+    fn test_vertical_tiling_build_failure() {
+        let overlay = VerticalTilingWidget::build(
+            StaticPixelDisplay::<SinglePixel, 5, 20>::new(false),
+            StaticPixelDisplay::<SinglePixel, 4, 20>::new(true),
+        );
+        assert!(overlay.is_err());
+    }
+
+    #[test]
+    fn test_vertical_tiling_dimensions() {
+        let overlay = VerticalTilingWidget::new(
+            StaticPixelDisplay::<SinglePixel, 30, 45>::new(false),
+            StaticPixelDisplay::<SinglePixel, 30, 54>::new(true),
+        );
+        assert_eq!(overlay.get_width_characters(), 30);
+        assert_eq!(overlay.get_height_characters(), 99);
+    }
+}

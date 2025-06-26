@@ -576,4 +576,33 @@ mod tests {
         >::uv_to_texture(0.5, -1.0, 1.0, 2000);
         assert_eq!(actual, expected);
     }
+
+    #[test]
+    fn test_buffer_swap() {
+        let mut widget =
+            DoubleBufferWidget::new(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+            );
+        widget.set_pixel_static::<0, 0>(true);
+        let buffer1 = widget.backbuffer.clone();
+        widget.swap_buffers();
+        let buffer2 = widget.backbuffer;
+        assert_ne!(
+            buffer1.borrow()[0].to_string(),
+            buffer2.borrow()[0].to_string()
+        )
+    }
+
+    #[test]
+    fn test_padding_dimensions() {
+        let widget = PaddingWidget::new(
+            StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+            10,
+            20,
+            30,
+            40,
+        );
+        assert_eq!(widget.get_width_characters(), 31);
+        assert_eq!(widget.get_height_characters(), 71)
+    }
 }
