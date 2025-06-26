@@ -26,12 +26,9 @@ use crossterm::{
     terminal,
 };
 
-use crate::{
-    pixel::monochrome_pixel::SinglePixel,
-    widget::{
-        DynamicWidget,
-        single_widget::PaddingWidget,
-    },
+use crate::widget::{
+    DynamicWidget,
+    single_widget::PaddingWidget,
 };
 
 pub enum UpdateStatus {

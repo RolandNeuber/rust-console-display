@@ -514,7 +514,7 @@ impl<T: DynamicWidget> Display for PaddingWidget<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut str_repr = String::new();
         for _ in 0..self.padding_top {
-            str_repr.push_str(&" ".repeat(self.child.get_width_characters() + self.padding_left + self.padding_right));
+            str_repr.push_str(&" ".repeat(self.get_width_characters()));
             str_repr.push_str("\r\n");
         }
         let str_repr_child = self.child.to_string();
@@ -525,11 +525,11 @@ impl<T: DynamicWidget> Display for PaddingWidget<T> {
             str_repr.push_str("\r\n");
         }
         for _ in 0..self.padding_bottom {
-            str_repr.push_str(&" ".repeat(self.child.get_width_characters() + self.padding_left + self.padding_right));
+            str_repr.push_str(&" ".repeat(self.get_width_characters()));
             str_repr.push_str("\r\n");
         }
         str_repr = str_repr.trim_end_matches("\r\n").to_string();
-        write!(f, "{}", str_repr)
+        write!(f, "{str_repr}")
     }
 }
 
