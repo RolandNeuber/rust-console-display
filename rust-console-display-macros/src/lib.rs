@@ -39,7 +39,7 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
             self.child.get_width_characters()
         }
         fn get_height_characters(&self) -> usize {
-            self.child.get_width_characters()
+            self.child.get_height_characters()
         }
     }))
 }

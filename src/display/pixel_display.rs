@@ -137,9 +137,8 @@ impl<T: MultiPixel> Display for DynamicPixelDisplay<T> {
             }
             string_repr.push_str("\r\n");
         }
-        string_repr.pop();
 
-        write!(f, "{string_repr}")
+        write!(f, "{}", string_repr.trim_end_matches("\r\n"))
     }
 }
 
@@ -384,8 +383,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> Display
             }
             string_repr.push_str("\r\n");
         }
-        string_repr.pop();
 
-        write!(f, "{string_repr}")
+        write!(f, "{}", string_repr.trim_end_matches("\r\n"))
     }
 }
