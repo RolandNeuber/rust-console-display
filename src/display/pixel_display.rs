@@ -24,7 +24,7 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
     ///
     /// This function panics if the data generated from the fill does not match the dimensions of the display.
     /// This should not happen and is subject to change in the future.
-    pub fn build(width: usize, height: usize, fill: T::U) -> Self
+    pub fn new(width: usize, height: usize, fill: T::U) -> Self
     where
         Self: Sized,
         [(); T::WIDTH * T::HEIGHT]:,
@@ -54,7 +54,7 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
                 "Width and height must be multiples of multipixel dimensions. Got width = {width}, height = {height}."
             ));
         }
-        if data.len() / width / height != 1 {
+        if data.len() != width * height {
             return Err(format!(
                 "Data does not match specified dimensions. Expected length of {}, got {}.",
                 width * height,
@@ -198,7 +198,6 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         }
     }
 
-    // TODO: Add proper double buffering.
     /// Returns a vector containing all the pixels in the display.
     ///
     /// # Panics
@@ -385,5 +384,83 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> Display
         }
 
         write!(f, "{}", string_repr.trim_end_matches("\r\n"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::pixel::monochrome_pixel::SinglePixel;
+
+    use super::*;
+
+    mod dynamic_pixel_display {
+        use super::*;
+
+        #[test]
+        fn build_from_data_success() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::build_from_data(
+                    1,
+                    1,
+                    &[false],
+                );
+            assert!(dynamic_pixel_display.is_ok());
+        }
+
+        #[test]
+        fn build_from_data_failure_less() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::build_from_data(
+                    23,
+                    1,
+                    &[false; 22],
+                );
+            assert!(dynamic_pixel_display.is_err());
+        }
+
+        #[test]
+        fn build_from_data_failure_more() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::build_from_data(
+                    23,
+                    1,
+                    &[false; 24],
+                );
+            assert!(dynamic_pixel_display.is_err());
+        }
+
+        #[test]
+        fn get_pixel_success() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let pixel = dynamic_pixel_display.get_pixel(1, 0);
+            assert!(pixel.is_ok());
+        }
+
+        #[test]
+        fn get_pixel_failure() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let pixel = dynamic_pixel_display.get_pixel(0, 1);
+            assert!(pixel.is_err());
+        }
+
+        #[test]
+        fn set_pixel_success() {
+            let mut dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let res = dynamic_pixel_display.set_pixel(1, 0, true);
+            let pixel = dynamic_pixel_display.get_pixel(1, 0);
+            assert!(res.is_ok());
+            assert_eq!(pixel, Ok(true));
+        }
+
+        #[test]
+        fn set_pixel_failure() {
+            let mut dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let res = dynamic_pixel_display.set_pixel(0, 1, true);
+            assert!(res.is_err());
+        }
     }
 }

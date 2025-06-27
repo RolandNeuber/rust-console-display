@@ -12,11 +12,10 @@ use console_display::{
 
 fn main() {
     let mut char_disp: CharacterDisplay<CharacterPixel, 40, 20> =
-        CharacterDisplay::build(
+        CharacterDisplay::new(
             CharacterPixel::build('あ', Color::Default, Color::Default)
                 .unwrap(),
-        )
-        .unwrap();
+        );
 
     let mut x = 0;
     let mut y = 0;
