@@ -17,9 +17,15 @@ use console_display::{
         },
     },
     pixel_display::StaticPixelDisplay,
-    widget::two_widget::{
-        OverlayWidget,
-        VerticalTilingWidget,
+    widget::{
+        single_widget::{
+            BorderDefault,
+            BorderWidget,
+        },
+        two_widget::{
+            OverlayWidget,
+            VerticalTilingWidget,
+        },
     },
 };
 use crossterm::event::KeyCode;
@@ -218,40 +224,48 @@ fn main() {
 }
 
 type Display = DisplayDriver<
-    VerticalTilingWidget<
-        CharacterDisplay<CharacterPixel, 100, 1>,
-        OverlayWidget<
-            StaticPixelDisplay<ColorDualPixel, 100, 42>,
-            CharacterDisplay<CharacterPixel, 100, 21>,
+    BorderWidget<
+        VerticalTilingWidget<
+            CharacterDisplay<CharacterPixel, 100, 1>,
+            OverlayWidget<
+                StaticPixelDisplay<ColorDualPixel, 100, 42>,
+                CharacterDisplay<CharacterPixel, 100, 21>,
+            >,
         >,
+        BorderDefault,
     >,
 >;
 
 fn construct_display() -> Display {
-    DisplayDriver::new(VerticalTilingWidget::new(
-        CharacterDisplay::<_, 100, 1>::new(
-            CharacterPixel::build(
-                ' ',
-                Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
-                Color::Color(RGBColor {
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                }),
-            )
-            .unwrap(),
-        ),
-        OverlayWidget::new(
-            StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(RGBColor {
-                r: 0,
-                b: 0,
-                g: 0,
-            }),
-            CharacterDisplay::<CharacterPixel, 100, 21>::new(
-                CharacterPixel::build(' ', Color::Default, Color::Default)
-                    .unwrap(),
+    DisplayDriver::new(BorderWidget::new(
+        VerticalTilingWidget::new(
+            CharacterDisplay::<_, 100, 1>::new(
+                CharacterPixel::build(
+                    ' ',
+                    Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
+                    Color::Color(RGBColor {
+                        r: 255,
+                        g: 255,
+                        b: 255,
+                    }),
+                )
+                .unwrap(),
             ),
-            true,
+            OverlayWidget::new(
+                StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(
+                    RGBColor { r: 0, b: 0, g: 0 },
+                ),
+                CharacterDisplay::<CharacterPixel, 100, 21>::new(
+                    CharacterPixel::build(
+                        ' ',
+                        Color::Default,
+                        Color::Default,
+                    )
+                    .unwrap(),
+                ),
+                true,
+            ),
         ),
+        BorderDefault::new('═', '╔', '║', '╚', '═', '╝', '║', '╗'),
     ))
 }

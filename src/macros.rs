@@ -34,6 +34,8 @@ macro_rules! impl_setters {
 #[macro_export]
 macro_rules! impl_new {
     ($visibility:vis $struct:ident, $($arg:ident: $type:ty), *) => {
+        //TODO: Refactor arguments
+        #[allow(clippy::too_many_arguments)]
         $visibility fn new($($arg: $type),*) -> $struct {
             $struct {
                 $($arg), *
@@ -41,7 +43,7 @@ macro_rules! impl_new {
         }
     };
     ($visibility:vis $struct:ident, <, $($generic:ty), *, >, $($arg:ident: $type:ty), *) => {
-        $visibility fn new($($arg: $type),*) -> $struct<$($generic)*> {
+        $visibility fn new($($arg: $type),*) -> $struct<$($generic,)*> {
             $struct {
                 $($arg), *
             }

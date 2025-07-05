@@ -22,6 +22,7 @@ use rust_console_display_macros::{
 
 use crate::{
     console_display::ConsoleDisplay,
+    impl_getters,
     impl_new,
     impl_setters,
     pixel::monochrome_pixel::MultiPixel,
@@ -544,6 +545,175 @@ impl<T: DynamicWidget> Deref for PaddingWidget<T> {
 impl<T: DynamicWidget> DerefMut for PaddingWidget<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.get_child_mut()
+    }
+}
+
+pub trait Border {
+    fn border_at(
+        &self,
+        width: usize,
+        height: usize,
+    ) -> impl Fn(usize, usize) -> Option<char>;
+    fn width_top(&self) -> usize;
+    fn width_left(&self) -> usize;
+    fn width_bottom(&self) -> usize;
+    fn width_right(&self) -> usize;
+}
+
+pub struct BorderDefault {
+    top: char,
+    top_left: char,
+    left: char,
+    bottom_left: char,
+    bottom: char,
+    bottom_right: char,
+    right: char,
+    top_right: char,
+}
+
+impl BorderDefault {
+    impl_new!(
+        pub BorderDefault,
+        top: char,
+        top_left: char,
+        left: char,
+        bottom_left: char,
+        bottom: char,
+        bottom_right: char,
+        right: char,
+        top_right: char
+    );
+
+    impl_getters!(
+        pub top: char,
+        pub top_left: char,
+        pub left: char,
+        pub bottom_left: char,
+        pub bottom: char,
+        pub bottom_right: char,
+        pub right: char,
+        pub top_right: char
+    );
+}
+
+impl Border for BorderDefault {
+    fn border_at(
+        &self,
+        width: usize,
+        height: usize,
+    ) -> impl Fn(usize, usize) -> Option<char> {
+        move |x: usize, y: usize| {
+            Some(match (x, y) {
+                (0, 0) => self.top_left,
+                (0, y) if y == height - 1 => self.bottom_left,
+                (x, y) if x == width - 1 && y == height - 1 => {
+                    self.bottom_right
+                }
+                (x, 0) if x == width - 1 => self.top_right,
+                (_, 0) => self.top,
+                (0, _) => self.left,
+                (_, y) if y == height - 1 => self.bottom,
+                (x, _) if x == width - 1 => self.right,
+                (_, _) => return None,
+            })
+        }
+    }
+
+    fn width_top(&self) -> usize {
+        1
+    }
+
+    fn width_left(&self) -> usize {
+        1
+    }
+
+    fn width_bottom(&self) -> usize {
+        1
+    }
+
+    fn width_right(&self) -> usize {
+        1
+    }
+}
+
+pub struct BorderWidget<T: DynamicWidget, S: Border> {
+    child: T,
+    border: S,
+}
+
+impl<T: DynamicWidget, S: Border> BorderWidget<T, S> {
+    impl_new!(pub BorderWidget, <, T, S, >, child: T, border: S);
+}
+
+impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
+    fn get_width_characters(&self) -> usize {
+        self.child.get_width_characters() +
+            self.border.width_left() +
+            self.border.width_right()
+    }
+
+    fn get_height_characters(&self) -> usize {
+        self.child.get_height_characters() +
+            self.border.width_top() +
+            self.border.width_bottom()
+    }
+}
+
+impl<T: DynamicWidget, S: Border> Display for BorderWidget<T, S> {
+    // TODO: Implement properly
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let width_chars = self.get_width_characters();
+        let height_chars = self.get_height_characters();
+        let border_at = self.border.border_at(width_chars, height_chars);
+        let mut str_repr = String::new();
+        for y in 0..self.border.width_top() {
+            for x in 0..width_chars {
+                str_repr.push(border_at(x, y).unwrap_or(' '));
+            }
+            str_repr.push_str("\r\n");
+        }
+        let str_repr_child = self.child.to_string();
+        for (y, line_child) in str_repr_child.lines().enumerate() {
+            for x in 0..self.border.width_left() {
+                str_repr.push(
+                    border_at(x, y + self.border.width_top())
+                        .unwrap_or(' '),
+                );
+            }
+            str_repr.push_str(line_child);
+            for x in 0..self.border.width_right() {
+                str_repr.push(
+                    border_at(
+                        x + width_chars - self.border.width_right(),
+                        y + self.border.width_top(),
+                    )
+                    .unwrap_or(' '),
+                );
+            }
+            str_repr.push_str("\r\n");
+        }
+        for y in height_chars - self.border.width_right()..height_chars {
+            for x in 0..width_chars {
+                str_repr.push(border_at(x, y).unwrap_or(' '));
+            }
+            str_repr.push_str("\r\n");
+        }
+        str_repr = str_repr.trim_end_matches("\r\n").to_string();
+        write!(f, "{str_repr}")
+    }
+}
+
+impl<T: DynamicWidget, S: Border> Deref for BorderWidget<T, S> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+
+impl<T: DynamicWidget, S: Border> DerefMut for BorderWidget<T, S> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
     }
 }
 
