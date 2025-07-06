@@ -135,7 +135,7 @@ impl SinglePixel {
     /// assert_eq!(symbol, " ");
     ///
     /// ```
-    const fn get_char(&self) -> char {
+    const fn get_char(self) -> char {
         if self.pixels[0] { '█' } else { ' ' }
     }
 }
@@ -180,7 +180,7 @@ impl DualPixel {
     ];
 
     #[rustfmt::skip]
-    const fn index(&self) -> usize {
+    const fn index(self) -> usize {
         (self.pixels[0] as usize)      |
         (self.pixels[1] as usize) << 1
     }
@@ -216,7 +216,7 @@ impl DualPixel {
     /// assert_eq!(symbol, " ");
     ///
     /// ```
-    const fn get_char(&self) -> char {
+    const fn get_char(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -263,7 +263,7 @@ impl QuadPixel {
     ];
 
     #[rustfmt::skip]
-    const fn index(&self) -> usize {
+    const fn index(self) -> usize {
         (self.pixels[0] as usize)      |
         (self.pixels[1] as usize) << 1 |
         (self.pixels[2] as usize) << 2 |
@@ -292,7 +292,7 @@ impl QuadPixel {
     ///
     /// assert_eq!(symbol, "▚")
     /// ```
-    const fn get_char(&self) -> char {
+    const fn get_char(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -339,7 +339,7 @@ impl HexPixel {
     ];
 
     #[rustfmt::skip]
-    const fn index(&self) -> usize {
+    const fn index(self) -> usize {
         (self.pixels[0] as usize)      |
         (self.pixels[1] as usize) << 1 |
         (self.pixels[2] as usize) << 2 |
@@ -371,7 +371,7 @@ impl HexPixel {
     ///
     /// assert_eq!(symbol, "🬶")
     /// ```
-    const fn get_char(&self) -> char {
+    const fn get_char(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -430,7 +430,7 @@ impl OctPixel {
     ];
 
     #[rustfmt::skip]
-    const fn index(&self) -> usize {
+    const fn index(self) -> usize {
         (self.pixels[0] as usize)      |
         (self.pixels[1] as usize) << 1 |
         (self.pixels[2] as usize) << 2 |
@@ -464,7 +464,7 @@ impl OctPixel {
     ///
     /// assert_eq!(symbol, "𜴰")
     /// ```
-    const fn get_char(&self) -> char {
+    const fn get_char(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -519,7 +519,7 @@ impl BrailleOctPixel {
     ];
 
     #[rustfmt::skip]
-    const fn index(&self) -> usize {
+    const fn index(self) -> usize {
         (self.pixels[0] as usize)      |
         (self.pixels[1] as usize) << 1 |
         (self.pixels[2] as usize) << 2 |
@@ -554,7 +554,7 @@ impl BrailleOctPixel {
     ///
     /// assert_eq!(symbol, "⠵")
     /// ```
-    const fn get_char(&self) -> char {
+    const fn get_char(self) -> char {
         Self::CHARS[self.index()]
     }
 }

@@ -63,6 +63,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     ///
     /// This function panics if the data generated from the fill does not match the dimensions of the display.
     /// This should not happen and is subject to change in the future.
+    #[must_use]
     pub fn new(fill: CharacterPixel) -> Self
     where
         [(); WIDTH * HEIGHT]:,

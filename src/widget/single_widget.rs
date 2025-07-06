@@ -14,7 +14,7 @@ use std::{
     },
 };
 
-use rust_console_display_macros::{
+use console_display_macros::{
     DynamicWidget,
     SingleWidget,
     StaticWidget,
@@ -236,6 +236,8 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         )
     }
 
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
     fn uv_to_texture(
         uv: f32,
         uv_min: f32,
@@ -576,7 +578,7 @@ pub struct BorderDefault {
 
 impl BorderDefault {
     impl_new!(
-        pub BorderDefault,
+        #[must_use] pub BorderDefault,
         top: CharacterPixel,
         top_left: CharacterPixel,
         left: CharacterPixel,
@@ -588,14 +590,14 @@ impl BorderDefault {
     );
 
     impl_getters!(
-        pub top: CharacterPixel,
-        pub top_left: CharacterPixel,
-        pub left: CharacterPixel,
-        pub bottom_left: CharacterPixel,
-        pub bottom: CharacterPixel,
-        pub bottom_right: CharacterPixel,
-        pub right: CharacterPixel,
-        pub top_right: CharacterPixel
+        #[must_use] pub top: CharacterPixel,
+        #[must_use] pub top_left: CharacterPixel,
+        #[must_use] pub left: CharacterPixel,
+        #[must_use] pub bottom_left: CharacterPixel,
+        #[must_use] pub bottom: CharacterPixel,
+        #[must_use] pub bottom_right: CharacterPixel,
+        #[must_use] pub right: CharacterPixel,
+        #[must_use] pub top_right: CharacterPixel
     );
 }
 
@@ -769,7 +771,7 @@ mod tests {
             assert_ne!(
                 buffer1.borrow()[0].to_string(),
                 buffer2.borrow()[0].to_string()
-            )
+            );
         }
     }
     mod padding_widget {
@@ -785,7 +787,7 @@ mod tests {
                 40,
             );
             assert_eq!(widget.get_width_characters(), 31);
-            assert_eq!(widget.get_height_characters(), 71)
+            assert_eq!(widget.get_height_characters(), 71);
         }
     }
 }

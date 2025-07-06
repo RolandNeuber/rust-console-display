@@ -86,7 +86,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     /// It enters alternate screen mode,
     /// hides the cursor and disables line wrapping.
     ///
-    /// # Error
+    /// # Errors
     ///
     /// Returns an error when any on the actions above fail.
     /// Note that resizing the terminal does not fail, if the terminal does not support it.
@@ -100,8 +100,14 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             stdout,
             terminal::EnterAlternateScreen, // use alternate screen
             terminal::SetSize(
-                self.get_child().get_width_characters() as u16,
-                self.get_child().get_height_characters() as u16
+                self.get_child()
+                    .get_width_characters()
+                    .try_into()
+                    .unwrap_or(u16::MAX),
+                self.get_child()
+                    .get_height_characters()
+                    .try_into()
+                    .unwrap_or(u16::MAX)
             ), // set dimensions of screen
             terminal::DisableLineWrap,      // disable line wrapping
             terminal::Clear(terminal::ClearType::All), // clear screen

@@ -44,7 +44,11 @@ fn main() {
 
     display.set_target_frame_rate(30.);
     display.set_on_update(move |disp, _| {
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_possible_wrap)]
         let width = disp.get_width() as i32;
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_possible_wrap)]
         let height = disp.get_height() as i32;
         for x in 0..width {
             for y in 0..height {
@@ -59,10 +63,12 @@ fn main() {
                         neighbors += 1;
                     }
                 }
+                #[allow(clippy::cast_sign_loss)]
                 let pixel = disp
                     .get_pixel(x as usize, y as usize)
                     .expect("Could not get pixel.");
 
+                #[allow(clippy::cast_sign_loss)]
                 let _ = disp.set_pixel(
                     x as usize,
                     y as usize,

@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use rust_console_display_macros::{
+use console_display_macros::{
     StaticWidget,
     TwoWidget,
 };

@@ -66,11 +66,11 @@ jobs:
     # Allow dirty flag added for convinience. Be careful when auto-formatting is enabled.
     - name: Clippy apply suggestions
       if: env.AUTO_FORMAT == 'true'
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
+      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo -A clippy::cast-precision-loss
 
     # Still need to run clippy as well, because cargo clippy fix makes errors into warnings. See: https://github.com/rust-lang/rust-clippy/discussions/9979
     - name: Clippy
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
+      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo -A clippy::cast-precision-loss
 
     # Still need to run cargo +nightly test --doc as this is not included in the regular test command. See: https://github.com/rust-lang/cargo/issues/6669
     - name: Run tests

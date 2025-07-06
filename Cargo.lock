@@ -163,12 +163,20 @@ checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
 name = "console-display"
 version = "0.1.0"
 dependencies = [
+ "console-display-macros",
  "crossterm",
  "image",
  "paste",
  "rand",
- "rust-console-display-macros",
  "unicode-width",
+]
+
+[[package]]
+name = "console-display-macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -824,14 +832,6 @@ name = "rgb"
 version = "0.8.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
-
-[[package]]
-name = "rust-console-display-macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn",
-]
 
 [[package]]
 name = "rustix"

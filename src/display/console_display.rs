@@ -200,6 +200,8 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
         let mut x = x1;
         let mut y = y1;
 
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_sign_loss)]
         for _ in 0..=steps.round() as usize {
             if x >= 0. && y >= 0. {
                 let _ = self.set_pixel(

@@ -45,6 +45,14 @@ impl Pixel for CharacterPixel {
 }
 
 impl CharacterPixel {
+    /// Constructs a character pixel from a char, a foreground and a background color.
+    ///
+    /// # Panics
+    ///
+    /// This function checks for control characters at compile time.
+    /// Panics when the compile time checks miss a control character.
+    /// This should not happen and is a implementation detail that is subject to change.
+    #[must_use]
     pub fn new<const CHARACTER: char>(
         foreground: Color,
         background: Color,
@@ -154,7 +162,7 @@ impl TryFrom<char> for CharacterPixel {
     type Error = String;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
-        CharacterPixel::build(value, Color::Default, Color::Default)
+        Self::build(value, Color::Default, Color::Default)
     }
 }
 
@@ -162,8 +170,8 @@ impl Default for CharacterPixelData {
     fn default() -> Self {
         Self {
             character: ' ',
-            foreground: Default::default(),
-            background: Default::default(),
+            foreground: Color::default(),
+            background: Color::default(),
             copy: false,
             width: 1,
         }

@@ -1,7 +1,8 @@
 #[macro_export]
 macro_rules! impl_getters {
-    ($($visibility:vis $field:ident: $type:ty),*) => {
+    ($($(#[$attr:meta])* $visibility:vis $field:ident: $type:ty),*) => {
         $(
+            $(#[$attr])*
             $visibility fn $field(&self) -> &$type {
                 &self.$field
             }
@@ -33,9 +34,10 @@ macro_rules! impl_setters {
 
 #[macro_export]
 macro_rules! impl_new {
-    ($visibility:vis $struct:ident, $($arg:ident: $type:ty), *) => {
+    ($(#[$attr:meta])* $visibility:vis $struct:ident, $($arg:ident: $type:ty), *) => {
         //TODO: Refactor arguments
         #[allow(clippy::too_many_arguments)]
+        $(#[$attr])*
         $visibility fn new($($arg: $type),*) -> $struct {
             $struct {
                 $($arg), *
