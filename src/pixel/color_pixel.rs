@@ -53,6 +53,12 @@ impl Color {
     }
 }
 
+impl From<RGBColor> for Color {
+    fn from(value: RGBColor) -> Self {
+        Color::Color(value)
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct RGBColor {
     pub r: u8,
@@ -61,6 +67,31 @@ pub struct RGBColor {
 }
 
 impl RGBColor {
+    pub const BLACK: Self = RGBColor { r: 0, g: 0, b: 0 };
+    pub const WHITE: Self = RGBColor {
+        r: 255,
+        g: 255,
+        b: 255,
+    };
+    pub const RED: Self = RGBColor { r: 255, g: 0, b: 0 };
+    pub const GREEN: Self = RGBColor { r: 0, g: 255, b: 0 };
+    pub const BLUE: Self = RGBColor { r: 0, g: 0, b: 255 };
+    pub const YELLOW: Self = RGBColor {
+        r: 255,
+        g: 255,
+        b: 0,
+    };
+    pub const CYAN: Self = RGBColor {
+        r: 0,
+        g: 255,
+        b: 255,
+    };
+    pub const MAGENTA: Self = RGBColor {
+        r: 255,
+        g: 0,
+        b: 255,
+    };
+
     #[rustfmt::skip]
     fn distance(color1: Self, color2: Self) -> f32 {
         (

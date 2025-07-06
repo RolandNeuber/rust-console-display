@@ -266,6 +266,39 @@ fn construct_display() -> Display {
                 true,
             ),
         ),
-        BorderDefault::new('═', '╔', '║', '╚', '═', '╝', '║', '╗'),
+        BorderDefault::new(
+            CharacterPixel::new::<'═'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+            CharacterPixel::new::<'╔'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+            CharacterPixel::new::<'║'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+            CharacterPixel::new::<'╚'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+            CharacterPixel::new::<'═'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+            CharacterPixel::new::<'╝'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+            CharacterPixel::new::<'║'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+            CharacterPixel::new::<'╗'>(
+                Color::Default,
+                RGBColor::BLACK.into(),
+            ),
+        ),
     ))
 }

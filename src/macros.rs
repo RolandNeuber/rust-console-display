@@ -55,5 +55,19 @@ macro_rules! impl_new {
 macro_rules! constraint {
     {$x:expr} => {
         [(); 0 - !$x as usize]
-    }
+    };
+}
+
+#[macro_export]
+macro_rules! or {
+    ($x:expr, $y:expr) => {
+        ($x as u8 | $y as u8) == 1
+    };
+}
+
+#[macro_export]
+macro_rules! and {
+    ($x:expr, $y:expr) => {
+        ($x as u8 & $y as u8) == 1
+    };
 }

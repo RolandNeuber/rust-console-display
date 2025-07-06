@@ -25,7 +25,10 @@ use crate::{
     impl_getters,
     impl_new,
     impl_setters,
-    pixel::monochrome_pixel::MultiPixel,
+    pixel::{
+        character_pixel::CharacterPixel,
+        monochrome_pixel::MultiPixel,
+    },
     pixel_display::StaticPixelDisplay,
     widget::DynamicWidget,
 };
@@ -553,7 +556,7 @@ pub trait Border {
         &self,
         width: usize,
         height: usize,
-    ) -> impl Fn(usize, usize) -> Option<char>;
+    ) -> impl Fn(usize, usize) -> CharacterPixel;
     fn width_top(&self) -> usize;
     fn width_left(&self) -> usize;
     fn width_bottom(&self) -> usize;
@@ -561,38 +564,38 @@ pub trait Border {
 }
 
 pub struct BorderDefault {
-    top: char,
-    top_left: char,
-    left: char,
-    bottom_left: char,
-    bottom: char,
-    bottom_right: char,
-    right: char,
-    top_right: char,
+    top: CharacterPixel,
+    top_left: CharacterPixel,
+    left: CharacterPixel,
+    bottom_left: CharacterPixel,
+    bottom: CharacterPixel,
+    bottom_right: CharacterPixel,
+    right: CharacterPixel,
+    top_right: CharacterPixel,
 }
 
 impl BorderDefault {
     impl_new!(
         pub BorderDefault,
-        top: char,
-        top_left: char,
-        left: char,
-        bottom_left: char,
-        bottom: char,
-        bottom_right: char,
-        right: char,
-        top_right: char
+        top: CharacterPixel,
+        top_left: CharacterPixel,
+        left: CharacterPixel,
+        bottom_left: CharacterPixel,
+        bottom: CharacterPixel,
+        bottom_right: CharacterPixel,
+        right: CharacterPixel,
+        top_right: CharacterPixel
     );
 
     impl_getters!(
-        pub top: char,
-        pub top_left: char,
-        pub left: char,
-        pub bottom_left: char,
-        pub bottom: char,
-        pub bottom_right: char,
-        pub right: char,
-        pub top_right: char
+        pub top: CharacterPixel,
+        pub top_left: CharacterPixel,
+        pub left: CharacterPixel,
+        pub bottom_left: CharacterPixel,
+        pub bottom: CharacterPixel,
+        pub bottom_right: CharacterPixel,
+        pub right: CharacterPixel,
+        pub top_right: CharacterPixel
     );
 }
 
@@ -601,21 +604,19 @@ impl Border for BorderDefault {
         &self,
         width: usize,
         height: usize,
-    ) -> impl Fn(usize, usize) -> Option<char> {
-        move |x: usize, y: usize| {
-            Some(match (x, y) {
-                (0, 0) => self.top_left,
-                (0, y) if y == height - 1 => self.bottom_left,
-                (x, y) if x == width - 1 && y == height - 1 => {
-                    self.bottom_right
-                }
-                (x, 0) if x == width - 1 => self.top_right,
-                (_, 0) => self.top,
-                (0, _) => self.left,
-                (_, y) if y == height - 1 => self.bottom,
-                (x, _) if x == width - 1 => self.right,
-                (_, _) => return None,
-            })
+    ) -> impl Fn(usize, usize) -> CharacterPixel {
+        move |x: usize, y: usize| match (x, y) {
+            (0, 0) => self.top_left,
+            (0, y) if y == height - 1 => self.bottom_left,
+            (x, y) if x == width - 1 && y == height - 1 => {
+                self.bottom_right
+            }
+            (x, 0) if x == width - 1 => self.top_right,
+            (_, 0) => self.top,
+            (0, _) => self.left,
+            (_, y) if y == height - 1 => self.bottom,
+            (x, _) if x == width - 1 => self.right,
+            (_, _) => CharacterPixel::default(),
         }
     }
 
@@ -668,33 +669,32 @@ impl<T: DynamicWidget, S: Border> Display for BorderWidget<T, S> {
         let mut str_repr = String::new();
         for y in 0..self.border.width_top() {
             for x in 0..width_chars {
-                str_repr.push(border_at(x, y).unwrap_or(' '));
+                str_repr.push_str(&border_at(x, y).to_string());
             }
             str_repr.push_str("\r\n");
         }
         let str_repr_child = self.child.to_string();
         for (y, line_child) in str_repr_child.lines().enumerate() {
             for x in 0..self.border.width_left() {
-                str_repr.push(
-                    border_at(x, y + self.border.width_top())
-                        .unwrap_or(' '),
+                str_repr.push_str(
+                    &border_at(x, y + self.border.width_top()).to_string(),
                 );
             }
             str_repr.push_str(line_child);
             for x in 0..self.border.width_right() {
-                str_repr.push(
-                    border_at(
+                str_repr.push_str(
+                    &border_at(
                         x + width_chars - self.border.width_right(),
                         y + self.border.width_top(),
                     )
-                    .unwrap_or(' '),
+                    .to_string(),
                 );
             }
             str_repr.push_str("\r\n");
         }
         for y in height_chars - self.border.width_right()..height_chars {
             for x in 0..width_chars {
-                str_repr.push(border_at(x, y).unwrap_or(' '));
+                str_repr.push_str(&border_at(x, y).to_string());
             }
             str_repr.push_str("\r\n");
         }
