@@ -3,12 +3,16 @@ use std::fmt::{
     Display,
 };
 
-use crate::pixel::Pixel;
+use crate::{
+    constraint,
+    or,
+    pixel::Pixel,
+};
 
 use super::color_pixel::Color;
 use unicode_width::UnicodeWidthChar;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct CharacterPixel {
     data: [CharacterPixelData; 1],
 }
@@ -41,6 +45,27 @@ impl Pixel for CharacterPixel {
 }
 
 impl CharacterPixel {
+    pub fn new<const CHARACTER: char>(
+        foreground: Color,
+        background: Color,
+    ) -> Self
+    where
+        constraint!(CHARACTER >= '\u{20}'):, // Exclude C0 control chars
+        constraint!(or!(CHARACTER < '\u{7F}', CHARACTER >= '\u{A0}')):, // Exclude C1 control chars
+    {
+        Self {
+            data: [CharacterPixelData {
+                character: CHARACTER,
+                foreground,
+                background,
+                copy: false,
+                width: UnicodeWidthChar::width(CHARACTER).expect(
+                    "Invariant violated, found control character.",
+                ),
+            }],
+        }
+    }
+
     /// Constructs a character pixel from a char, a foreground and a background color.
     ///
     /// # Errors
@@ -122,5 +147,25 @@ impl Display for CharacterPixel {
 impl Debug for CharacterPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", &self.get_character())
+    }
+}
+
+impl TryFrom<char> for CharacterPixel {
+    type Error = String;
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        CharacterPixel::build(value, Color::Default, Color::Default)
+    }
+}
+
+impl Default for CharacterPixelData {
+    fn default() -> Self {
+        Self {
+            character: ' ',
+            foreground: Default::default(),
+            background: Default::default(),
+            copy: false,
+            width: 1,
+        }
     }
 }

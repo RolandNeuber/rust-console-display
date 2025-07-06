@@ -49,7 +49,9 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
         Self: Sized,
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
+        if !width.is_multiple_of(T::WIDTH) ||
+            !height.is_multiple_of(T::HEIGHT)
+        {
             return Err(format!(
                 "Width and height must be multiples of multipixel dimensions. Got width = {width}, height = {height}."
             ));
