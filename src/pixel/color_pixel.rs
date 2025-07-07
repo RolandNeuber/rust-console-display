@@ -93,13 +93,14 @@ impl RGBColor {
     };
 
     #[rustfmt::skip]
+    #[allow(clippy::cast_possible_truncation)]
     fn distance(color1: Self, color2: Self) -> f32 {
         (
-            f32::from((i16::from(color1.r) - i16::from(color2.r)).pow(2)) +
-            f32::from((i16::from(color1.g) - i16::from(color2.g)).pow(2)) +
-            f32::from((i16::from(color1.b) - i16::from(color2.b)).pow(2))
+            f64::from((i32::from(color1.r) - i32::from(color2.r)).pow(2)) +
+            f64::from((i32::from(color1.g) - i32::from(color2.g)).pow(2)) +
+            f64::from((i32::from(color1.b) - i32::from(color2.b)).pow(2))
         )
-        .sqrt()
+        .sqrt() as f32
     }
 
     fn mix(colors: &[Self]) -> Result<Self, &str> {

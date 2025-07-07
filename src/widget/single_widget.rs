@@ -663,7 +663,6 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
 }
 
 impl<T: DynamicWidget, S: Border> Display for BorderWidget<T, S> {
-    // TODO: Implement properly
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let width_chars = self.get_width_characters();
         let height_chars = self.get_height_characters();

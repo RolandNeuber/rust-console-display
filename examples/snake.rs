@@ -94,12 +94,14 @@ fn main() {
         // place new segment in front (direction) of snake head
         snake.insert(
             0,
+            #[allow(clippy::cast_possible_truncation)]
+            #[allow(clippy::cast_possible_wrap)]
             (
-                (snake[0].0 as i128 + direction.0)
-                    .rem_euclid(map_display.get_width() as i128)
+                (snake[0].0 as i32 + direction.0)
+                    .rem_euclid(map_display.get_width() as i32)
                     as usize,
-                (snake[0].1 as i128 + direction.1)
-                    .rem_euclid(map_display.get_height() as i128)
+                (snake[0].1 as i32 + direction.1)
+                    .rem_euclid(map_display.get_height() as i32)
                     as usize,
             ),
         );
