@@ -98,7 +98,7 @@ pub fn derive_two_widget(input: TokenStream) -> TokenStream {
 }
 
 fn add_static_widget_bound_to_t(mut generics: Generics) -> Generics {
-    for param in generics.params.iter_mut() {
+    for param in &mut generics.params {
         if let GenericParam::Type(type_param) = param &&
             type_param.ident == "T"
         {

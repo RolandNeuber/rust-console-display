@@ -55,7 +55,7 @@ impl Color {
 
 impl From<RGBColor> for Color {
     fn from(value: RGBColor) -> Self {
-        Color::Color(value)
+        Self::Color(value)
     }
 }
 
@@ -67,39 +67,40 @@ pub struct RGBColor {
 }
 
 impl RGBColor {
-    pub const BLACK: Self = RGBColor { r: 0, g: 0, b: 0 };
-    pub const WHITE: Self = RGBColor {
+    pub const BLACK: Self = Self { r: 0, g: 0, b: 0 };
+    pub const WHITE: Self = Self {
         r: 255,
         g: 255,
         b: 255,
     };
-    pub const RED: Self = RGBColor { r: 255, g: 0, b: 0 };
-    pub const GREEN: Self = RGBColor { r: 0, g: 255, b: 0 };
-    pub const BLUE: Self = RGBColor { r: 0, g: 0, b: 255 };
-    pub const YELLOW: Self = RGBColor {
+    pub const RED: Self = Self { r: 255, g: 0, b: 0 };
+    pub const GREEN: Self = Self { r: 0, g: 255, b: 0 };
+    pub const BLUE: Self = Self { r: 0, g: 0, b: 255 };
+    pub const YELLOW: Self = Self {
         r: 255,
         g: 255,
         b: 0,
     };
-    pub const CYAN: Self = RGBColor {
+    pub const CYAN: Self = Self {
         r: 0,
         g: 255,
         b: 255,
     };
-    pub const MAGENTA: Self = RGBColor {
+    pub const MAGENTA: Self = Self {
         r: 255,
         g: 0,
         b: 255,
     };
 
     #[rustfmt::skip]
+    #[allow(clippy::cast_possible_truncation)]
     fn distance(color1: Self, color2: Self) -> f32 {
         (
-            (i32::from(color1.r) - i32::from(color2.r)).pow(2) as f32 +
-            (i32::from(color1.g) - i32::from(color2.g)).pow(2) as f32 +
-            (i32::from(color1.b) - i32::from(color2.b)).pow(2) as f32
+            f64::from((i32::from(color1.r) - i32::from(color2.r)).pow(2)) +
+            f64::from((i32::from(color1.g) - i32::from(color2.g)).pow(2)) +
+            f64::from((i32::from(color1.b) - i32::from(color2.b)).pow(2))
         )
-        .sqrt()
+        .sqrt() as f32
     }
 
     fn mix(colors: &[Self]) -> Result<Self, &str> {
@@ -112,10 +113,15 @@ impl RGBColor {
             sum.1 += u32::from(color.g);
             sum.2 += u32::from(color.b);
         }
+        let Ok(colors_len) = u32::try_from(colors.len())
+        else {
+            return Err("colors contains too many elements");
+        };
+
         Ok(Self {
-            r: (sum.0 / colors.len() as u32) as u8,
-            g: (sum.1 / colors.len() as u32) as u8,
-            b: (sum.2 / colors.len() as u32) as u8,
+            r: (sum.0 / colors_len).clamp(0, 255) as u8,
+            g: (sum.1 / colors_len).clamp(0, 255) as u8,
+            b: (sum.2 / colors_len).clamp(0, 255) as u8,
         })
     }
 

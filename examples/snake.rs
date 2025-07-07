@@ -31,44 +31,24 @@ use console_display::{
 use crossterm::event::KeyCode;
 use rand::Rng;
 
+#[allow(clippy::too_many_lines)]
 fn main() {
-    let background_color = RGBColor { r: 0, g: 0, b: 0 };
-    let snake_color = RGBColor { r: 0, g: 255, b: 0 };
-    let apple_color = RGBColor { r: 255, g: 0, b: 0 };
+    let background_color = RGBColor::BLACK;
+    let snake_color = RGBColor::GREEN;
+    let apple_color = RGBColor::RED;
 
     let mut disp = construct_display();
 
     let _ = disp.0.set_pixel(
         99,
         0,
-        &CharacterPixel::build(
-            '1',
-            Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
-            Color::Color(RGBColor {
-                r: 255,
-                g: 255,
-                b: 255,
-            }),
-        )
-        .unwrap(),
+        &CharacterPixel::new::<'1'>(
+            Color::Color(RGBColor::BLACK),
+            Color::Color(RGBColor::WHITE),
+        ),
     );
 
-    let endscreen = &mut disp.1.1;
-
-    for (i, sym) in "You lost".chars().enumerate() {
-        endscreen
-            .set_pixel(
-                46 + i,
-                10,
-                &CharacterPixel::build(
-                    sym,
-                    Color::Default,
-                    Color::Default,
-                )
-                .expect("Could not construct character pixel."),
-            )
-            .expect("Could not set character pixel.");
-    }
+    initialize_end_screen(&mut disp.1.1);
 
     let mut fps = 10.;
     let mut score = 1;
@@ -76,41 +56,13 @@ fn main() {
     let mut snake: Vec<(usize, usize)>;
     let mut apple;
 
-    {
-        let map_display = &mut disp.1;
-
-        snake = vec![(
-            map_display.0.get_width() / 2,
-            map_display.0.get_height() / 2,
-        )];
-
-        map_display
-            .0
-            .set_pixel(snake[0].0, snake[0].1, snake_color)
-            .expect("Could not set pixel.");
-
-        apple = (
-            rand::thread_rng().gen_range(0..map_display.0.get_width()),
-            rand::thread_rng().gen_range(0..map_display.0.get_height()),
-        );
-
-        while snake.contains(&apple) {
-            apple = (
-                rand::thread_rng().gen_range(0..map_display.0.get_width()),
-                rand::thread_rng()
-                    .gen_range(0..map_display.0.get_height()),
-            );
-        }
-
-        map_display
-            .0
-            .set_pixel(apple.0, apple.1, apple_color)
-            .expect("Could not set pixel.");
-    }
+    (snake, apple) =
+        initialize_map(&mut disp.1.0, snake_color, apple_color);
 
     let mut lost = false;
 
     disp.set_target_frame_rate(fps);
+    // TODO: Extract closure into separate function
     disp.set_on_update(move |disp, latest_event| {
         if let Some(key_event) = latest_event {
             let KeyCode::Char(key) = key_event.code
@@ -142,6 +94,8 @@ fn main() {
         // place new segment in front (direction) of snake head
         snake.insert(
             0,
+            #[allow(clippy::cast_possible_truncation)]
+            #[allow(clippy::cast_possible_wrap)]
             (
                 (snake[0].0 as i32 + direction.0)
                     .rem_euclid(map_display.get_width() as i32)
@@ -160,12 +114,8 @@ fn main() {
                     0,
                     &CharacterPixel::build(
                         digit,
-                        Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
-                        Color::Color(RGBColor {
-                            r: 255,
-                            g: 255,
-                            b: 255,
-                        }),
+                        Color::Color(RGBColor::BLACK),
+                        Color::Color(RGBColor::WHITE),
                     )
                     .unwrap(),
                 );
@@ -205,9 +155,9 @@ fn main() {
             snake.pop();
         }
 
-        let map_display = &mut disp.1.0;
         // place pixel at snake head
-        map_display
+        disp.1
+            .0
             .set_pixel(snake[0].0, snake[0].1, snake_color)
             .expect("Could not set pixel.");
 
@@ -242,18 +192,14 @@ fn construct_display() -> Display {
             CharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::build(
                     ' ',
-                    Color::Color(RGBColor { r: 0, g: 0, b: 0 }),
-                    Color::Color(RGBColor {
-                        r: 255,
-                        g: 255,
-                        b: 255,
-                    }),
+                    Color::Color(RGBColor::BLACK),
+                    Color::Color(RGBColor::WHITE),
                 )
                 .unwrap(),
             ),
             OverlayWidget::new(
                 StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(
-                    RGBColor { r: 0, b: 0, g: 0 },
+                    RGBColor::BLACK,
                 ),
                 CharacterDisplay::<CharacterPixel, 100, 21>::new(
                     CharacterPixel::build(
@@ -301,4 +247,54 @@ fn construct_display() -> Display {
             ),
         ),
     ))
+}
+
+fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
+    endscreen: &mut CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>,
+) {
+    for (i, sym) in "You lost".chars().enumerate() {
+        endscreen
+            .set_pixel(
+                46 + i,
+                10,
+                &CharacterPixel::build(
+                    sym,
+                    Color::Default,
+                    Color::Default,
+                )
+                .expect("Could not construct character pixel."),
+            )
+            .expect("Could not set character pixel.");
+    }
+}
+
+fn initialize_map<const WIDTH: usize, const HEIGHT: usize>(
+    map_display: &mut StaticPixelDisplay<ColorDualPixel, WIDTH, HEIGHT>,
+    snake_color: RGBColor,
+    apple_color: RGBColor,
+) -> (Vec<(usize, usize)>, (usize, usize)) {
+    let snake =
+        vec![(map_display.get_width() / 2, map_display.get_height() / 2)];
+
+    map_display
+        .set_pixel(snake[0].0, snake[0].1, snake_color)
+        .expect("Could not set pixel.");
+
+    let mut apple = (
+        rand::thread_rng().gen_range(0..map_display.get_width()),
+        rand::thread_rng().gen_range(0..map_display.get_height()),
+    );
+
+    while snake.contains(&apple) {
+        apple = (
+            rand::thread_rng().gen_range(0..map_display.get_width()),
+            rand::thread_rng().gen_range(0..map_display.get_height()),
+        );
+    }
+
+    map_display
+        .set_pixel(apple.0, apple.1, apple_color)
+        .expect("Could not set pixel.");
+
+    (snake, apple)
 }

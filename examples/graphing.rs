@@ -26,11 +26,7 @@ fn main() {
             PixelType,
             { DIMENSIONS.0 },
             { DIMENSIONS.1 },
-        >::new(RGBColor {
-            r: 0,
-            g: 0,
-            b: 0,
-        })));
+        >::new(RGBColor::BLACK)));
     display.set_uv_x_min(uv_x.0);
     display.set_uv_x_max(uv_x.1);
     display.set_uv_y_min(uv_y.0);
@@ -44,17 +40,7 @@ fn main() {
         for x in xs {
             let y = function(x);
 
-            this.draw_line(
-                old_x,
-                old_y,
-                x,
-                y,
-                RGBColor {
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                },
-            );
+            this.draw_line(old_x, old_y, x, y, RGBColor::WHITE);
 
             old_x = x;
             old_y = y;

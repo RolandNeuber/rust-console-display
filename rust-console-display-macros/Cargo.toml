@@ -1,7 +1,13 @@
 [package]
-name = "rust-console-display-macros"
+name = "console-display-macros"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Macros for the console-display crate."
+readme = "../README.md"
+repository = "https://github.com/RolandNeuber/rust-console-display"
+keywords = ["console-display", "macro"]
+categories = ["command-line-interface", "gui", "graphics"]
 
 [lib]
 proc-macro = true
