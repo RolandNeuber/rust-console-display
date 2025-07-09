@@ -26,6 +26,8 @@ pub fn derive_static_widget(input: TokenStream) -> TokenStream {
     }))
 }
 
+/// Derives DynamicWidget for a struct.
+/// Sets the width and height in characters to the dimensions of the child element.
 #[proc_macro_derive(DynamicWidget)]
 pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
