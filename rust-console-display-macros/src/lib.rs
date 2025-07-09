@@ -8,6 +8,8 @@ use syn::{
     parse_quote,
 };
 
+/// Derives StaticWidget for a struct.
+/// Sets the width and height in characters to the dimensions of the child element.
 #[proc_macro_derive(StaticWidget)]
 pub fn derive_static_widget(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -44,6 +46,8 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
     }))
 }
 
+/// Derives SingleWidget for a struct.
+/// Implements getter (+ mut) for the child element assuming the child is of type `T`.
 #[proc_macro_derive(SingleWidget)]
 pub fn derive_single_widget(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -77,6 +81,8 @@ pub fn derive_single_widget(input: TokenStream) -> TokenStream {
     }))
 }
 
+/// Derives TwoWidget for a struct.
+/// Implements getter (+ mut) for the child elements assuming the children are of type `S` and `T` respectively.
 #[proc_macro_derive(TwoWidget)]
 pub fn derive_two_widget(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -97,6 +103,7 @@ pub fn derive_two_widget(input: TokenStream) -> TokenStream {
     }))
 }
 
+/// Adds a bound that restricts generics such that: `T: StaticWidget`.
 fn add_static_widget_bound_to_t(mut generics: Generics) -> Generics {
     for param in &mut generics.params {
         if let GenericParam::Type(type_param) = param &&
