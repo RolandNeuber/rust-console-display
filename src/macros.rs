@@ -1,3 +1,21 @@
+/// Implements getters for properties on a struct.
+/// May take attributes and visibility.
+///
+/// # Examples
+/// ```
+/// use console_display::impl_getters;
+/// struct Example {
+///     flag: bool,
+///     data: [String; 8],
+/// }
+///
+/// impl Example {
+///     impl_getters!(
+///         #[must_use] pub flag: bool,
+///         data: [String; 8]
+///     );
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_getters {
     ($($(#[$attr:meta])* $visibility:vis $field:ident: $type:ty),*) => {
@@ -10,6 +28,22 @@ macro_rules! impl_getters {
     };
 }
 
+/// Implements mutable getters for properties on a struct.
+///
+/// # Examples
+/// ```
+/// use console_display::impl_getters_mut;
+/// struct Example {
+///     flag: bool,
+///     data: [String; 8],
+/// }
+///
+/// impl Example {
+///     impl_getters_mut!(
+///         data: [String; 8]
+///     );
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_getters_mut {
     ($($visibility:vis $field:ident: $type:ty),*) => {
@@ -21,6 +55,22 @@ macro_rules! impl_getters_mut {
     };
 }
 
+/// Implements setters for properties on a struct.
+/// May take a visibility for each setter.
+///
+/// # Examples
+/// ```
+/// use console_display::impl_setters;
+/// struct Example {
+///     flag: bool,
+/// }
+///
+/// impl Example {
+///     impl_setters!(
+///         pub flag: bool
+///     );
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_setters {
     ($($visibility:vis $field:ident: $type:ty),*) => {
@@ -32,10 +82,41 @@ macro_rules! impl_setters {
     };
 }
 
+/// Implements new for a struct.
+/// May take a visibility and generics.
+///
+/// # Examples
+/// ```
+/// use console_display::impl_new;
+/// struct Example {
+///     flag: bool,
+///     data: [String; 8],
+/// }
+///
+/// impl Example {
+///     impl_new!(
+///         pub Example,
+///         flag: bool,
+///         data: [String; 8]
+///     );
+/// }
+///
+/// struct GenericExample<T> {
+///     flag: T,
+///     data: [String; 8],
+/// }
+///
+/// impl<T> GenericExample<T> {
+///     impl_new!(
+///         pub GenericExample, <, T, >,
+///         flag: T,
+///         data: [String; 8]
+///     );
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_new {
     ($(#[$attr:meta])* $visibility:vis $struct:ident, $($arg:ident: $type:ty), *) => {
-        //TODO: Refactor arguments
         #[allow(clippy::too_many_arguments)]
         $(#[$attr])*
         $visibility fn new($($arg: $type),*) -> $struct {
@@ -53,6 +134,32 @@ macro_rules! impl_new {
     };
 }
 
+/// Constrains a constant generic parameter with the given constraint.
+/// Should be used in conjunction with the `or` and `and` macros.
+///
+/// # Examples
+/// ```
+/// #![allow(incomplete_features)]
+/// #![feature(generic_const_exprs)]
+///
+/// use console_display::constraint;
+/// use console_display::and;
+///
+/// fn subpixel_static<const X: usize, const Y: usize>() -> u8
+/// where
+///     constraint!(and!(X < 10, Y < 20)):,
+/// {
+///     generate_vec()[X + Y * 10]
+/// }
+///
+/// fn generate_vec() -> Vec<u8> {
+///     let mut vec = Vec::with_capacity(200);
+///     for i in 0..200 {
+///         vec.push(i);
+///     }
+///     vec
+/// }
+/// ```
 #[macro_export]
 macro_rules! constraint {
     {$x:expr} => {
@@ -60,6 +167,8 @@ macro_rules! constraint {
     };
 }
 
+/// Inserts a eagerly evaluated `or` into a `constraint`.
+/// See [constraint] for examples and usage.
 #[macro_export]
 macro_rules! or {
     ($x:expr, $y:expr) => {
@@ -67,6 +176,8 @@ macro_rules! or {
     };
 }
 
+/// Inserts a eagerly evaluated `and` into a `constraint`.
+/// See [constraint] for examples and usage.
 #[macro_export]
 macro_rules! and {
     ($x:expr, $y:expr) => {
