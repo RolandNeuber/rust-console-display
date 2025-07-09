@@ -2,12 +2,10 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    character_display::CharacterDisplay,
-    display_driver::DisplayDriver,
-    pixel::{
+    character_display::CharacterDisplay, console_display::ConsoleDisplay, display_driver::DisplayDriver, pixel::{
         character_pixel::CharacterPixel,
         color_pixel::Color,
-    },
+    }
 };
 
 fn main() {
@@ -34,7 +32,7 @@ fn main() {
         let pixel =
             CharacterPixel::build(i, Color::Default, Color::Default)
                 .unwrap();
-        let _ = char_disp.set_pixel(x, y, &pixel);
+        let _ = char_disp.set_pixel(x, y, pixel.into());
         if x + pixel.get_width() > char_disp.get_width() {
             y += 1;
             x = 0;

@@ -182,6 +182,41 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
 
     fn draw_line(
         &mut self,
+        x1: i32,
+        y1: i32,
+        x2: i32,
+        y2: i32,
+        value: T::U,
+    ) where
+        [(); T::WIDTH * T::HEIGHT]:,
+    {
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+        let steps = dx.abs().max(dy.abs());
+        let x_inc = dx / steps;
+        let y_inc = dy / steps;
+
+        let mut x = x1;
+        let mut y = y1;
+
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_sign_loss)]
+        for _ in 0..=steps {
+            if x >= 0 && y >= 0 {
+                let _ = self.set_pixel(
+                    x as usize,
+                    y as usize,
+                    value,
+                );
+            }
+            x += x_inc;
+            y += y_inc;
+        }
+    }
+
+    fn draw_line_f32(
+        &mut self,
         x1: f32,
         y1: f32,
         x2: f32,

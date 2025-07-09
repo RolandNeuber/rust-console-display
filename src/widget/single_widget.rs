@@ -193,7 +193,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
             ),
         );
         self.get_child_mut()
-            .draw_line(uv1.0, uv1.1, uv2.0, uv2.1, value);
+            .draw_line_f32(uv1.0, uv1.1, uv2.0, uv2.1, value);
     }
 
     #[must_use]
@@ -713,6 +713,72 @@ impl<T: DynamicWidget, S: Border> Deref for BorderWidget<T, S> {
 }
 
 impl<T: DynamicWidget, S: Border> DerefMut for BorderWidget<T, S> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
+    }
+}
+
+pub struct InsetWidget<T: DynamicWidget> {
+    child: T,
+    inset_left: usize,
+    inset_right: usize,
+    inset_top: usize,
+    inset_bottom: usize,
+}
+
+impl<T: DynamicWidget> InsetWidget<T> {
+    impl_new!(pub InsetWidget, <, T, >, child: T, inset_left: usize, inset_right: usize, inset_top: usize, inset_bottom: usize);
+
+    impl_getters!(pub child: T);
+}
+
+impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
+    fn get_width_characters(&self) -> usize {
+        (self.child.get_width_characters() -
+            self.inset_left -
+            self.inset_right).max(0)
+    }
+
+    fn get_height_characters(&self) -> usize {
+        (self.child.get_height_characters() -
+            self.inset_top -
+            self.inset_bottom).max(0)
+    }
+}
+
+impl<T: DynamicWidget> Display for InsetWidget<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut str_repr = String::new();
+
+        let str_repr_child = self.child.to_string();
+        for line_child in str_repr_child
+            .lines()
+            .skip(self.inset_top)
+            .take(str_repr_child.lines().count() - self.inset_top - self.inset_bottom)
+        {
+            let pixels = line_child.split("\x1b").collect::<Vec<_>>();
+            str_repr.push_str(
+                &pixels
+                    [self.inset_left..pixels.len() - self.inset_right].join("\x1b"),
+            );
+            str_repr.push_str(&line_child);
+            str_repr.push_str("\r\n");
+        }
+
+        str_repr = str_repr.trim_end_matches("\r\n").to_string();
+        write!(f, "{str_repr}")
+    }
+}
+
+impl<T: DynamicWidget> Deref for InsetWidget<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+
+impl<T: DynamicWidget> DerefMut for InsetWidget<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }

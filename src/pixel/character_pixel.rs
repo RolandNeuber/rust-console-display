@@ -26,6 +26,12 @@ pub struct CharacterPixelData {
     width: usize,
 }
 
+impl From<CharacterPixel> for CharacterPixelData {
+    fn from(value: CharacterPixel) -> Self {
+        value.data[0]
+    }
+}
+
 impl Pixel for CharacterPixel {
     type U = CharacterPixelData;
 

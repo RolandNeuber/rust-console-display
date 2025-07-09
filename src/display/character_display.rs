@@ -139,54 +139,54 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         HEIGHT
     }
 
-    /// Returns the pixel value at the specified coordinates.
-    ///
-    /// # Errors
-    ///
-    /// If the coordinates are out of bounds, an error is returned.    
-    pub fn get_pixel(
-        &self,
-        x: usize,
-        y: usize,
-    ) -> Result<&CharacterPixel, String> {
-        if x >= self.get_width() || y >= self.get_height() {
-            return Err(format!(
-                "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-            ));
-        }
+    // / Returns the pixel value at the specified coordinates.
+    // /
+    // / # Errors
+    // /
+    // / If the coordinates are out of bounds, an error is returned.    
+    // pub fn get_pixel(
+    //     &self,
+    //     x: usize,
+    //     y: usize,
+    // ) -> Result<&CharacterPixel, String> {
+    //     if x >= self.get_width() || y >= self.get_height() {
+    //         return Err(format!(
+    //             "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+    //         ));
+    //     }
 
-        Ok(&self.get_data()[x + y * self.get_width()])
-    }
+    //     Ok(&self.get_data()[x + y * self.get_width()])
+    // }
 
-    /// Sets a character pixel at a specific x and y coordinate.
-    /// Also works with characters wider than one column extending to the right.
-    /// If a wide character is partially replaced, the rest of the affected character is overwritten with a default narrow character.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the coordinates are out of bounds. This also applies for wide characters partially out of bounds.
-    ///
-    /// # Panics
-    ///
-    /// If the default character pixel could not be constructed.
-    /// This should never happen and is subject to change in the future.
-    pub fn set_pixel(
-        &mut self,
-        x: usize,
-        y: usize,
-        value: &CharacterPixel,
-    ) -> Result<(), String> {
-        if x > self.get_width() + value.get_width() ||
-            y >= self.get_height()
-        {
-            return Err(format!(
-                "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-            ));
-        }
+    // / Sets a character pixel at a specific x and y coordinate.
+    // / Also works with characters wider than one column extending to the right.
+    // / If a wide character is partially replaced, the rest of the affected character is overwritten with a default narrow character.
+    // /
+    // / # Errors
+    // /
+    // / Returns an error if the coordinates are out of bounds. This also applies for wide characters partially out of bounds.
+    // /
+    // / # Panics
+    // /
+    // / If the default character pixel could not be constructed.
+    // / This should never happen and is subject to change in the future.
+    // pub fn set_pixel(
+    //     &mut self,
+    //     x: usize,
+    //     y: usize,
+    //     value: &CharacterPixel,
+    // ) -> Result<(), String> {
+    //     if x > self.get_width() + value.get_width() ||
+    //         y >= self.get_height()
+    //     {
+    //         return Err(format!(
+    //             "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+    //         ));
+    //     }
 
-        self.data[x + y * WIDTH] = *value;
-        Ok(())
-    }
+    //     self.data[x + y * WIDTH] = *value;
+    //     Ok(())
+    // }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
