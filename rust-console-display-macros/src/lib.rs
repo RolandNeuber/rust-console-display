@@ -8,7 +8,7 @@ use syn::{
     parse_quote,
 };
 
-/// Derives StaticWidget for a struct.
+/// Derives `StaticWidget` for a struct.
 /// Sets the width and height in characters to the dimensions of the child element.
 #[proc_macro_derive(StaticWidget)]
 pub fn derive_static_widget(input: TokenStream) -> TokenStream {
@@ -26,7 +26,7 @@ pub fn derive_static_widget(input: TokenStream) -> TokenStream {
     }))
 }
 
-/// Derives DynamicWidget for a struct.
+/// Derives `DynamicWidget` for a struct.
 /// Sets the width and height in characters to the dimensions of the child element.
 #[proc_macro_derive(DynamicWidget)]
 pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
@@ -48,7 +48,7 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
     }))
 }
 
-/// Derives SingleWidget for a struct.
+/// Derives `SingleWidget` for a struct.
 /// Implements getter (+ mut) for the child element assuming the child is of type `T`.
 #[proc_macro_derive(SingleWidget)]
 pub fn derive_single_widget(input: TokenStream) -> TokenStream {
@@ -83,7 +83,7 @@ pub fn derive_single_widget(input: TokenStream) -> TokenStream {
     }))
 }
 
-/// Derives TwoWidget for a struct.
+/// Derives `TwoWidget` for a struct.
 /// Implements getter (+ mut) for the child elements assuming the children are of type `S` and `T` respectively.
 #[proc_macro_derive(TwoWidget)]
 pub fn derive_two_widget(input: TokenStream) -> TokenStream {
