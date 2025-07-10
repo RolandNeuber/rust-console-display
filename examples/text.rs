@@ -2,10 +2,13 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    character_display::CharacterDisplay, console_display::ConsoleDisplay, display_driver::DisplayDriver, pixel::{
+    character_display::CharacterDisplay,
+    console_display::ConsoleDisplay,
+    display_driver::DisplayDriver,
+    pixel::{
         character_pixel::CharacterPixel,
         color_pixel::Color,
-    }
+    },
 };
 
 fn main() {

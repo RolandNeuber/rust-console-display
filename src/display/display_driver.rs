@@ -101,11 +101,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             terminal::EnterAlternateScreen, // use alternate screen
             terminal::SetSize(
                 self.get_child()
-                    .get_width_characters()
+                    .width_characters()
                     .try_into()
                     .unwrap_or(u16::MAX),
                 self.get_child()
-                    .get_height_characters()
+                    .height_characters()
                     .try_into()
                     .unwrap_or(u16::MAX)
             ), // set dimensions of screen
@@ -168,10 +168,10 @@ impl<T: DynamicWidget> DisplayDriver<T> {
                 Err(_) => (0, 0),
             };
 
-            let padding_vertical = (height as usize)
-                .saturating_sub(self.get_height_characters());
-            let padding_horizontal = (width as usize)
-                .saturating_sub(self.get_width_characters());
+            let padding_vertical =
+                (height as usize).saturating_sub(self.height_characters());
+            let padding_horizontal =
+                (width as usize).saturating_sub(self.width_characters());
 
             self.display.set_padding_left(padding_horizontal / 2);
             self.display.set_padding_top(padding_vertical / 2);

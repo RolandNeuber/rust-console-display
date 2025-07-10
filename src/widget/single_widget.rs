@@ -22,6 +22,7 @@ use console_display_macros::{
 
 use crate::{
     console_display::ConsoleDisplay,
+    impl_display_for_dynamic_widget,
     impl_getters,
     impl_new,
     impl_setters,
@@ -359,12 +360,8 @@ impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
     }
 }
 
-impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> Display
-    for UvWidget<T, S>
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_child())
-    }
+impl<T: ConsoleDisplay<S>, S: MultiPixel> Display for UvWidget<T, S> {
+    impl_display_for_dynamic_widget!();
 }
 
 impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
@@ -415,12 +412,20 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
 impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
     for DoubleBufferWidget<T, S>
 {
-    fn get_width_characters(&self) -> usize {
-        self.child.borrow().get_width_characters()
+    fn width_characters(&self) -> usize {
+        self.child.borrow().width_characters()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.child.borrow().get_height_characters()
+    fn height_characters(&self) -> usize {
+        self.child.borrow().height_characters()
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        if self.is_write.get() {
+            self.swap_buffers();
+            self.is_write.set(false);
+        }
+        self.child.borrow().string_data()
     }
 }
 
@@ -451,13 +456,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
 impl<T: ConsoleDisplay<S>, S: MultiPixel> Display
     for DoubleBufferWidget<T, S>
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.is_write.get() {
-            self.swap_buffers();
-            self.is_write.set(false);
-        }
-        self.child.borrow().fmt(f)
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref
@@ -503,40 +502,58 @@ impl<T: DynamicWidget> PaddingWidget<T> {
 }
 
 impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
-    fn get_width_characters(&self) -> usize {
-        self.child.get_width_characters() +
+    fn width_characters(&self) -> usize {
+        self.child.width_characters() +
             self.padding_left +
             self.padding_right
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.child.get_height_characters() +
+    fn height_characters(&self) -> usize {
+        self.child.height_characters() +
             self.padding_top +
             self.padding_bottom
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        // TODO: Implement properly
+        let mut data = self.child.string_data();
+        let padding_top = vec![
+            vec![
+                CharacterPixel::default().to_string();
+                self.width_characters()
+            ];
+            self.padding_top
+        ];
+        let padding_bottom = vec![
+            vec![
+                CharacterPixel::default().to_string();
+                self.width_characters()
+            ];
+            self.padding_bottom
+        ];
+        data = data
+            .into_iter()
+            .map(|line| {
+                [
+                    vec![
+                        CharacterPixel::default().to_string();
+                        self.padding_left
+                    ],
+                    line,
+                    vec![
+                        CharacterPixel::default().to_string();
+                        self.padding_right
+                    ],
+                ]
+                .concat()
+            })
+            .collect();
+        [padding_top, data, padding_bottom].concat()
     }
 }
 
 impl<T: DynamicWidget> Display for PaddingWidget<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut str_repr = String::new();
-        for _ in 0..self.padding_top {
-            str_repr.push_str(&" ".repeat(self.get_width_characters()));
-            str_repr.push_str("\r\n");
-        }
-        let str_repr_child = self.child.to_string();
-        for line_child in str_repr_child.lines() {
-            str_repr.push_str(&" ".repeat(self.padding_left));
-            str_repr.push_str(line_child);
-            str_repr.push_str(&" ".repeat(self.padding_right));
-            str_repr.push_str("\r\n");
-        }
-        for _ in 0..self.padding_bottom {
-            str_repr.push_str(&" ".repeat(self.get_width_characters()));
-            str_repr.push_str("\r\n");
-        }
-        str_repr = str_repr.trim_end_matches("\r\n").to_string();
-        write!(f, "{str_repr}")
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget> Deref for PaddingWidget<T> {
@@ -649,59 +666,67 @@ impl<T: DynamicWidget, S: Border> BorderWidget<T, S> {
 }
 
 impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
-    fn get_width_characters(&self) -> usize {
-        self.child.get_width_characters() +
+    fn width_characters(&self) -> usize {
+        self.child.width_characters() +
             self.border.width_left() +
             self.border.width_right()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.child.get_height_characters() +
+    fn height_characters(&self) -> usize {
+        self.child.height_characters() +
             self.border.width_top() +
             self.border.width_bottom()
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        let border_at = self
+            .border
+            .border_at(self.width_characters(), self.height_characters());
+        let mut data = self.child.string_data();
+        let border_top = (0..self.border.width_top())
+            .map(|y| {
+                (0..self.width_characters())
+                    .map(|x| border_at(x, y).to_string())
+                    .collect()
+            })
+            .collect();
+        let border_bottom = (self.height_characters() -
+            self.border.width_bottom()..
+            self.height_characters())
+            .map(|y| {
+                (0..self.width_characters())
+                    .map(|x| border_at(x, y).to_string())
+                    .collect()
+            })
+            .collect();
+        data = data
+            .into_iter()
+            .enumerate()
+            .map(|(y, line)| {
+                [
+                    (0..self.border.width_left())
+                        .map(|x| {
+                            border_at(x, y + self.border.width_top())
+                                .to_string()
+                        })
+                        .collect(),
+                    line,
+                    (0..self.border.width_right())
+                        .map(|x| {
+                            border_at(x, y + self.border.width_top())
+                                .to_string()
+                        })
+                        .collect(),
+                ]
+                .concat()
+            })
+            .collect();
+        [border_top, data, border_bottom].concat()
     }
 }
 
 impl<T: DynamicWidget, S: Border> Display for BorderWidget<T, S> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let width_chars = self.get_width_characters();
-        let height_chars = self.get_height_characters();
-        let border_at = self.border.border_at(width_chars, height_chars);
-        let mut str_repr = String::new();
-        for y in 0..self.border.width_top() {
-            for x in 0..width_chars {
-                str_repr.push_str(&border_at(x, y).to_string());
-            }
-            str_repr.push_str("\r\n");
-        }
-        let str_repr_child = self.child.to_string();
-        for (y, line_child) in str_repr_child.lines().enumerate() {
-            for x in 0..self.border.width_left() {
-                str_repr.push_str(
-                    &border_at(x, y + self.border.width_top()).to_string(),
-                );
-            }
-            str_repr.push_str(line_child);
-            for x in 0..self.border.width_right() {
-                str_repr.push_str(
-                    &border_at(
-                        x + width_chars - self.border.width_right(),
-                        y + self.border.width_top(),
-                    )
-                    .to_string(),
-                );
-            }
-            str_repr.push_str("\r\n");
-        }
-        for y in height_chars - self.border.width_right()..height_chars {
-            for x in 0..width_chars {
-                str_repr.push_str(&border_at(x, y).to_string());
-            }
-            str_repr.push_str("\r\n");
-        }
-        str_repr = str_repr.trim_end_matches("\r\n").to_string();
-        write!(f, "{str_repr}")
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget, S: Border> Deref for BorderWidget<T, S> {
@@ -733,41 +758,41 @@ impl<T: DynamicWidget> InsetWidget<T> {
 }
 
 impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
-    fn get_width_characters(&self) -> usize {
-        (self.child.get_width_characters() -
-            self.inset_left -
-            self.inset_right).max(0)
+    fn width_characters(&self) -> usize {
+        self.child
+            .width_characters()
+            .saturating_sub(self.inset_left)
+            .saturating_sub(self.inset_right)
     }
 
-    fn get_height_characters(&self) -> usize {
-        (self.child.get_height_characters() -
-            self.inset_top -
-            self.inset_bottom).max(0)
+    fn height_characters(&self) -> usize {
+        self.child
+            .height_characters()
+            .saturating_sub(self.inset_top)
+            .saturating_sub(self.inset_bottom)
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        let mut data = self.child.string_data();
+
+        data = data
+            .into_iter()
+            .skip(self.inset_top)
+            .take(self.height_characters())
+            .collect::<Vec<_>>();
+
+        data.into_iter()
+            .map(|line| {
+                line[self.inset_left..
+                    self.width_characters() + self.inset_left]
+                    .to_vec()
+            })
+            .collect()
     }
 }
 
 impl<T: DynamicWidget> Display for InsetWidget<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut str_repr = String::new();
-
-        let str_repr_child = self.child.to_string();
-        for line_child in str_repr_child
-            .lines()
-            .skip(self.inset_top)
-            .take(str_repr_child.lines().count() - self.inset_top - self.inset_bottom)
-        {
-            let pixels = line_child.split("\x1b").collect::<Vec<_>>();
-            str_repr.push_str(
-                &pixels
-                    [self.inset_left..pixels.len() - self.inset_right].join("\x1b"),
-            );
-            str_repr.push_str(&line_child);
-            str_repr.push_str("\r\n");
-        }
-
-        str_repr = str_repr.trim_end_matches("\r\n").to_string();
-        write!(f, "{str_repr}")
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget> Deref for InsetWidget<T> {
@@ -851,8 +876,8 @@ mod tests {
                 30,
                 40,
             );
-            assert_eq!(widget.get_width_characters(), 31);
-            assert_eq!(widget.get_height_characters(), 71);
+            assert_eq!(widget.width_characters(), 31);
+            assert_eq!(widget.height_characters(), 71);
         }
     }
 }

@@ -132,8 +132,8 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
         let offset_x: usize = x % T::WIDTH;
         let offset_y: usize = y % T::HEIGHT;
 
-        let pixel = &self.get_data()
-            [block_x + block_y * self.get_width_characters()];
+        let pixel =
+            &self.get_data()[block_x + block_y * self.width_characters()];
 
         Ok(pixel
             .subpixel(offset_x, offset_y)
@@ -170,7 +170,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
         let offset_x: usize = x % T::WIDTH;
         let offset_y: usize = y % T::HEIGHT;
 
-        let width_characters = self.get_width_characters();
+        let width_characters = self.width_characters();
         let pixel =
             &mut self.get_data_mut()[block_x + block_y * width_characters];
         pixel
@@ -204,11 +204,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
         #[allow(clippy::cast_sign_loss)]
         for _ in 0..=steps {
             if x >= 0 && y >= 0 {
-                let _ = self.set_pixel(
-                    x as usize,
-                    y as usize,
-                    value,
-                );
+                let _ = self.set_pixel(x as usize, y as usize, value);
             }
             x += x_inc;
             y += y_inc;
