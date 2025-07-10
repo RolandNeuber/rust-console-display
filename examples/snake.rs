@@ -42,10 +42,11 @@ fn main() {
     let _ = disp.0.set_pixel(
         99,
         0,
-        &CharacterPixel::new::<'1'>(
+        CharacterPixel::new::<'1'>(
             Color::Color(RGBColor::BLACK),
             Color::Color(RGBColor::WHITE),
-        ),
+        )
+        .into(),
     );
 
     initialize_end_screen(&mut disp.1.1);
@@ -112,12 +113,13 @@ fn main() {
                 let _ = disp.0.set_pixel(
                     99 - i,
                     0,
-                    &CharacterPixel::build(
+                    CharacterPixel::build(
                         digit,
                         Color::Color(RGBColor::BLACK),
                         Color::Color(RGBColor::WHITE),
                     )
-                    .unwrap(),
+                    .unwrap()
+                    .into(),
                 );
             }
 
@@ -257,12 +259,9 @@ fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
             .set_pixel(
                 46 + i,
                 10,
-                &CharacterPixel::build(
-                    sym,
-                    Color::Default,
-                    Color::Default,
-                )
-                .expect("Could not construct character pixel."),
+                CharacterPixel::build(sym, Color::Default, Color::Default)
+                    .expect("Could not construct character pixel.")
+                    .into(),
             )
             .expect("Could not set character pixel.");
     }

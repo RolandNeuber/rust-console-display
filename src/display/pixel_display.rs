@@ -4,6 +4,7 @@ use std::fmt::Display;
 use crate::{
     console_display::ConsoleDisplay,
     constraint,
+    impl_display_for_dynamic_widget,
     pixel::monochrome_pixel::MultiPixel,
     widget::{
         DynamicWidget,
@@ -117,31 +118,24 @@ impl<T: MultiPixel> ConsoleDisplay<T> for DynamicPixelDisplay<T> {
 }
 
 impl<T: MultiPixel> DynamicWidget for DynamicPixelDisplay<T> {
-    fn get_width_characters(&self) -> usize {
+    fn width_characters(&self) -> usize {
         self.width / T::WIDTH
     }
 
-    fn get_height_characters(&self) -> usize {
+    fn height_characters(&self) -> usize {
         self.height / T::HEIGHT
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        self.data
+            .chunks(self.width_characters())
+            .map(|chunk| chunk.iter().map(ToString::to_string).collect())
+            .collect()
     }
 }
 
 impl<T: MultiPixel> Display for DynamicPixelDisplay<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut string_repr = String::new();
-        for y in 0..self.get_height_characters() {
-            for x in 0..self.get_width_characters() {
-                string_repr.push_str(
-                    self.get_data()[x + y * self.get_width_characters()]
-                        .to_string()
-                        .as_str(),
-                );
-            }
-            string_repr.push_str("\r\n");
-        }
-
-        write!(f, "{}", string_repr.trim_end_matches("\r\n"))
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 /// Represents a console display with a width and height in pixels.
@@ -352,12 +346,19 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
 impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
-    fn get_width_characters(&self) -> usize {
+    fn width_characters(&self) -> usize {
         Self::WIDTH_CHARACTERS
     }
 
-    fn get_height_characters(&self) -> usize {
+    fn height_characters(&self) -> usize {
         Self::HEIGHT_CHARACTERS
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        self.data
+            .chunks(Self::WIDTH_CHARACTERS)
+            .map(|chunk| chunk.iter().map(ToString::to_string).collect())
+            .collect()
     }
 }
 
@@ -372,21 +373,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
 impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> Display
     for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut string_repr = String::new();
-        for y in 0..Self::HEIGHT_CHARACTERS {
-            for x in 0..Self::WIDTH_CHARACTERS {
-                string_repr.push_str(
-                    self.get_data()[x + y * Self::WIDTH_CHARACTERS]
-                        .to_string()
-                        .as_str(),
-                );
-            }
-            string_repr.push_str("\r\n");
-        }
-
-        write!(f, "{}", string_repr.trim_end_matches("\r\n"))
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 #[cfg(test)]

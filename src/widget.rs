@@ -12,7 +12,14 @@ pub trait StaticWidget: DynamicWidget {
 
 pub trait DynamicWidget: Display {
     /// Returns the width of the display in characters.
-    fn get_width_characters(&self) -> usize;
+    #[must_use]
+    fn width_characters(&self) -> usize;
     /// Returns the height of the display in characters.
-    fn get_height_characters(&self) -> usize;
+    #[must_use]
+    fn height_characters(&self) -> usize;
+    /// Returns a string representation.
+    /// The first vector contains rows.
+    /// The vectors inside/rows contain individual characters.
+    #[must_use]
+    fn string_data(&self) -> Vec<Vec<String>>;
 }

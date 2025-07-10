@@ -39,11 +39,14 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
 
     TokenStream::from(quote!(
     impl #impl_generics DynamicWidget for #name #ty_generics #where_clause {
-        fn get_width_characters(&self) -> usize {
-            self.child.get_width_characters()
+        fn width_characters(&self) -> usize {
+            self.child.width_characters()
         }
-        fn get_height_characters(&self) -> usize {
-            self.child.get_height_characters()
+        fn height_characters(&self) -> usize {
+            self.child.height_characters()
+        }
+        fn string_data(&self) -> Vec<Vec<String>> {
+            self.child.string_data()
         }
     }))
 }
@@ -96,10 +99,10 @@ pub fn derive_two_widget(input: TokenStream) -> TokenStream {
 
     TokenStream::from(quote!(
     impl #impl_generics TwoWidget<S, T> for #name #ty_generics #where_clause {
-        fn get_children(&self) -> (&S, &T) {
+        fn children(&self) -> (&S, &T) {
             (&self.children.0, &self.children.1)
         }
-        fn get_children_mut(&mut self) -> (&mut S, &mut T) {
+        fn children_mut(&mut self) -> (&mut S, &mut T) {
             (&mut self.children.0, &mut self.children.1)
         }
     }))

@@ -13,6 +13,7 @@ use console_display_macros::{
 
 use crate::{
     constraint,
+    impl_display_for_dynamic_widget,
     impl_getters,
     impl_setters,
     widget::DynamicWidget,
@@ -23,8 +24,8 @@ use super::StaticWidget;
 pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
-    fn get_children(&self) -> (&S, &T);
-    fn get_children_mut(&mut self) -> (&mut S, &mut T);
+    fn children(&self) -> (&S, &T);
+    fn children_mut(&mut self) -> (&mut S, &mut T);
 }
 
 #[derive(StaticWidget, TwoWidget)]
@@ -59,16 +60,15 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
         child2: T,
         child1_on_top: bool,
     ) -> Result<Self, String> {
-        if child1.get_width_characters() != child2.get_width_characters() ||
-            child1.get_height_characters() !=
-                child2.get_height_characters()
+        if child1.width_characters() != child2.width_characters() ||
+            child1.height_characters() != child2.height_characters()
         {
             return Err(format!(
                 "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
-                child1.get_height_characters(),
-                child2.get_height_characters(),
-                child1.get_width_characters(),
-                child2.get_width_characters(),
+                child1.height_characters(),
+                child2.height_characters(),
+                child1.width_characters(),
+                child2.width_characters(),
             ));
         }
         Ok(Self {
@@ -85,24 +85,26 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for OverlayWidget<S, T>
 {
-    fn get_width_characters(&self) -> usize {
-        self.children.0.get_width_characters()
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.children.0.get_height_characters()
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters()
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        if self.child1_on_top {
+            self.children.0.string_data()
+        }
+        else {
+            self.children.1.string_data()
+        }
     }
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.child1_on_top {
-            write!(f, "{}", self.children.0)
-        }
-        else {
-            write!(f, "{}", self.children.1)
-        }
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
@@ -132,12 +134,11 @@ impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
     ///
     /// Returns an error if the height of both children does not match.
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
-        if child1.get_height_characters() != child2.get_height_characters()
-        {
+        if child1.height_characters() != child2.height_characters() {
             return Err(format!(
                 "Height in characters of arguments does not match. {} and {}.",
-                child1.get_height_characters(),
-                child2.get_height_characters()
+                child1.height_characters(),
+                child2.height_characters()
             ));
         }
         Ok(Self {
@@ -169,30 +170,29 @@ impl<S: StaticWidget, T: StaticWidget> StaticWidget
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for HorizontalTilingWidget<S, T>
 {
-    fn get_width_characters(&self) -> usize {
-        self.children.0.get_width_characters() +
-            self.children.1.get_width_characters()
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters() +
+            self.children.1.width_characters()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.children.0.get_height_characters()
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters()
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        self.0
+            .string_data()
+            .into_iter()
+            .zip(self.children.1.string_data())
+            .map(|lines| [lines.0, lines.1].concat())
+            .collect()
     }
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Display
     for HorizontalTilingWidget<S, T>
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str_repr1 = self.children.0.to_string();
-        let str_repr2 = self.children.1.to_string();
-        let lines = Iterator::zip(str_repr1.lines(), str_repr2.lines());
-        let mut str_repr = String::new();
-        for line_pair in lines {
-            str_repr.push_str(line_pair.0);
-            str_repr.push_str(line_pair.1);
-        }
-        write!(f, "{str_repr}")
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Deref
@@ -226,11 +226,11 @@ impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
     ///
     /// Returns an error if the width of both children does not match.
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
-        if child1.get_width_characters() != child2.get_width_characters() {
+        if child1.width_characters() != child2.width_characters() {
             return Err(format!(
                 "Width in characters of arguments does not match. {} and {}.",
-                child1.get_width_characters(),
-                child2.get_width_characters()
+                child1.width_characters(),
+                child2.width_characters()
             ));
         }
         Ok(Self {
@@ -262,22 +262,24 @@ impl<S: StaticWidget, T: StaticWidget> StaticWidget
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for VerticalTilingWidget<S, T>
 {
-    fn get_width_characters(&self) -> usize {
-        self.children.0.get_width_characters()
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.children.0.get_height_characters() +
-            self.children.1.get_height_characters()
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters() +
+            self.children.1.height_characters()
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        [self.0.string_data(), self.1.string_data()].concat()
     }
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Display
     for VerticalTilingWidget<S, T>
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\r\n{}", self.children.0, self.children.1)
-    }
+    impl_display_for_dynamic_widget!();
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Deref
@@ -337,8 +339,8 @@ mod tests {
                 StaticPixelDisplay::<SinglePixel, 37, 63>::new(true),
                 true,
             );
-            assert_eq!(overlay.get_width_characters(), 37);
-            assert_eq!(overlay.get_height_characters(), 63);
+            assert_eq!(overlay.width_characters(), 37);
+            assert_eq!(overlay.height_characters(), 63);
         }
     }
 
@@ -369,8 +371,8 @@ mod tests {
                 StaticPixelDisplay::<SinglePixel, 37, 20>::new(false),
                 StaticPixelDisplay::<SinglePixel, 63, 20>::new(true),
             );
-            assert_eq!(overlay.get_width_characters(), 100);
-            assert_eq!(overlay.get_height_characters(), 20);
+            assert_eq!(overlay.width_characters(), 100);
+            assert_eq!(overlay.height_characters(), 20);
         }
     }
 
@@ -401,8 +403,8 @@ mod tests {
                 StaticPixelDisplay::<SinglePixel, 30, 45>::new(false),
                 StaticPixelDisplay::<SinglePixel, 30, 54>::new(true),
             );
-            assert_eq!(overlay.get_width_characters(), 30);
-            assert_eq!(overlay.get_height_characters(), 99);
+            assert_eq!(overlay.width_characters(), 30);
+            assert_eq!(overlay.height_characters(), 99);
         }
     }
 }
