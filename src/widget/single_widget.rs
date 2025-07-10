@@ -515,7 +515,6 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
     }
 
     fn string_data(&self) -> Vec<Vec<String>> {
-        // TODO: Implement properly
         let mut data = self.child.string_data();
         let padding_top = vec![
             vec![
