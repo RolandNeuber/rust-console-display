@@ -23,7 +23,7 @@ use console_display::{
             BorderWidget,
         },
         two_widget::{
-            OverlayWidget,
+            AlternativeWidget,
             VerticalTilingWidget,
         },
     },
@@ -179,7 +179,7 @@ type Display = DisplayDriver<
     BorderWidget<
         VerticalTilingWidget<
             CharacterDisplay<CharacterPixel, 100, 1>,
-            OverlayWidget<
+            AlternativeWidget<
                 StaticPixelDisplay<ColorDualPixel, 100, 42>,
                 CharacterDisplay<CharacterPixel, 100, 21>,
             >,
@@ -199,7 +199,7 @@ fn construct_display() -> Display {
                 )
                 .unwrap(),
             ),
-            OverlayWidget::new(
+            AlternativeWidget::new(
                 StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(
                     RGBColor::BLACK,
                 ),

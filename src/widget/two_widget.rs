@@ -29,12 +29,12 @@ pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
 }
 
 #[derive(StaticWidget, TwoWidget)]
-pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
+pub struct AlternativeWidget<S: DynamicWidget, T: DynamicWidget> {
     child1_on_top: bool,
     children: (S, T),
 }
 
-impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
+impl<S: StaticWidget, T: StaticWidget> AlternativeWidget<S, T> {
     pub const fn new(child1: S, child2: T, child1_on_top: bool) -> Self
     where
         constraint!(S::WIDTH_CHARACTERS == T::WIDTH_CHARACTERS):,
@@ -47,7 +47,7 @@ impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
     /// Builds an overlay widget with two children.
     /// The `child1_on_top` parameter determines whether the first child should be
     /// on top or below the second child.
@@ -83,7 +83,7 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
-    for OverlayWidget<S, T>
+    for AlternativeWidget<S, T>
 {
     fn width_characters(&self) -> usize {
         self.children.0.width_characters()
@@ -103,11 +103,11 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Display for AlternativeWidget<S, T> {
     impl_display_for_dynamic_widget!();
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Deref for AlternativeWidget<S, T> {
     type Target = (S, T);
 
     fn deref(&self) -> &Self::Target {
@@ -115,7 +115,7 @@ impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut for AlternativeWidget<S, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.children
     }
@@ -300,6 +300,8 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut
     }
 }
 
+
+
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -314,7 +316,7 @@ mod tests {
 
         #[test]
         fn build_success() {
-            let overlay = OverlayWidget::build(
+            let overlay = AlternativeWidget::build(
                 StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
                 StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
                 true,
@@ -324,7 +326,7 @@ mod tests {
 
         #[test]
         fn build_failure() {
-            let overlay = OverlayWidget::build(
+            let overlay = AlternativeWidget::build(
                 StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
                 StaticPixelDisplay::<SinglePixel, 1, 2>::new(true),
                 true,
@@ -334,7 +336,7 @@ mod tests {
 
         #[test]
         fn dimensions() {
-            let overlay = OverlayWidget::new(
+            let overlay = AlternativeWidget::new(
                 StaticPixelDisplay::<SinglePixel, 37, 63>::new(false),
                 StaticPixelDisplay::<SinglePixel, 37, 63>::new(true),
                 true,
