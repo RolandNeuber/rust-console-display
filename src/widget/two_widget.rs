@@ -48,9 +48,9 @@ impl<S: StaticWidget, T: StaticWidget> AlternativeWidget<S, T> {
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
-    /// Builds an overlay widget with two children.
+    /// Builds an alternative widget with two children.
     /// The `child1_on_top` parameter determines whether the first child should be
-    /// on top or below the second child.
+    /// displayed instead of the second child and vice versa.
     ///
     /// # Errors
     ///
@@ -300,7 +300,88 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut
     }
 }
 
+#[derive(StaticWidget)]
+pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
+    children: (S, T),
+}
 
+impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
+    pub const fn new(child1: S, child2: T) -> Self
+    where
+        constraint!(S::WIDTH_CHARACTERS == T::WIDTH_CHARACTERS):,
+        constraint!(S::HEIGHT_CHARACTERS == T::HEIGHT_CHARACTERS):,
+    {
+        Self {
+            children: (child1, child2),
+        }
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
+    /// Builds an overlay widget with two children.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dimensions of both children don't match.
+    pub fn build(
+        child1: S,
+        child2: T,
+    ) -> Result<Self, String> {
+        if child1.width_characters() != child2.width_characters() ||
+            child1.height_characters() != child2.height_characters()
+        {
+            return Err(format!(
+                "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
+                child1.height_characters(),
+                child2.height_characters(),
+                child1.width_characters(),
+                child2.width_characters(),
+            ));
+        }
+        Ok(Self {
+            children: (child1, child2),
+        })
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget for OverlayWidget<S, T> {
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters()
+    }
+
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters()
+    }
+
+    fn string_data(&self) -> Vec<Vec<String>> {
+        // TODO: Implement properly
+        let overlay = self.0.string_data();
+        let display = self.1.string_data();
+        overlay.into_iter().zip(display).map(|(overlay_row, display_row)| {
+            overlay_row.into_iter().zip(display_row).map(|(cell_top, cell_bottom)| {
+                todo!();
+            }).collect()
+        }).collect()
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
+    impl_display_for_dynamic_widget!();
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
+    type Target = (S, T);
+
+    fn deref(&self) -> &Self::Target {
+        &self.children
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.children
+    }
+}
 
 #[cfg(test)]
 mod tests {
