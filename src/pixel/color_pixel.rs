@@ -13,43 +13,50 @@ use crate::{
             QuadPixel,
         },
     },
+    widget::DataCell,
 };
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub enum Color {
     #[default]
     Default,
+    Transparent,
     Color(RGBColor),
 }
 
 impl Color {
     #[must_use]
-    pub fn color(
+    pub fn color<'a>(
         text: &str,
-        foreground_color: &Self,
-        background_color: &Self,
+        mut foreground_color: &'a Self,
+        background_color: &'a Self,
     ) -> String {
-        let mut output = String::new();
+        if *foreground_color == Self::Transparent {
+            foreground_color = background_color;
+        }
+
+        let mut codes = Vec::new();
 
         if let Self::Color(foreground_color) = foreground_color {
-            output = format!(
-                "{}\x1b[38;2;{};{};{}m",
-                output,
+            codes.push(format!(
+                "\x1b[38;2;{};{};{}m",
                 foreground_color.r,
                 foreground_color.g,
                 foreground_color.b, // foreground color
-            );
+            ));
         }
         if let Self::Color(background_color) = background_color {
-            output = format!(
-                "{}\x1b[48;2;{};{};{}m",
-                output,
+            codes.push(format!(
+                "\x1b[48;2;{};{};{}m",
                 background_color.r,
                 background_color.g,
                 background_color.b, // background color
-            );
+            ));
         }
-        format!("{output}{text}\x1b[0m")
+        if codes.is_empty() {
+            return text.to_owned();
+        }
+        format!("{}{text}{}", codes.join(""), "\x1b[0m")
     }
 }
 
@@ -59,7 +66,7 @@ impl From<RGBColor> for Color {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct RGBColor {
     pub r: u8,
     pub g: u8,
@@ -201,6 +208,16 @@ impl Display for ColorSinglePixel {
     }
 }
 
+impl From<ColorSinglePixel> for DataCell {
+    fn from(val: ColorSinglePixel) -> Self {
+        Self {
+            character: '█',
+            foreground: Color::Color(val.pixels[0]),
+            background: Color::Color(val.pixels[0]),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct ColorDualPixel {
     pixels: [RGBColor; 2],
@@ -229,6 +246,16 @@ impl Display for ColorDualPixel {
             "{}",
             RGBColor::color("▀", &self.pixels[0], &self.pixels[1])
         )
+    }
+}
+
+impl From<ColorDualPixel> for DataCell {
+    fn from(val: ColorDualPixel) -> Self {
+        Self {
+            character: '▀',
+            foreground: Color::Color(val.pixels[0]),
+            background: Color::Color(val.pixels[1]),
+        }
     }
 }
 
@@ -283,6 +310,35 @@ impl Display for ColorQuadPixel {
     }
 }
 
+impl From<ColorQuadPixel> for DataCell {
+    fn from(val: ColorQuadPixel) -> Self {
+        let colors = val.pixels;
+        let grouping = RGBColor::group(&colors);
+        let symb = QuadPixel::new(grouping).character();
+
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
+            }
+        }
+        let col1 =
+            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col2 =
+            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+
+        Self {
+            character: symb,
+            foreground: Color::Color(col1),
+            background: Color::Color(col2),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct ColorHexPixel {
     pixels: [RGBColor; 6],
@@ -334,6 +390,35 @@ impl Display for ColorHexPixel {
     }
 }
 
+impl From<ColorHexPixel> for DataCell {
+    fn from(val: ColorHexPixel) -> Self {
+        let colors = val.pixels;
+        let grouping = RGBColor::group(&colors);
+        let symb = HexPixel::new(grouping).character();
+
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
+            }
+        }
+        let col1 =
+            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col2 =
+            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+
+        Self {
+            character: symb,
+            foreground: Color::Color(col1),
+            background: Color::Color(col2),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct ColorOctPixel {
     pixels: [RGBColor; 8],
@@ -382,5 +467,34 @@ impl Display for ColorOctPixel {
             "{}",
             RGBColor::color(symb.to_string().as_str(), &col1, &col2)
         )
+    }
+}
+
+impl From<ColorOctPixel> for DataCell {
+    fn from(val: ColorOctPixel) -> Self {
+        let colors = val.pixels;
+        let grouping = RGBColor::group(&colors);
+        let symb = OctPixel::new(grouping).character();
+
+        let mut col1 = vec![];
+        let mut col2 = vec![];
+        for i in 0..grouping.len() {
+            if grouping[i] {
+                col1.push(colors[i]);
+            }
+            else {
+                col2.push(colors[i]);
+            }
+        }
+        let col1 =
+            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col2 =
+            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+
+        Self {
+            character: symb,
+            foreground: Color::Color(col1),
+            background: Color::Color(col2),
+        }
     }
 }

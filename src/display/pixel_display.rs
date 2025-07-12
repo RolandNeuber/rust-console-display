@@ -7,6 +7,7 @@ use crate::{
     impl_display_for_dynamic_widget,
     pixel::monochrome_pixel::MultiPixel,
     widget::{
+        DataCell,
         DynamicWidget,
         StaticWidget,
     },
@@ -100,19 +101,19 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
 }
 
 impl<T: MultiPixel> ConsoleDisplay<T> for DynamicPixelDisplay<T> {
-    fn get_width(&self) -> usize {
+    fn width(&self) -> usize {
         self.width
     }
 
-    fn get_height(&self) -> usize {
+    fn height(&self) -> usize {
         self.height
     }
 
-    fn get_data(&self) -> &[T] {
+    fn data(&self) -> &[T] {
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut Box<[T]> {
+    fn data_mut(&mut self) -> &mut Box<[T]> {
         &mut self.data
     }
 }
@@ -126,10 +127,10 @@ impl<T: MultiPixel> DynamicWidget for DynamicPixelDisplay<T> {
         self.height / T::HEIGHT
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         self.data
             .chunks(self.width_characters())
-            .map(|chunk| chunk.iter().map(ToString::to_string).collect())
+            .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
             .collect()
     }
 }
@@ -201,14 +202,14 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// This function panics if the index of a pixel is out of bounds.
     /// This should not happen and is subject to change in the future.
     #[must_use]
-    pub fn get_pixels(&self) -> [T::U; WIDTH * HEIGHT]
+    pub fn pixels(&self) -> [T::U; WIDTH * HEIGHT]
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
         array::from_fn(|i| {
-            let x = i % self.get_width();
-            let y = i / self.get_width();
-            self.get_pixel(x, y)
+            let x = i % self.width();
+            let y = i / self.width();
+            self.pixel(x, y)
                 .expect("Invariant violated, pixel index out of range.")
         })
     }
@@ -223,12 +224,11 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        for x in 0..self.get_width() {
-            for y in 0..self.get_height() {
-                self.set_pixel(x, y, data[x + y * self.get_width()])
-                    .expect(
-                        "Invariant violated, pixel index out of range.",
-                    );
+        for x in 0..self.width() {
+            for y in 0..self.height() {
+                self.set_pixel(x, y, data[x + y * self.width()]).expect(
+                    "Invariant violated, pixel index out of range.",
+                );
             }
         }
     }
@@ -263,11 +263,11 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// );
     /// // Replace with actual error handling
     ///
-    /// let pixel = disp.get_pixel(3, 2);
+    /// let pixel = disp.pixel(3, 2);
     ///
     /// assert_eq!(pixel, Ok(false));
     ///
-    /// let pixel = disp.get_pixel(5, 6);
+    /// let pixel = disp.pixel(5, 6);
     ///
     /// assert!(matches!(pixel, Err(_)));
     /// ```
@@ -281,7 +281,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// If the index of a subpixel is out of bounds.
     /// This should not happen and is subject to change in the future.
     #[must_use]
-    pub fn get_pixel_static<const X: usize, const Y: usize>(&self) -> T::U
+    pub fn pixel_static<const X: usize, const Y: usize>(&self) -> T::U
     where
         constraint!(X <= WIDTH):,
         constraint!(Y <= HEIGHT):,
@@ -289,7 +289,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         constraint!(Y % T::HEIGHT < T::HEIGHT):,
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        let pixel = &self.get_data()
+        let pixel = &self.data()
             [X / T::WIDTH + Y / T::HEIGHT * Self::WIDTH_CHARACTERS];
         pixel.subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>()
     }
@@ -315,7 +315,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         constraint!(Y % T::HEIGHT < T::HEIGHT):,
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        let pixel = &mut self.get_data_mut()
+        let pixel = &mut self.data_mut()
             [X / T::WIDTH + Y / T::HEIGHT * Self::WIDTH_CHARACTERS];
         pixel.set_subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>(
             value,
@@ -326,19 +326,19 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
 impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
-    fn get_width(&self) -> usize {
+    fn width(&self) -> usize {
         WIDTH
     }
 
-    fn get_height(&self) -> usize {
+    fn height(&self) -> usize {
         HEIGHT
     }
 
-    fn get_data(&self) -> &[T] {
+    fn data(&self) -> &[T] {
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut Box<[T]> {
+    fn data_mut(&mut self) -> &mut Box<[T]> {
         &mut self.data
     }
 }
@@ -354,10 +354,10 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
         Self::HEIGHT_CHARACTERS
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         self.data
             .chunks(Self::WIDTH_CHARACTERS)
-            .map(|chunk| chunk.iter().map(ToString::to_string).collect())
+            .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
             .collect()
     }
 }
@@ -419,18 +419,18 @@ mod tests {
         }
 
         #[test]
-        fn get_pixel_success() {
+        fn pixel_success() {
             let dynamic_pixel_display =
                 DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
-            let pixel = dynamic_pixel_display.get_pixel(1, 0);
+            let pixel = dynamic_pixel_display.pixel(1, 0);
             assert!(pixel.is_ok());
         }
 
         #[test]
-        fn get_pixel_failure() {
+        fn pixel_failure() {
             let dynamic_pixel_display =
                 DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
-            let pixel = dynamic_pixel_display.get_pixel(0, 1);
+            let pixel = dynamic_pixel_display.pixel(0, 1);
             assert!(pixel.is_err());
         }
 
@@ -439,7 +439,7 @@ mod tests {
             let mut dynamic_pixel_display =
                 DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
             let res = dynamic_pixel_display.set_pixel(1, 0, true);
-            let pixel = dynamic_pixel_display.get_pixel(1, 0);
+            let pixel = dynamic_pixel_display.pixel(1, 0);
             assert!(res.is_ok());
             assert_eq!(pixel, Ok(true));
         }

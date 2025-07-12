@@ -1,12 +1,16 @@
 use std::fmt::Display;
 
-use crate::pixel::Pixel;
+use crate::pixel::{
+    Pixel,
+    color_pixel::Color,
+};
 
 use crate::{
     constraint,
     impl_getters,
     impl_getters_mut,
     impl_new,
+    widget::DataCell,
 };
 
 /// Specifies a block of pixels with specified dimensions.
@@ -105,8 +109,6 @@ pub struct SinglePixel {
 }
 
 impl SinglePixel {
-    /// See [`MultiPixel::get_char`] for details.
-    ///
     /// # Examples
     ///
     /// ```
@@ -135,7 +137,8 @@ impl SinglePixel {
     /// assert_eq!(symbol, " ");
     ///
     /// ```
-    const fn get_char(self) -> char {
+    #[must_use]
+    pub const fn character(self) -> char {
         if self.pixels[0] { '█' } else { ' ' }
     }
 }
@@ -158,7 +161,17 @@ impl MultiPixel for SinglePixel {
 
 impl Display for SinglePixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_char())
+        write!(f, "{}", self.character())
+    }
+}
+
+impl From<SinglePixel> for DataCell {
+    fn from(val: SinglePixel) -> Self {
+        Self {
+            character: val.character(),
+            foreground: Color::Default,
+            background: Color::Default,
+        }
     }
 }
 
@@ -185,8 +198,6 @@ impl DualPixel {
         (self.pixels[1] as usize) << 1
     }
 
-    /// See [`MultiPixel::get_char`] for details.
-    ///
     /// # Examples
     ///
     /// ```
@@ -216,7 +227,8 @@ impl DualPixel {
     /// assert_eq!(symbol, " ");
     ///
     /// ```
-    const fn get_char(self) -> char {
+    #[must_use]
+    pub const fn character(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -239,7 +251,17 @@ impl MultiPixel for DualPixel {
 
 impl Display for DualPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_char())
+        write!(f, "{}", self.character())
+    }
+}
+
+impl From<DualPixel> for DataCell {
+    fn from(val: DualPixel) -> Self {
+        Self {
+            character: val.character(),
+            foreground: Color::Default,
+            background: Color::Default,
+        }
     }
 }
 
@@ -270,8 +292,6 @@ impl QuadPixel {
         (self.pixels[3] as usize) << 3
     }
 
-    /// See [`MultiPixel::get_char`] for details.
-    ///
     /// # Examples
     ///
     /// ```
@@ -292,14 +312,15 @@ impl QuadPixel {
     ///
     /// assert_eq!(symbol, "▚")
     /// ```
-    const fn get_char(self) -> char {
+    #[must_use]
+    pub const fn character(self) -> char {
         Self::CHARS[self.index()]
     }
 }
 
 impl Display for QuadPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_char())
+        write!(f, "{}", self.character())
     }
 }
 
@@ -317,6 +338,16 @@ impl Pixel for QuadPixel {
 
 impl MultiPixel for QuadPixel {
     impl_new!(QuadPixel, pixels: [bool; 4]);
+}
+
+impl From<QuadPixel> for DataCell {
+    fn from(val: QuadPixel) -> Self {
+        Self {
+            character: val.character(),
+            foreground: Color::Default,
+            background: Color::Default,
+        }
+    }
 }
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
@@ -348,8 +379,6 @@ impl HexPixel {
         (self.pixels[5] as usize) << 5
     }
 
-    /// See [`MultiPixel::get_char`] for details.
-    ///
     /// # Examples
     ///
     /// ```
@@ -371,7 +400,8 @@ impl HexPixel {
     ///
     /// assert_eq!(symbol, "🬶")
     /// ```
-    const fn get_char(self) -> char {
+    #[must_use]
+    pub const fn character(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -394,7 +424,17 @@ impl MultiPixel for HexPixel {
 
 impl Display for HexPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_char())
+        write!(f, "{}", self.character())
+    }
+}
+
+impl From<HexPixel> for DataCell {
+    fn from(val: HexPixel) -> Self {
+        Self {
+            character: val.character(),
+            foreground: Color::Default,
+            background: Color::Default,
+        }
     }
 }
 
@@ -441,8 +481,6 @@ impl OctPixel {
         (self.pixels[7] as usize) << 7
     }
 
-    /// See [`MultiPixel::get_char`] for details.
-    ///
     /// # Examples
     ///
     /// ```
@@ -464,7 +502,8 @@ impl OctPixel {
     ///
     /// assert_eq!(symbol, "𜴰")
     /// ```
-    const fn get_char(self) -> char {
+    #[must_use]
+    pub const fn character(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -487,7 +526,17 @@ impl MultiPixel for OctPixel {
 
 impl Display for OctPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_char())
+        write!(f, "{}", self.character())
+    }
+}
+
+impl From<OctPixel> for DataCell {
+    fn from(val: OctPixel) -> Self {
+        Self {
+            character: val.character(),
+            foreground: Color::Default,
+            background: Color::Default,
+        }
     }
 }
 
@@ -530,8 +579,6 @@ impl BrailleOctPixel {
         (self.pixels[7] as usize) << 7
     }
 
-    /// See [`MultiPixel::get_char`] for details.
-    ///
     /// # Examples
     ///
     /// ```
@@ -554,7 +601,8 @@ impl BrailleOctPixel {
     ///
     /// assert_eq!(symbol, "⠵")
     /// ```
-    const fn get_char(self) -> char {
+    #[must_use]
+    pub const fn character(self) -> char {
         Self::CHARS[self.index()]
     }
 }
@@ -577,6 +625,16 @@ impl MultiPixel for BrailleOctPixel {
 
 impl Display for BrailleOctPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_char())
+        write!(f, "{}", self.character())
+    }
+}
+
+impl From<BrailleOctPixel> for DataCell {
+    fn from(val: BrailleOctPixel) -> Self {
+        Self {
+            character: val.character(),
+            foreground: Color::Default,
+            background: Color::Default,
+        }
     }
 }

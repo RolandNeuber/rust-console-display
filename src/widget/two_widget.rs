@@ -16,7 +16,11 @@ use crate::{
     impl_display_for_dynamic_widget,
     impl_getters,
     impl_setters,
-    widget::DynamicWidget,
+    pixel::color_pixel::Color,
+    widget::{
+        DataCell,
+        DynamicWidget,
+    },
 };
 
 use super::StaticWidget;
@@ -93,7 +97,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
         self.children.0.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         if self.child1_on_top {
             self.children.0.string_data()
         }
@@ -103,11 +107,15 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Display for AlternativeWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Display
+    for AlternativeWidget<S, T>
+{
     impl_display_for_dynamic_widget!();
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Deref for AlternativeWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Deref
+    for AlternativeWidget<S, T>
+{
     type Target = (S, T);
 
     fn deref(&self) -> &Self::Target {
@@ -115,7 +123,9 @@ impl<S: DynamicWidget, T: DynamicWidget> Deref for AlternativeWidget<S, T> {
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DerefMut for AlternativeWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut
+    for AlternativeWidget<S, T>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.children
     }
@@ -179,7 +189,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
         self.children.0.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         self.0
             .string_data()
             .into_iter()
@@ -271,7 +281,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
             self.children.1.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         [self.0.string_data(), self.1.string_data()].concat()
     }
 }
@@ -306,13 +316,13 @@ pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
 }
 
 impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
-    pub const fn new(child1: S, child2: T) -> Self
+    pub const fn new(overlay: S, base: T) -> Self
     where
         constraint!(S::WIDTH_CHARACTERS == T::WIDTH_CHARACTERS):,
         constraint!(S::HEIGHT_CHARACTERS == T::HEIGHT_CHARACTERS):,
     {
         Self {
-            children: (child1, child2),
+            children: (overlay, base),
         }
     }
 }
@@ -323,28 +333,27 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
     /// # Errors
     ///
     /// Returns an error if the dimensions of both children don't match.
-    pub fn build(
-        child1: S,
-        child2: T,
-    ) -> Result<Self, String> {
-        if child1.width_characters() != child2.width_characters() ||
-            child1.height_characters() != child2.height_characters()
+    pub fn build(overlay: S, base: T) -> Result<Self, String> {
+        if overlay.width_characters() != base.width_characters() ||
+            overlay.height_characters() != base.height_characters()
         {
             return Err(format!(
                 "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
-                child1.height_characters(),
-                child2.height_characters(),
-                child1.width_characters(),
-                child2.width_characters(),
+                overlay.height_characters(),
+                base.height_characters(),
+                overlay.width_characters(),
+                base.width_characters(),
             ));
         }
         Ok(Self {
-            children: (child1, child2),
+            children: (overlay, base),
         })
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
+    for OverlayWidget<S, T>
+{
     fn width_characters(&self) -> usize {
         self.children.0.width_characters()
     }
@@ -353,15 +362,29 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget for OverlayWidget<S, T> {
         self.children.0.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
-        // TODO: Implement properly
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         let overlay = self.0.string_data();
         let display = self.1.string_data();
-        overlay.into_iter().zip(display).map(|(overlay_row, display_row)| {
-            overlay_row.into_iter().zip(display_row).map(|(cell_top, cell_bottom)| {
-                todo!();
-            }).collect()
-        }).collect()
+        overlay
+            .into_iter()
+            .zip(display)
+            .map(|(overlay_row, display_row)| {
+                overlay_row
+                    .into_iter()
+                    .zip(display_row)
+                    .map(|(cell_top, cell_bottom)| {
+                        let mut cell = cell_top;
+                        if cell.background == Color::Transparent {
+                            cell.background = cell_bottom.background;
+                            if cell.foreground == Color::Transparent {
+                                cell.foreground = cell_bottom.foreground;
+                            }
+                        }
+                        cell
+                    })
+                    .collect()
+            })
+            .collect()
     }
 }
 

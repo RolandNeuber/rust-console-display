@@ -99,10 +99,10 @@ fn main() {
             #[allow(clippy::cast_possible_wrap)]
             (
                 (snake[0].0 as i32 + direction.0)
-                    .rem_euclid(map_display.get_width() as i32)
+                    .rem_euclid(map_display.width() as i32)
                     as usize,
                 (snake[0].1 as i32 + direction.1)
-                    .rem_euclid(map_display.get_height() as i32)
+                    .rem_euclid(map_display.height() as i32)
                     as usize,
             ),
         );
@@ -124,17 +124,14 @@ fn main() {
             }
 
             let map_display = &mut disp.1.0;
-            if score == map_display.get_width() * map_display.get_height()
-            {
+            if score == map_display.width() * map_display.height() {
                 return UpdateStatus::Break;
             }
             // place new apple
             while snake.contains(&apple) {
                 apple = (
-                    rand::thread_rng()
-                        .gen_range(0..map_display.get_width()),
-                    rand::thread_rng()
-                        .gen_range(0..map_display.get_height()),
+                    rand::thread_rng().gen_range(0..map_display.width()),
+                    rand::thread_rng().gen_range(0..map_display.height()),
                 );
             }
             map_display
@@ -272,22 +269,21 @@ fn initialize_map<const WIDTH: usize, const HEIGHT: usize>(
     snake_color: RGBColor,
     apple_color: RGBColor,
 ) -> (Vec<(usize, usize)>, (usize, usize)) {
-    let snake =
-        vec![(map_display.get_width() / 2, map_display.get_height() / 2)];
+    let snake = vec![(map_display.width() / 2, map_display.height() / 2)];
 
     map_display
         .set_pixel(snake[0].0, snake[0].1, snake_color)
         .expect("Could not set pixel.");
 
     let mut apple = (
-        rand::thread_rng().gen_range(0..map_display.get_width()),
-        rand::thread_rng().gen_range(0..map_display.get_height()),
+        rand::thread_rng().gen_range(0..map_display.width()),
+        rand::thread_rng().gen_range(0..map_display.height()),
     );
 
     while snake.contains(&apple) {
         apple = (
-            rand::thread_rng().gen_range(0..map_display.get_width()),
-            rand::thread_rng().gen_range(0..map_display.get_height()),
+            rand::thread_rng().gen_range(0..map_display.width()),
+            rand::thread_rng().gen_range(0..map_display.height()),
         );
     }
 

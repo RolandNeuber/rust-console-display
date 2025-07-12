@@ -34,7 +34,7 @@ fn main() {
 
     display.set_on_update(|this: &mut DisplayDriver<_>, _| {
         let function = |x: f32| (x * x).sin();
-        let mut xs = this.get_x_values().collect::<Vec<_>>().into_iter();
+        let mut xs = this.x_values().collect::<Vec<_>>().into_iter();
         let mut old_x = xs.next().unwrap();
         let mut old_y = function(old_x);
         for x in xs {

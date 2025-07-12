@@ -31,7 +31,10 @@ use crate::{
         monochrome_pixel::MultiPixel,
     },
     pixel_display::StaticPixelDisplay,
-    widget::DynamicWidget,
+    widget::{
+        DataCell,
+        DynamicWidget,
+    },
 };
 
 use super::StaticWidget;
@@ -48,8 +51,8 @@ pub trait SingleWidget<T: DynamicWidget>:
         T: 'a,
         Self: 'a;
 
-    fn get_child(&self) -> Self::Borrowed<'_>;
-    fn get_child_mut(&mut self) -> Self::BorrowedMut<'_>;
+    fn child(&self) -> Self::Borrowed<'_>;
+    fn child_mut(&mut self) -> Self::BorrowedMut<'_>;
 }
 
 #[derive(StaticWidget, DynamicWidget)]
@@ -64,7 +67,7 @@ pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
 
 impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
     pub fn new(child: T) -> Self {
-        let (width, height) = (child.get_width(), child.get_height());
+        let (width, height) = (child.width(), child.height());
         Self {
             pixel_type: PhantomData::<S>,
             child,
@@ -88,26 +91,26 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// # Errors
     ///
     /// Returns an error if the pixel coordinates calculated by the UV mapping are out of bounds.
-    pub fn get_pixel(&self, x: f32, y: f32) -> Result<S::U, String>
+    pub fn pixel(&self, x: f32, y: f32) -> Result<S::U, String>
     where
         [(); S::WIDTH * S::HEIGHT]:,
     {
-        let display = self.get_child();
+        let display = self.child();
         let uv = (
             Self::uv_to_texture(
                 x,
                 self.uv_x_min,
                 self.uv_x_max,
-                display.get_width(),
+                display.width(),
             ),
             Self::uv_to_texture(
                 y,
                 self.uv_y_min,
                 self.uv_y_max,
-                display.get_width(),
+                display.width(),
             ),
         );
-        display.get_pixel(uv.0, uv.1)
+        display.pixel(uv.0, uv.1)
     }
 
     /// Sets the pixel at the _uv_ coordinate (x, y).
@@ -124,7 +127,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     where
         [(); S::WIDTH * S::HEIGHT]:,
     {
-        let display = self.get_child();
+        let display = self.child();
         // Note: Checks need to consider that uv_max < uv_min.
         // While unintuitive, this is used to flip the uv mapping. (Especially with the y coordinate.)
         if x < self.uv_x_min.min(self.uv_x_max) ||
@@ -142,16 +145,16 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
                 x,
                 self.uv_x_min,
                 self.uv_x_max,
-                display.get_width(),
+                display.width(),
             ),
             Self::uv_to_texture(
                 y,
                 self.uv_y_min,
                 self.uv_y_max,
-                display.get_width(),
+                display.width(),
             ),
         );
-        self.get_child_mut().set_pixel(uv.0, uv.1, value)
+        self.child_mut().set_pixel(uv.0, uv.1, value)
     }
 
     pub fn draw_line(
@@ -164,19 +167,19 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     ) where
         [(); S::WIDTH * S::HEIGHT]:,
     {
-        let display = self.get_child();
+        let display = self.child();
         let uv1 = (
             Self::uv_to_texture_f32(
                 x1,
                 self.uv_x_min,
                 self.uv_x_max,
-                display.get_width() as f32,
+                display.width() as f32,
             ),
             Self::uv_to_texture_f32(
                 y1,
                 self.uv_y_min,
                 self.uv_y_max,
-                display.get_width() as f32,
+                display.width() as f32,
             ),
         );
         let uv2 = (
@@ -184,16 +187,16 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
                 x2,
                 self.uv_x_min,
                 self.uv_x_max,
-                display.get_width() as f32,
+                display.width() as f32,
             ),
             Self::uv_to_texture_f32(
                 y2,
                 self.uv_y_min,
                 self.uv_y_max,
-                display.get_width() as f32,
+                display.width() as f32,
             ),
         );
-        self.get_child_mut()
+        self.child_mut()
             .draw_line_f32(uv1.0, uv1.1, uv2.0, uv2.1, value);
     }
 
@@ -203,7 +206,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
             x,
             self.uv_x_min,
             self.uv_x_max,
-            self.get_child().get_width(),
+            self.child().width(),
         )
     }
 
@@ -213,7 +216,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
             y,
             self.uv_y_min,
             self.uv_y_max,
-            self.get_child().get_height(),
+            self.child().height(),
         )
     }
 
@@ -221,7 +224,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     pub fn texture_to_uv_x(&self, x: usize) -> f32 {
         Self::texture_to_uv(
             x,
-            self.get_child().get_width(),
+            self.child().width(),
             self.uv_x_min,
             self.uv_x_max,
         )
@@ -231,7 +234,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     pub fn texture_to_uv_y(&self, y: usize) -> f32 {
         Self::texture_to_uv(
             y,
-            self.get_child().get_height(),
+            self.child().height(),
             self.uv_y_min,
             self.uv_y_max,
         )
@@ -294,12 +297,12 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// widget.set_uv_x_min(-1.);
     /// widget.set_uv_x_max(2.);
     ///
-    /// assert_eq!(vec![-0.7, -0.1, 0.5, 1.1, 1.7], widget.get_x_values().map(|x| (x * 100.).round() / 100.).collect::<Vec<_>>())
+    /// assert_eq!(vec![-0.7, -0.1, 0.5, 1.1, 1.7], widget.x_values().map(|x| (x * 100.).round() / 100.).collect::<Vec<_>>())
     /// ```
-    pub fn get_x_values(
+    pub fn x_values(
         &self,
     ) -> impl Iterator<Item = f32> + use<'_, S, WIDTH, HEIGHT> {
-        let width = self.get_child().get_width();
+        let width = self.child().width();
         (0..width).map(|x| self.texture_to_uv_x(x))
     }
 
@@ -326,12 +329,12 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// widget.set_uv_y_min(-1.);
     /// widget.set_uv_y_max(1.);
     ///
-    /// assert_eq!(vec![-0.8, -0.4, 0.0, 0.4, 0.8], widget.get_y_values().map(|y| (y * 100.).round() / 100.).collect::<Vec<_>>())
+    /// assert_eq!(vec![-0.8, -0.4, 0.0, 0.4, 0.8], widget.y_values().map(|y| (y * 100.).round() / 100.).collect::<Vec<_>>())
     /// ```
-    pub fn get_y_values(
+    pub fn y_values(
         &self,
     ) -> impl Iterator<Item = f32> + use<'_, S, WIDTH, HEIGHT> {
-        let height = self.get_child().get_height();
+        let height = self.child().height();
         (0..height).map(|x| self.texture_to_uv_y(x))
     }
 }
@@ -351,11 +354,11 @@ impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
         T: 'a,
         Self: 'a;
 
-    fn get_child(&self) -> &T {
+    fn child(&self) -> &T {
         &self.child
     }
 
-    fn get_child_mut(&mut self) -> &mut T {
+    fn child_mut(&mut self) -> &mut T {
         &mut self.child
     }
 }
@@ -391,7 +394,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
     where
         [(); S::WIDTH * S::HEIGHT]:,
     {
-        let pixels = child.get_data().to_vec().into_boxed_slice();
+        let pixels = child.data().to_vec().into_boxed_slice();
         Self {
             pixel_type: PhantomData::<S>,
             child: RefCell::new(child),
@@ -403,7 +406,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
     #[allow(clippy::swap_with_temporary)]
     pub fn swap_buffers(&self) {
         mem::swap(
-            self.child.borrow_mut().get_data_mut(),
+            self.child.borrow_mut().data_mut(),
             &mut self.backbuffer.borrow_mut(),
         );
     }
@@ -420,7 +423,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
         self.child.borrow().height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         if self.is_write.get() {
             self.swap_buffers();
             self.is_write.set(false);
@@ -444,11 +447,11 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
         T: 'a,
         Self: 'a;
 
-    fn get_child(&self) -> Ref<'_, T> {
+    fn child(&self) -> Ref<'_, T> {
         self.child.borrow()
     }
 
-    fn get_child_mut(&mut self) -> RefMut<'_, T> {
+    fn child_mut(&mut self) -> RefMut<'_, T> {
         self.child.borrow_mut()
     }
 }
@@ -514,18 +517,18 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
             self.padding_bottom
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         let mut data = self.child.string_data();
         let padding_top = vec![
             vec![
-                CharacterPixel::default().to_string();
+                CharacterPixel::default().into();
                 self.width_characters()
             ];
             self.padding_top
         ];
         let padding_bottom = vec![
             vec![
-                CharacterPixel::default().to_string();
+                CharacterPixel::default().into();
                 self.width_characters()
             ];
             self.padding_bottom
@@ -535,12 +538,12 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
             .map(|line| {
                 [
                     vec![
-                        CharacterPixel::default().to_string();
+                        CharacterPixel::default().into();
                         self.padding_left
                     ],
                     line,
                     vec![
-                        CharacterPixel::default().to_string();
+                        CharacterPixel::default().into();
                         self.padding_right
                     ],
                 ]
@@ -559,13 +562,13 @@ impl<T: DynamicWidget> Deref for PaddingWidget<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.get_child()
+        self.child()
     }
 }
 
 impl<T: DynamicWidget> DerefMut for PaddingWidget<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.get_child_mut()
+        self.child_mut()
     }
 }
 
@@ -677,7 +680,7 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
             self.border.width_bottom()
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         let border_at = self
             .border
             .border_at(self.width_characters(), self.height_characters());
@@ -685,7 +688,7 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
         let border_top = (0..self.border.width_top())
             .map(|y| {
                 (0..self.width_characters())
-                    .map(|x| border_at(x, y).to_string())
+                    .map(|x| border_at(x, y).into())
                     .collect()
             })
             .collect();
@@ -694,7 +697,7 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
             self.height_characters())
             .map(|y| {
                 (0..self.width_characters())
-                    .map(|x| border_at(x, y).to_string())
+                    .map(|x| border_at(x, y).into())
                     .collect()
             })
             .collect();
@@ -706,14 +709,14 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
                     (0..self.border.width_left())
                         .map(|x| {
                             border_at(x, y + self.border.width_top())
-                                .to_string()
+                                .into()
                         })
                         .collect(),
                     line,
                     (0..self.border.width_right())
                         .map(|x| {
                             border_at(x, y + self.border.width_top())
-                                .to_string()
+                                .into()
                         })
                         .collect(),
                 ]
@@ -771,7 +774,7 @@ impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
             .saturating_sub(self.inset_bottom)
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         let mut data = self.child.string_data();
 
         data = data

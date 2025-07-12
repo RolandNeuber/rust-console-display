@@ -36,12 +36,12 @@ fn main() {
             CharacterPixel::build(i, Color::Default, Color::Default)
                 .unwrap();
         let _ = char_disp.set_pixel(x, y, pixel.into());
-        if x + pixel.get_width() > char_disp.get_width() {
+        if x + pixel.width() > char_disp.width() {
             y += 1;
             x = 0;
         }
         else {
-            x += pixel.get_width();
+            x += pixel.width();
         }
     }
 

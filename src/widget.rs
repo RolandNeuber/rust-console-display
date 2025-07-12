@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::pixel::color_pixel::Color;
+
 pub mod single_widget;
 pub mod two_widget;
 
@@ -21,5 +23,26 @@ pub trait DynamicWidget: Display {
     /// The first vector contains rows.
     /// The vectors inside/rows contain individual characters.
     #[must_use]
-    fn string_data(&self) -> Vec<Vec<String>>;
+    fn string_data(&self) -> Vec<Vec<DataCell>>;
+}
+
+#[derive(Clone, Copy)]
+pub struct DataCell {
+    pub character: char,
+    pub foreground: Color,
+    pub background: Color,
+}
+
+impl Display for DataCell {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            Color::color(
+                &self.character.to_string(),
+                &self.foreground,
+                &self.background
+            )
+        )
+    }
 }
