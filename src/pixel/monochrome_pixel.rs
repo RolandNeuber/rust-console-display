@@ -1,8 +1,9 @@
+// TODO: Deprecate monochrome pixel in favor of color pixel.
 use std::fmt::Display;
 
 use crate::pixel::{
     Pixel,
-    color_pixel::Color,
+    color_pixel::TerminalColor,
 };
 
 use crate::{
@@ -169,8 +170,8 @@ impl From<SinglePixel> for DataCell {
     fn from(val: SinglePixel) -> Self {
         Self {
             character: val.character(),
-            foreground: Color::Default,
-            background: Color::Default,
+            foreground: TerminalColor::Default,
+            background: TerminalColor::Default,
         }
     }
 }
@@ -259,8 +260,8 @@ impl From<DualPixel> for DataCell {
     fn from(val: DualPixel) -> Self {
         Self {
             character: val.character(),
-            foreground: Color::Default,
-            background: Color::Default,
+            foreground: TerminalColor::Default,
+            background: TerminalColor::Default,
         }
     }
 }
@@ -344,8 +345,8 @@ impl From<QuadPixel> for DataCell {
     fn from(val: QuadPixel) -> Self {
         Self {
             character: val.character(),
-            foreground: Color::Default,
-            background: Color::Default,
+            foreground: TerminalColor::Default,
+            background: TerminalColor::Default,
         }
     }
 }
@@ -432,8 +433,8 @@ impl From<HexPixel> for DataCell {
     fn from(val: HexPixel) -> Self {
         Self {
             character: val.character(),
-            foreground: Color::Default,
-            background: Color::Default,
+            foreground: TerminalColor::Default,
+            background: TerminalColor::Default,
         }
     }
 }
@@ -534,8 +535,8 @@ impl From<OctPixel> for DataCell {
     fn from(val: OctPixel) -> Self {
         Self {
             character: val.character(),
-            foreground: Color::Default,
-            background: Color::Default,
+            foreground: TerminalColor::Default,
+            background: TerminalColor::Default,
         }
     }
 }
@@ -633,8 +634,8 @@ impl From<BrailleOctPixel> for DataCell {
     fn from(val: BrailleOctPixel) -> Self {
         Self {
             character: val.character(),
-            foreground: Color::Default,
-            background: Color::Default,
+            foreground: TerminalColor::Default,
+            background: TerminalColor::Default,
         }
     }
 }

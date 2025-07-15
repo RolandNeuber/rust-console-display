@@ -11,7 +11,7 @@ use console_display::{
     pixel::{
         character_pixel::CharacterPixel,
         color_pixel::{
-            Color,
+            TerminalColor,
             ColorDualPixel,
             RGBColor,
         },
@@ -33,9 +33,9 @@ use rand::Rng;
 
 #[allow(clippy::too_many_lines)]
 fn main() {
-    let background_color = RGBColor::BLACK;
-    let snake_color = RGBColor::GREEN;
-    let apple_color = RGBColor::RED;
+    let background_color: TerminalColor = RGBColor::BLACK.into();
+    let snake_color: TerminalColor = RGBColor::GREEN.into();
+    let apple_color: TerminalColor = RGBColor::RED.into();
 
     let mut disp = construct_display();
 
@@ -43,8 +43,8 @@ fn main() {
         99,
         0,
         CharacterPixel::new::<'1'>(
-            Color::Color(RGBColor::BLACK),
-            Color::Color(RGBColor::WHITE),
+            TerminalColor::RGBColor(RGBColor::BLACK),
+            TerminalColor::RGBColor(RGBColor::WHITE),
         )
         .into(),
     );
@@ -115,8 +115,8 @@ fn main() {
                     0,
                     CharacterPixel::build(
                         digit,
-                        Color::Color(RGBColor::BLACK),
-                        Color::Color(RGBColor::WHITE),
+                        TerminalColor::RGBColor(RGBColor::BLACK),
+                        TerminalColor::RGBColor(RGBColor::WHITE),
                     )
                     .unwrap()
                     .into(),
@@ -191,20 +191,20 @@ fn construct_display() -> Display {
             CharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::build(
                     ' ',
-                    Color::Color(RGBColor::BLACK),
-                    Color::Color(RGBColor::WHITE),
+                    TerminalColor::RGBColor(RGBColor::BLACK),
+                    TerminalColor::RGBColor(RGBColor::WHITE),
                 )
                 .unwrap(),
             ),
             AlternativeWidget::new(
                 StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(
-                    RGBColor::BLACK,
+                    RGBColor::BLACK.into(),
                 ),
                 CharacterDisplay::<CharacterPixel, 100, 21>::new(
                     CharacterPixel::build(
                         ' ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap(),
                 ),
@@ -213,35 +213,35 @@ fn construct_display() -> Display {
         ),
         BorderDefault::new(
             CharacterPixel::new::<'═'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╔'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'║'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╚'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'═'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╝'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'║'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╗'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
         ),
@@ -256,7 +256,7 @@ fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
             .set_pixel(
                 46 + i,
                 10,
-                CharacterPixel::build(sym, Color::Default, Color::Default)
+                CharacterPixel::build(sym, TerminalColor::Default, TerminalColor::Default)
                     .expect("Could not construct character pixel.")
                     .into(),
             )
@@ -266,8 +266,8 @@ fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
 
 fn initialize_map<const WIDTH: usize, const HEIGHT: usize>(
     map_display: &mut StaticPixelDisplay<ColorDualPixel, WIDTH, HEIGHT>,
-    snake_color: RGBColor,
-    apple_color: RGBColor,
+    snake_color: TerminalColor,
+    apple_color: TerminalColor,
 ) -> (Vec<(usize, usize)>, (usize, usize)) {
     let snake = vec![(map_display.width() / 2, map_display.height() / 2)];
 

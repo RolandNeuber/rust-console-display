@@ -1,4 +1,11 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    ops::{
+        Deref,
+        DerefMut,
+    },
+    u8,
+};
 
 use crate::{
     impl_getters,
@@ -16,16 +23,57 @@ use crate::{
     widget::DataCell,
 };
 
+pub trait Color
+where
+    Self: Sized,
+{
+    #[must_use]
+    fn distance(color1: &Self, color2: &Self) -> f32;
+
+    #[must_use]
+    fn mix(colors: &[Self]) -> Self;
+
+    #[must_use]
+    fn group<const N: usize>(colors: &[Self; N]) -> [bool; N] {
+        let mut max = 0f32;
+        let mut col1 = 0;
+        let mut col2 = 0;
+        for i in 0..N {
+            for j in (i + 1)..N {
+                let dist = Self::distance(&colors[i], &colors[j]);
+                if dist > max {
+                    max = dist;
+                    col1 = i;
+                    col2 = j;
+                }
+            }
+        }
+        let mut groups = [false; N];
+        for i in 0..N {
+            if Self::distance(&colors[col1], &colors[i]) >
+                Self::distance(&colors[col2], &colors[i])
+            {
+                groups[i] = true;
+            }
+        }
+        groups
+    }
+}
+
+/// Defines a color, usually used for foreground and background.\
+/// Default - Uses the default color provided by the terminal for foreground or background respectively.\
+/// Transparent - Uses the color of the widget below instead. If this is used in the bottom-most widget, this behaves like Default.\
+/// RGBColor - Displays an actual opaque color made of RGB components.
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
-pub enum Color {
+pub enum TerminalColor {
     #[default]
     Default,
     Transparent,
-    Color(RGBColor),
+    ARGBColor(ARGBColor),
+    RGBColor(RGBColor),
 }
 
-impl Color {
-    #[must_use]
+impl TerminalColor {
     pub fn color<'a>(
         text: &str,
         mut foreground_color: &'a Self,
@@ -37,7 +85,7 @@ impl Color {
 
         let mut codes = Vec::new();
 
-        if let Self::Color(foreground_color) = foreground_color {
+        if let Self::RGBColor(foreground_color) = foreground_color {
             codes.push(format!(
                 "\x1b[38;2;{};{};{}m",
                 foreground_color.r,
@@ -45,7 +93,7 @@ impl Color {
                 foreground_color.b, // foreground color
             ));
         }
-        if let Self::Color(background_color) = background_color {
+        if let Self::RGBColor(background_color) = background_color {
             codes.push(format!(
                 "\x1b[48;2;{};{};{}m",
                 background_color.r,
@@ -60,9 +108,27 @@ impl Color {
     }
 }
 
-impl From<RGBColor> for Color {
+impl Color for TerminalColor {
+    fn distance(color1: &Self, color2: &Self) -> f32 {
+        if let TerminalColor::RGBColor(col1) = color1 &&
+            let TerminalColor::RGBColor(col2) = color2
+        {
+            return RGBColor::distance(col1, col2);
+        }
+        match (color1, color2) {
+            (x, y) if x == y => 0.,
+            (_, _) => 2.,
+        }
+    }
+
+    fn mix(colors: &[Self]) -> Self {
+        todo!()
+    }
+}
+
+impl From<RGBColor> for TerminalColor {
     fn from(value: RGBColor) -> Self {
-        Self::Color(value)
+        Self::RGBColor(value)
     }
 }
 
@@ -98,66 +164,9 @@ impl RGBColor {
         g: 0,
         b: 255,
     };
+}
 
-    #[rustfmt::skip]
-    #[allow(clippy::cast_possible_truncation)]
-    fn distance(color1: Self, color2: Self) -> f32 {
-        (
-            f64::from((i32::from(color1.r) - i32::from(color2.r)).pow(2)) +
-            f64::from((i32::from(color1.g) - i32::from(color2.g)).pow(2)) +
-            f64::from((i32::from(color1.b) - i32::from(color2.b)).pow(2))
-        )
-        .sqrt() as f32
-    }
-
-    fn mix(colors: &[Self]) -> Result<Self, &str> {
-        if colors.is_empty() {
-            return Err("colors must contain at least one element");
-        }
-        let mut sum = (0, 0, 0);
-        for color in colors {
-            sum.0 += u32::from(color.r);
-            sum.1 += u32::from(color.g);
-            sum.2 += u32::from(color.b);
-        }
-        let Ok(colors_len) = u32::try_from(colors.len())
-        else {
-            return Err("colors contains too many elements");
-        };
-
-        Ok(Self {
-            r: (sum.0 / colors_len).clamp(0, 255) as u8,
-            g: (sum.1 / colors_len).clamp(0, 255) as u8,
-            b: (sum.2 / colors_len).clamp(0, 255) as u8,
-        })
-    }
-
-    fn group<const N: usize>(colors: &[Self; N]) -> [bool; N] {
-        let mut max = 0f32;
-        let mut col1 = 0;
-        let mut col2 = 0;
-        for i in 0..N {
-            for j in (i + 1)..N {
-                let dist = Self::distance(colors[i], colors[j]);
-                if dist > max {
-                    max = dist;
-                    col1 = i;
-                    col2 = j;
-                }
-            }
-        }
-        let mut groups = [false; N];
-        for i in 0..N {
-            if Self::distance(colors[col1], colors[i]) >
-                Self::distance(colors[col2], colors[i])
-            {
-                groups[i] = true;
-            }
-        }
-        groups
-    }
-
-    #[must_use]
+impl RGBColor {
     pub fn color(
         text: &str,
         foreground_color: &Self,
@@ -176,14 +185,135 @@ impl RGBColor {
     }
 }
 
+impl Color for RGBColor {
+    #[rustfmt::skip]
+    fn distance(color1: &Self, color2: &Self) -> f32 {
+        (
+            ((f32::from(color1.r) - f32::from(color2.r)) / 255.).powi(2) +
+            ((f32::from(color1.g) - f32::from(color2.g)) / 255.).powi(2) +
+            ((f32::from(color1.b) - f32::from(color2.b)) / 255.).powi(2)
+        )
+        .sqrt()
+    }
+
+    fn mix(colors: &[Self]) -> Self {
+        let mut sum = (0, 0, 0);
+        for color in colors {
+            sum.0 += u32::from(color.r);
+            sum.1 += u32::from(color.g);
+            sum.2 += u32::from(color.b);
+        }
+        let Ok(colors_len) = u32::try_from(colors.len())
+        else {
+            panic!("colors contains too many elements");
+        };
+
+        Self {
+            r: (sum.0 / colors_len).clamp(0, 255) as u8,
+            g: (sum.1 / colors_len).clamp(0, 255) as u8,
+            b: (sum.2 / colors_len).clamp(0, 255) as u8,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct ARGBColor {
+    pub opacity: u8,
+    pub color: RGBColor,
+}
+
+impl Color for ARGBColor {
+    fn distance(color1: &Self, color2: &Self) -> f32 {
+        (((f32::from(color1.color.r) - f32::from(color2.color.r)) / 255.)
+            .powi(2) +
+            ((f32::from(color1.color.g) - f32::from(color2.color.g)) /
+                255.)
+                .powi(2) +
+            ((f32::from(color1.color.b) - f32::from(color2.color.b)) /
+                255.)
+                .powi(2) +
+            ((f32::from(color1.opacity) - f32::from(color2.opacity)) /
+                255.)
+                .powi(2))
+        .sqrt()
+    }
+
+    fn mix(colors: &[Self]) -> Self {
+        let mut sum_opacity = 0;
+        for color in colors {
+            sum_opacity += u32::from(color.opacity);
+        }
+        let Ok(colors_len) = u32::try_from(colors.len())
+        else {
+            panic!("colors contains too many elements");
+        };
+
+        Self {
+            opacity: (sum_opacity / colors_len).clamp(0, 255) as u8,
+            color: RGBColor::mix(
+                &colors.iter().map(|x| x.color).collect::<Vec<_>>(),
+            ),
+        }
+    }
+}
+
+impl ARGBColor {
+    pub fn color(
+        text: &str,
+        foreground_color: &Self,
+        background_color: &Self,
+    ) -> String {
+        format!(
+            "\x1b[38;2;{};{};{}m\x1b[48;2;{};{};{}m{}\x1b[0m",
+            foreground_color.color.r,
+            foreground_color.color.g,
+            foreground_color.color.b, // foreground color
+            background_color.color.r,
+            background_color.color.g,
+            background_color.color.b, // background color
+            text
+        )
+    }
+
+    pub fn blend(color_top: &Self, color_bottom: &Self) -> Self {
+        let opacity_top = f32::from(color_top.opacity) / 255.;
+        let opacity_bottom = f32::from(color_bottom.opacity) / 255.;
+        let opacity_res =
+            opacity_top + opacity_bottom * (1. - opacity_top);
+        let red = (f32::from(color_top.color.r) * opacity_top +
+            f32::from(color_bottom.color.r) *
+                (1. - opacity_top) *
+                opacity_bottom) /
+            opacity_res;
+        let green = (f32::from(color_top.color.g) * opacity_top +
+            f32::from(color_bottom.color.g) *
+                (1. - opacity_top) *
+                opacity_bottom) /
+            opacity_res;
+        let blue = (f32::from(color_top.color.b) * opacity_top +
+            f32::from(color_bottom.color.b) *
+                (1. - opacity_top) *
+                opacity_bottom) /
+            opacity_res;
+        ARGBColor {
+            opacity: (opacity_res * 255.).clamp(0., 255.) as u8,
+            color: RGBColor {
+                r: red.clamp(0., 255.) as u8,
+                g: green.clamp(0., 255.) as u8,
+                b: blue.clamp(0., 255.) as u8,
+            },
+        }
+    }
+}
+
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
 #[derive(Clone, Copy)]
 pub struct ColorSinglePixel {
-    pixels: [RGBColor; 1],
+    pixels: [TerminalColor; 1],
 }
 
 impl Pixel for ColorSinglePixel {
-    type U = RGBColor;
+    type U = TerminalColor;
 
     const WIDTH: usize = 1;
 
@@ -203,7 +333,7 @@ impl Display for ColorSinglePixel {
         write!(
             f,
             "{}",
-            RGBColor::color("█", &self.pixels[0], &self.pixels[0])
+            TerminalColor::color("█", &self.pixels[0], &self.pixels[0])
         )
     }
 }
@@ -212,19 +342,19 @@ impl From<ColorSinglePixel> for DataCell {
     fn from(val: ColorSinglePixel) -> Self {
         Self {
             character: '█',
-            foreground: Color::Color(val.pixels[0]),
-            background: Color::Color(val.pixels[0]),
+            foreground: val.pixels[0],
+            background: val.pixels[0],
         }
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct ColorDualPixel {
-    pixels: [RGBColor; 2],
+    pixels: [TerminalColor; 2],
 }
 
 impl Pixel for ColorDualPixel {
-    type U = RGBColor;
+    type U = TerminalColor;
 
     const WIDTH: usize = 1;
 
@@ -244,7 +374,7 @@ impl Display for ColorDualPixel {
         write!(
             f,
             "{}",
-            RGBColor::color("▀", &self.pixels[0], &self.pixels[1])
+            TerminalColor::color("▀", &self.pixels[0], &self.pixels[1])
         )
     }
 }
@@ -253,19 +383,19 @@ impl From<ColorDualPixel> for DataCell {
     fn from(val: ColorDualPixel) -> Self {
         Self {
             character: '▀',
-            foreground: Color::Color(val.pixels[0]),
-            background: Color::Color(val.pixels[1]),
+            foreground: val.pixels[0],
+            background: val.pixels[1],
         }
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct ColorQuadPixel {
-    pixels: [RGBColor; 4],
+    pixels: [TerminalColor; 4],
 }
 
 impl Pixel for ColorQuadPixel {
-    type U = RGBColor;
+    type U = TerminalColor;
 
     const WIDTH: usize = 2;
 
@@ -283,7 +413,7 @@ impl MultiPixel for ColorQuadPixel {
 impl Display for ColorQuadPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let colors = self.pixels;
-        let grouping = RGBColor::group(&colors);
+        let grouping = TerminalColor::group(&colors);
         let symb =
             QuadPixel::new(grouping).to_string().chars().next().unwrap();
 
@@ -297,15 +427,13 @@ impl Display for ColorQuadPixel {
                 col2.push(colors[i]);
             }
         }
-        let col1 =
-            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
-        let col2 =
-            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col1 = TerminalColor::mix(&col1);
+        let col2 = TerminalColor::mix(&col2);
 
         write!(
             f,
             "{}",
-            RGBColor::color(symb.to_string().as_str(), &col1, &col2)
+            TerminalColor::color(symb.to_string().as_str(), &col1, &col2)
         )
     }
 }
@@ -313,7 +441,7 @@ impl Display for ColorQuadPixel {
 impl From<ColorQuadPixel> for DataCell {
     fn from(val: ColorQuadPixel) -> Self {
         let colors = val.pixels;
-        let grouping = RGBColor::group(&colors);
+        let grouping = TerminalColor::group(&colors);
         let symb = QuadPixel::new(grouping).character();
 
         let mut col1 = vec![];
@@ -326,26 +454,24 @@ impl From<ColorQuadPixel> for DataCell {
                 col2.push(colors[i]);
             }
         }
-        let col1 =
-            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
-        let col2 =
-            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col1 = TerminalColor::mix(&col1);
+        let col2 = TerminalColor::mix(&col2);
 
         Self {
             character: symb,
-            foreground: Color::Color(col1),
-            background: Color::Color(col2),
+            foreground: col1,
+            background: col2,
         }
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct ColorHexPixel {
-    pixels: [RGBColor; 6],
+    pixels: [TerminalColor; 6],
 }
 
 impl Pixel for ColorHexPixel {
-    type U = RGBColor;
+    type U = TerminalColor;
 
     const WIDTH: usize = 2;
 
@@ -363,7 +489,7 @@ impl MultiPixel for ColorHexPixel {
 impl Display for ColorHexPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let colors = self.pixels;
-        let grouping = RGBColor::group(&colors);
+        let grouping = TerminalColor::group(&colors);
         let symb =
             HexPixel::new(grouping).to_string().chars().next().unwrap();
 
@@ -377,15 +503,13 @@ impl Display for ColorHexPixel {
                 col2.push(colors[i]);
             }
         }
-        let col1 =
-            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
-        let col2 =
-            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col1 = TerminalColor::mix(&col1);
+        let col2 = TerminalColor::mix(&col2);
 
         write!(
             f,
             "{}",
-            RGBColor::color(symb.to_string().as_str(), &col1, &col2)
+            TerminalColor::color(symb.to_string().as_str(), &col1, &col2)
         )
     }
 }
@@ -393,7 +517,7 @@ impl Display for ColorHexPixel {
 impl From<ColorHexPixel> for DataCell {
     fn from(val: ColorHexPixel) -> Self {
         let colors = val.pixels;
-        let grouping = RGBColor::group(&colors);
+        let grouping = TerminalColor::group(&colors);
         let symb = HexPixel::new(grouping).character();
 
         let mut col1 = vec![];
@@ -406,26 +530,24 @@ impl From<ColorHexPixel> for DataCell {
                 col2.push(colors[i]);
             }
         }
-        let col1 =
-            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
-        let col2 =
-            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col1 = TerminalColor::mix(&col1);
+        let col2 = TerminalColor::mix(&col2);
 
         Self {
             character: symb,
-            foreground: Color::Color(col1),
-            background: Color::Color(col2),
+            foreground: col1,
+            background: col2,
         }
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct ColorOctPixel {
-    pixels: [RGBColor; 8],
+    pixels: [TerminalColor; 8],
 }
 
 impl Pixel for ColorOctPixel {
-    type U = RGBColor;
+    type U = TerminalColor;
 
     const WIDTH: usize = 2;
 
@@ -443,7 +565,7 @@ impl MultiPixel for ColorOctPixel {
 impl Display for ColorOctPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let colors = self.pixels;
-        let grouping = RGBColor::group(&colors);
+        let grouping = TerminalColor::group(&colors);
         let symb =
             OctPixel::new(grouping).to_string().chars().next().unwrap();
 
@@ -457,15 +579,13 @@ impl Display for ColorOctPixel {
                 col2.push(colors[i]);
             }
         }
-        let col1 =
-            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
-        let col2 =
-            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col1 = TerminalColor::mix(&col1);
+        let col2 = TerminalColor::mix(&col2);
 
         write!(
             f,
             "{}",
-            RGBColor::color(symb.to_string().as_str(), &col1, &col2)
+            TerminalColor::color(symb.to_string().as_str(), &col1, &col2)
         )
     }
 }
@@ -473,7 +593,7 @@ impl Display for ColorOctPixel {
 impl From<ColorOctPixel> for DataCell {
     fn from(val: ColorOctPixel) -> Self {
         let colors = val.pixels;
-        let grouping = RGBColor::group(&colors);
+        let grouping = TerminalColor::group(&colors);
         let symb = OctPixel::new(grouping).character();
 
         let mut col1 = vec![];
@@ -486,15 +606,13 @@ impl From<ColorOctPixel> for DataCell {
                 col2.push(colors[i]);
             }
         }
-        let col1 =
-            RGBColor::mix(&col1).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
-        let col2 =
-            RGBColor::mix(&col2).unwrap_or(RGBColor { r: 0, g: 0, b: 0 });
+        let col1 = TerminalColor::mix(&col1);
+        let col2 = TerminalColor::mix(&col2);
 
         Self {
             character: symb,
-            foreground: Color::Color(col1),
-            background: Color::Color(col2),
+            foreground: col1,
+            background: col2,
         }
     }
 }

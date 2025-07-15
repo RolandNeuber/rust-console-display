@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::pixel::color_pixel::Color;
+use crate::pixel::color_pixel::{Color, TerminalColor};
 
 pub mod single_widget;
 pub mod two_widget;
@@ -29,8 +29,8 @@ pub trait DynamicWidget: Display {
 #[derive(Clone, Copy)]
 pub struct DataCell {
     pub character: char,
-    pub foreground: Color,
-    pub background: Color,
+    pub foreground: TerminalColor,
+    pub background: TerminalColor,
 }
 
 impl Display for DataCell {
@@ -38,7 +38,7 @@ impl Display for DataCell {
         write!(
             f,
             "{}",
-            Color::color(
+            TerminalColor::color(
                 &self.character.to_string(),
                 &self.foreground,
                 &self.background

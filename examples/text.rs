@@ -7,15 +7,15 @@ use console_display::{
     display_driver::DisplayDriver,
     pixel::{
         character_pixel::CharacterPixel,
-        color_pixel::Color,
+        color_pixel::TerminalColor,
     },
 };
 
 fn main() {
     let mut char_disp: CharacterDisplay<CharacterPixel, 40, 20> =
         CharacterDisplay::new(CharacterPixel::new::<'あ'>(
-            Color::Default,
-            Color::Default,
+            TerminalColor::Default,
+            TerminalColor::Default,
         ));
 
     let mut x = 0;
@@ -33,7 +33,7 @@ fn main() {
             continue;
         }
         let pixel =
-            CharacterPixel::build(i, Color::Default, Color::Default)
+            CharacterPixel::build(i, TerminalColor::Default, TerminalColor::Default)
                 .unwrap();
         let _ = char_disp.set_pixel(x, y, pixel.into());
         if x + pixel.width() > char_disp.width() {

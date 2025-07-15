@@ -6,11 +6,11 @@ use std::fmt::{
 use crate::{
     constraint,
     or,
-    pixel::Pixel,
+    pixel::{color_pixel::Color, Pixel},
     widget::DataCell,
 };
 
-use super::color_pixel::Color;
+use super::color_pixel::TerminalColor;
 use unicode_width::UnicodeWidthChar;
 
 #[derive(Clone, Copy, Default)]
@@ -21,8 +21,8 @@ pub struct CharacterPixel {
 #[derive(Clone, Copy)]
 pub struct CharacterPixelData {
     character: char,
-    foreground: Color,
-    background: Color,
+    foreground: TerminalColor,
+    background: TerminalColor,
     copy: bool,
     width: usize,
 }
@@ -71,8 +71,8 @@ impl CharacterPixel {
     /// This should not happen and is a implementation detail that is subject to change.
     #[must_use]
     pub fn new<const CHARACTER: char>(
-        foreground: Color,
-        background: Color,
+        foreground: TerminalColor,
+        background: TerminalColor,
     ) -> Self
     where
         constraint!(CHARACTER >= '\u{20}'):, // Exclude C0 control chars
@@ -98,8 +98,8 @@ impl CharacterPixel {
     /// Returns an error if the character is a control character.
     pub fn build(
         character: char,
-        foreground: Color,
-        background: Color,
+        foreground: TerminalColor,
+        background: TerminalColor,
     ) -> Result<Self, String> {
         Ok(Self {
             data: [CharacterPixelData {
@@ -131,12 +131,12 @@ impl CharacterPixel {
     }
 
     #[must_use]
-    pub const fn foreground(&self) -> Color {
+    pub const fn foreground(&self) -> TerminalColor {
         self.data[0].foreground
     }
 
     #[must_use]
-    pub const fn background(&self) -> Color {
+    pub const fn background(&self) -> TerminalColor {
         self.data[0].background
     }
 
@@ -160,7 +160,7 @@ impl Display for CharacterPixel {
         write!(
             f,
             "{}",
-            Color::color(
+            TerminalColor::color(
                 self.character().to_string().as_str(),
                 &self.foreground(),
                 &self.background()
@@ -179,7 +179,7 @@ impl TryFrom<char> for CharacterPixel {
     type Error = String;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
-        Self::build(value, Color::Default, Color::Default)
+        Self::build(value, TerminalColor::Default, TerminalColor::Default)
     }
 }
 
@@ -187,8 +187,8 @@ impl Default for CharacterPixelData {
     fn default() -> Self {
         Self {
             character: ' ',
-            foreground: Color::default(),
-            background: Color::default(),
+            foreground: TerminalColor::default(),
+            background: TerminalColor::default(),
             copy: false,
             width: 1,
         }

@@ -16,7 +16,7 @@ use crate::{
     impl_display_for_dynamic_widget,
     impl_getters,
     impl_setters,
-    pixel::color_pixel::Color,
+    pixel::color_pixel::TerminalColor,
     widget::{
         DataCell,
         DynamicWidget,
@@ -374,9 +374,9 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
                     .zip(display_row)
                     .map(|(cell_top, cell_bottom)| {
                         let mut cell = cell_top;
-                        if cell.background == Color::Transparent {
+                        if cell.background == TerminalColor::Transparent {
                             cell.background = cell_bottom.background;
-                            if cell.foreground == Color::Transparent {
+                            if cell.foreground == TerminalColor::Transparent {
                                 cell.foreground = cell_bottom.foreground;
                             }
                         }
@@ -406,47 +406,51 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
     }
 }
 
+// TODO: Add more tests for functionality rather than initialization
 #[cfg(test)]
 mod tests {
     use crate::{
-        pixel::monochrome_pixel::SinglePixel,
+        pixel::{
+            monochrome_pixel::SinglePixel,
+            color_pixel::ColorSinglePixel,
+        },
         pixel_display::StaticPixelDisplay,
     };
 
     use super::*;
 
-    mod overlay_widget {
+    mod alternative_widget {
         use super::*;
 
         #[test]
         fn build_success() {
-            let overlay = AlternativeWidget::build(
+            let alternative = AlternativeWidget::build(
                 StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
                 StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
                 true,
             );
-            assert!(overlay.is_ok());
+            assert!(alternative.is_ok());
         }
 
         #[test]
         fn build_failure() {
-            let overlay = AlternativeWidget::build(
+            let alternative = AlternativeWidget::build(
                 StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
                 StaticPixelDisplay::<SinglePixel, 1, 2>::new(true),
                 true,
             );
-            assert!(overlay.is_err());
+            assert!(alternative.is_err());
         }
 
         #[test]
         fn dimensions() {
-            let overlay = AlternativeWidget::new(
+            let alternative = AlternativeWidget::new(
                 StaticPixelDisplay::<SinglePixel, 37, 63>::new(false),
                 StaticPixelDisplay::<SinglePixel, 37, 63>::new(true),
                 true,
             );
-            assert_eq!(overlay.width_characters(), 37);
-            assert_eq!(overlay.height_characters(), 63);
+            assert_eq!(alternative.width_characters(), 37);
+            assert_eq!(alternative.height_characters(), 63);
         }
     }
 
@@ -511,6 +515,48 @@ mod tests {
             );
             assert_eq!(overlay.width_characters(), 30);
             assert_eq!(overlay.height_characters(), 99);
+        }
+    }
+
+    mod overlay_widget {
+        use crate::pixel::color_pixel::RGBColor;
+
+        use super::*;
+
+        #[test]
+        fn build_success() {
+            let overlay = OverlayWidget::build(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+            );
+            assert!(overlay.is_ok());
+        }
+
+        #[test]
+        fn build_failure() {
+            let overlay = OverlayWidget::build(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+                StaticPixelDisplay::<SinglePixel, 1, 2>::new(true),
+            );
+            assert!(overlay.is_err());
+        }
+
+        #[test]
+        fn dimensions() {
+            let overlay = OverlayWidget::new(
+                StaticPixelDisplay::<SinglePixel, 37, 63>::new(false),
+                StaticPixelDisplay::<SinglePixel, 37, 63>::new(true),
+            );
+            assert_eq!(overlay.width_characters(), 37);
+            assert_eq!(overlay.height_characters(), 63);
+        }
+
+        #[test]
+        fn transparency() {
+            let overlay = OverlayWidget::new(
+                StaticPixelDisplay::<ColorSinglePixel, 37, 63>::new(TerminalColor::Transparent),
+                StaticPixelDisplay::<ColorSinglePixel, 37, 63>::new(RGBColor::WHITE.into()),
+            );
         }
     }
 }

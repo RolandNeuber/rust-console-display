@@ -189,7 +189,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> Display
 
 #[cfg(test)]
 mod tests {
-    use crate::pixel::color_pixel::Color;
+    use crate::pixel::color_pixel::TerminalColor;
 
     use super::*;
 
@@ -200,8 +200,8 @@ mod tests {
                 vec![
                     CharacterPixel::build(
                         ' ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap(),
                 ],
@@ -216,8 +216,8 @@ mod tests {
                 vec![
                     CharacterPixel::build(
                         ' ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap();
                     8 * 10 - 1
@@ -233,8 +233,8 @@ mod tests {
                 vec![
                     CharacterPixel::build(
                         'あ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap();
                     9 * 10 / 2
