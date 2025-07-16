@@ -374,12 +374,24 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
                     .zip(display_row)
                     .map(|(cell_top, cell_bottom)| {
                         let mut cell = cell_top;
-                        if cell.background == TerminalColor::Transparent {
-                            cell.background = cell_bottom.background;
-                            if cell.foreground == TerminalColor::Transparent {
-                                cell.foreground = cell_bottom.foreground;
-                            }
+                        if let TerminalColor::ARGBColor(foreground) =
+                            cell.foreground &&
+                            let TerminalColor::ARGBColor(background) =
+                                cell.background &&
+                            background.opacity < u8::MAX / 2 &&
+                            foreground.opacity < u8::MAX / 2
+                        {
+                            cell.character = cell_bottom.character;
                         }
+
+                        cell.background = TerminalColor::blend(
+                            &cell.background,
+                            &cell_bottom.background,
+                        );
+                        cell.foreground = TerminalColor::blend(
+                            &cell.foreground,
+                            &cell_bottom.foreground,
+                        );
                         cell
                     })
                     .collect()
@@ -411,8 +423,8 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
 mod tests {
     use crate::{
         pixel::{
-            monochrome_pixel::SinglePixel,
             color_pixel::ColorSinglePixel,
+            monochrome_pixel::SinglePixel,
         },
         pixel_display::StaticPixelDisplay,
     };
@@ -519,7 +531,14 @@ mod tests {
     }
 
     mod overlay_widget {
-        use crate::pixel::color_pixel::RGBColor;
+        use crate::{
+            console_display::ConsoleDisplay,
+            pixel::color_pixel::{
+                ARGBColor,
+                RGBColor,
+            },
+            pixel_display::DynamicPixelDisplay,
+        };
 
         use super::*;
 
@@ -553,10 +572,27 @@ mod tests {
 
         #[test]
         fn transparency() {
-            let overlay = OverlayWidget::new(
-                StaticPixelDisplay::<ColorSinglePixel, 37, 63>::new(TerminalColor::Transparent),
-                StaticPixelDisplay::<ColorSinglePixel, 37, 63>::new(RGBColor::WHITE.into()),
+            let top = DynamicPixelDisplay::<ColorSinglePixel>::new(
+                37,
+                63,
+                TerminalColor::ARGBColor(ARGBColor {
+                    opacity: 0,
+                    color: RGBColor::BLACK,
+                }),
             );
+
+            let bottom =
+                StaticPixelDisplay::<ColorSinglePixel, 37, 63>::new(
+                    RGBColor::WHITE.into(),
+                );
+
+            let mut overlay = OverlayWidget::build(top, bottom).unwrap();
+
+            assert_eq!(overlay.to_string(), overlay.1.to_string());
+
+            overlay.0.set_pixel(10, 10, RGBColor::BLACK.into()).unwrap();
+
+            assert_ne!(overlay.to_string(), overlay.1.to_string());
         }
     }
 }

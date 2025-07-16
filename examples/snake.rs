@@ -11,9 +11,9 @@ use console_display::{
     pixel::{
         character_pixel::CharacterPixel,
         color_pixel::{
-            TerminalColor,
             ColorDualPixel,
             RGBColor,
+            TerminalColor,
         },
     },
     pixel_display::StaticPixelDisplay,
@@ -43,8 +43,8 @@ fn main() {
         99,
         0,
         CharacterPixel::new::<'1'>(
-            TerminalColor::RGBColor(RGBColor::BLACK),
-            TerminalColor::RGBColor(RGBColor::WHITE),
+            TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+            TerminalColor::ARGBColor(RGBColor::WHITE.into()),
         )
         .into(),
     );
@@ -115,8 +115,8 @@ fn main() {
                     0,
                     CharacterPixel::build(
                         digit,
-                        TerminalColor::RGBColor(RGBColor::BLACK),
-                        TerminalColor::RGBColor(RGBColor::WHITE),
+                        TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+                        TerminalColor::ARGBColor(RGBColor::WHITE.into()),
                     )
                     .unwrap()
                     .into(),
@@ -191,8 +191,8 @@ fn construct_display() -> Display {
             CharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::build(
                     ' ',
-                    TerminalColor::RGBColor(RGBColor::BLACK),
-                    TerminalColor::RGBColor(RGBColor::WHITE),
+                    TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+                    TerminalColor::ARGBColor(RGBColor::WHITE.into()),
                 )
                 .unwrap(),
             ),
@@ -256,9 +256,13 @@ fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
             .set_pixel(
                 46 + i,
                 10,
-                CharacterPixel::build(sym, TerminalColor::Default, TerminalColor::Default)
-                    .expect("Could not construct character pixel.")
-                    .into(),
+                CharacterPixel::build(
+                    sym,
+                    TerminalColor::Default,
+                    TerminalColor::Default,
+                )
+                .expect("Could not construct character pixel.")
+                .into(),
             )
             .expect("Could not set character pixel.");
     }

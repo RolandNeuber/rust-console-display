@@ -32,9 +32,12 @@ fn main() {
             x = 0;
             continue;
         }
-        let pixel =
-            CharacterPixel::build(i, TerminalColor::Default, TerminalColor::Default)
-                .unwrap();
+        let pixel = CharacterPixel::build(
+            i,
+            TerminalColor::Default,
+            TerminalColor::Default,
+        )
+        .unwrap();
         let _ = char_disp.set_pixel(x, y, pixel.into());
         if x + pixel.width() > char_disp.width() {
             y += 1;

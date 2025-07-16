@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::pixel::color_pixel::{Color, TerminalColor};
+use crate::pixel::color_pixel::TerminalColor;
 
 pub mod single_widget;
 pub mod two_widget;

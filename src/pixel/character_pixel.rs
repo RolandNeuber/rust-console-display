@@ -6,7 +6,7 @@ use std::fmt::{
 use crate::{
     constraint,
     or,
-    pixel::{color_pixel::Color, Pixel},
+    pixel::Pixel,
     widget::DataCell,
 };
 
