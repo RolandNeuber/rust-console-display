@@ -195,7 +195,7 @@ macro_rules! impl_display_for_dynamic_widget {
             let mut str_repr = String::new();
             for row in self.string_data() {
                 for cell in row {
-                    str_repr.push_str(&cell);
+                    str_repr.push_str(&cell.to_string());
                 }
                 str_repr.push_str("\r\n");
             }

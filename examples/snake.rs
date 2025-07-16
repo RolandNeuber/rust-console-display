@@ -11,9 +11,9 @@ use console_display::{
     pixel::{
         character_pixel::CharacterPixel,
         color_pixel::{
-            Color,
             ColorDualPixel,
             RGBColor,
+            TerminalColor,
         },
     },
     pixel_display::StaticPixelDisplay,
@@ -23,7 +23,7 @@ use console_display::{
             BorderWidget,
         },
         two_widget::{
-            OverlayWidget,
+            AlternativeWidget,
             VerticalTilingWidget,
         },
     },
@@ -33,9 +33,9 @@ use rand::Rng;
 
 #[allow(clippy::too_many_lines)]
 fn main() {
-    let background_color = RGBColor::BLACK;
-    let snake_color = RGBColor::GREEN;
-    let apple_color = RGBColor::RED;
+    let background_color: TerminalColor = RGBColor::BLACK.into();
+    let snake_color: TerminalColor = RGBColor::GREEN.into();
+    let apple_color: TerminalColor = RGBColor::RED.into();
 
     let mut disp = construct_display();
 
@@ -43,8 +43,8 @@ fn main() {
         99,
         0,
         CharacterPixel::new::<'1'>(
-            Color::Color(RGBColor::BLACK),
-            Color::Color(RGBColor::WHITE),
+            TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+            TerminalColor::ARGBColor(RGBColor::WHITE.into()),
         )
         .into(),
     );
@@ -99,10 +99,10 @@ fn main() {
             #[allow(clippy::cast_possible_wrap)]
             (
                 (snake[0].0 as i32 + direction.0)
-                    .rem_euclid(map_display.get_width() as i32)
+                    .rem_euclid(map_display.width() as i32)
                     as usize,
                 (snake[0].1 as i32 + direction.1)
-                    .rem_euclid(map_display.get_height() as i32)
+                    .rem_euclid(map_display.height() as i32)
                     as usize,
             ),
         );
@@ -115,8 +115,8 @@ fn main() {
                     0,
                     CharacterPixel::build(
                         digit,
-                        Color::Color(RGBColor::BLACK),
-                        Color::Color(RGBColor::WHITE),
+                        TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+                        TerminalColor::ARGBColor(RGBColor::WHITE.into()),
                     )
                     .unwrap()
                     .into(),
@@ -124,17 +124,14 @@ fn main() {
             }
 
             let map_display = &mut disp.1.0;
-            if score == map_display.get_width() * map_display.get_height()
-            {
+            if score == map_display.width() * map_display.height() {
                 return UpdateStatus::Break;
             }
             // place new apple
             while snake.contains(&apple) {
                 apple = (
-                    rand::thread_rng()
-                        .gen_range(0..map_display.get_width()),
-                    rand::thread_rng()
-                        .gen_range(0..map_display.get_height()),
+                    rand::thread_rng().gen_range(0..map_display.width()),
+                    rand::thread_rng().gen_range(0..map_display.height()),
                 );
             }
             map_display
@@ -179,7 +176,7 @@ type Display = DisplayDriver<
     BorderWidget<
         VerticalTilingWidget<
             CharacterDisplay<CharacterPixel, 100, 1>,
-            OverlayWidget<
+            AlternativeWidget<
                 StaticPixelDisplay<ColorDualPixel, 100, 42>,
                 CharacterDisplay<CharacterPixel, 100, 21>,
             >,
@@ -194,20 +191,20 @@ fn construct_display() -> Display {
             CharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::build(
                     ' ',
-                    Color::Color(RGBColor::BLACK),
-                    Color::Color(RGBColor::WHITE),
+                    TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+                    TerminalColor::ARGBColor(RGBColor::WHITE.into()),
                 )
                 .unwrap(),
             ),
-            OverlayWidget::new(
+            AlternativeWidget::new(
                 StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(
-                    RGBColor::BLACK,
+                    RGBColor::BLACK.into(),
                 ),
                 CharacterDisplay::<CharacterPixel, 100, 21>::new(
                     CharacterPixel::build(
                         ' ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap(),
                 ),
@@ -216,35 +213,35 @@ fn construct_display() -> Display {
         ),
         BorderDefault::new(
             CharacterPixel::new::<'═'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╔'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'║'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╚'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'═'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╝'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'║'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
             CharacterPixel::new::<'╗'>(
-                Color::Default,
+                TerminalColor::Default,
                 RGBColor::BLACK.into(),
             ),
         ),
@@ -259,9 +256,13 @@ fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
             .set_pixel(
                 46 + i,
                 10,
-                CharacterPixel::build(sym, Color::Default, Color::Default)
-                    .expect("Could not construct character pixel.")
-                    .into(),
+                CharacterPixel::build(
+                    sym,
+                    TerminalColor::Default,
+                    TerminalColor::Default,
+                )
+                .expect("Could not construct character pixel.")
+                .into(),
             )
             .expect("Could not set character pixel.");
     }
@@ -269,25 +270,24 @@ fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
 
 fn initialize_map<const WIDTH: usize, const HEIGHT: usize>(
     map_display: &mut StaticPixelDisplay<ColorDualPixel, WIDTH, HEIGHT>,
-    snake_color: RGBColor,
-    apple_color: RGBColor,
+    snake_color: TerminalColor,
+    apple_color: TerminalColor,
 ) -> (Vec<(usize, usize)>, (usize, usize)) {
-    let snake =
-        vec![(map_display.get_width() / 2, map_display.get_height() / 2)];
+    let snake = vec![(map_display.width() / 2, map_display.height() / 2)];
 
     map_display
         .set_pixel(snake[0].0, snake[0].1, snake_color)
         .expect("Could not set pixel.");
 
     let mut apple = (
-        rand::thread_rng().gen_range(0..map_display.get_width()),
-        rand::thread_rng().gen_range(0..map_display.get_height()),
+        rand::thread_rng().gen_range(0..map_display.width()),
+        rand::thread_rng().gen_range(0..map_display.height()),
     );
 
     while snake.contains(&apple) {
         apple = (
-            rand::thread_rng().gen_range(0..map_display.get_width()),
-            rand::thread_rng().gen_range(0..map_display.get_height()),
+            rand::thread_rng().gen_range(0..map_display.width()),
+            rand::thread_rng().gen_range(0..map_display.height()),
         );
     }
 

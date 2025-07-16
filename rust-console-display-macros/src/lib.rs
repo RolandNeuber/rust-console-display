@@ -45,7 +45,7 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
         fn height_characters(&self) -> usize {
             self.child.height_characters()
         }
-        fn string_data(&self) -> Vec<Vec<String>> {
+        fn string_data(&self) -> Vec<Vec<DataCell>> {
             self.child.string_data()
         }
     }))
@@ -76,11 +76,11 @@ pub fn derive_single_widget(input: TokenStream) -> TokenStream {
             T: 'a,
             Self: 'a;
 
-        fn get_child(&self) -> Self::Borrowed<'_> {
+        fn child(&self) -> Self::Borrowed<'_> {
             &self.child
         }
 
-        fn get_child_mut(&mut self) -> Self::BorrowedMut<'_> {
+        fn child_mut(&mut self) -> Self::BorrowedMut<'_> {
             &mut self.child
         }
     }))

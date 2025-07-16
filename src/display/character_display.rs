@@ -5,6 +5,7 @@ use crate::{
     impl_display_for_dynamic_widget,
     pixel::character_pixel::CharacterPixel,
     widget::{
+        DataCell,
         DynamicWidget,
         StaticWidget,
     },
@@ -23,19 +24,19 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     ConsoleDisplay<CharacterPixel>
     for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
-    fn get_width(&self) -> usize {
+    fn width(&self) -> usize {
         WIDTH
     }
 
-    fn get_height(&self) -> usize {
+    fn height(&self) -> usize {
         HEIGHT
     }
 
-    fn get_data(&self) -> &[CharacterPixel] {
+    fn data(&self) -> &[CharacterPixel] {
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut Box<[CharacterPixel]> {
+    fn data_mut(&mut self) -> &mut Box<[CharacterPixel]> {
         &mut self.data
     }
 }
@@ -51,7 +52,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
         HEIGHT
     }
 
-    fn string_data(&self) -> Vec<Vec<String>> {
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
         let mut result = Vec::new();
         let mut row = Vec::new();
         let mut width = 0;
@@ -65,15 +66,15 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
             }
 
             if cell.is_copy() {
-                row.push(" ".to_string());
+                row.push(CharacterPixel::default().into());
                 width += 1;
                 continue;
             }
 
-            row.push(cell.to_string());
-            width += cell.get_width();
+            row.push((*cell).into());
+            width += cell.width();
 
-            for _ in 1..cell.get_width() {
+            for _ in 1..cell.width() {
                 iter.next();
             }
         }
@@ -100,7 +101,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     where
         [(); WIDTH * HEIGHT]:,
     {
-        let character_width = fill.get_width();
+        let character_width = fill.width();
         let full_columns = WIDTH / character_width;
         let padding = WIDTH % character_width;
         let total_columns = full_columns + padding;
@@ -111,7 +112,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         for i in 0..padding {
             for y in 0..HEIGHT {
                 let x = full_columns + i;
-                data[x + y * total_columns] = CharacterPixel::build(' ', fill.get_foreground(), fill.get_background())
+                data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
                     .expect("Invariant violated. Should not be a control character.");
             }
         }
@@ -133,11 +134,11 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         let mut row_length = 0;
         for i in data {
             new_data.push(i);
-            for _ in 1..i.get_width() {
+            for _ in 1..i.width() {
                 new_data.push(i.make_copy());
             }
-            row_length += i.get_width();
-            if row_length > WIDTH && row_length - i.get_width() < WIDTH {
+            row_length += i.width();
+            if row_length > WIDTH && row_length - i.width() < WIDTH {
                 return Err(
                     "Data is malformed, character spans multiple rows."
                         .to_string(),
@@ -162,12 +163,12 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     }
 
     #[must_use]
-    pub const fn get_width(&self) -> usize {
+    pub const fn width(&self) -> usize {
         WIDTH
     }
 
     #[must_use]
-    pub const fn get_height(&self) -> usize {
+    pub const fn height(&self) -> usize {
         HEIGHT
     }
 }
@@ -188,7 +189,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> Display
 
 #[cfg(test)]
 mod tests {
-    use crate::pixel::color_pixel::Color;
+    use crate::pixel::color_pixel::TerminalColor;
 
     use super::*;
 
@@ -199,8 +200,8 @@ mod tests {
                 vec![
                     CharacterPixel::build(
                         ' ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap(),
                 ],
@@ -215,8 +216,8 @@ mod tests {
                 vec![
                     CharacterPixel::build(
                         ' ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap();
                     8 * 10 - 1
@@ -232,8 +233,8 @@ mod tests {
                 vec![
                     CharacterPixel::build(
                         'あ',
-                        Color::Default,
-                        Color::Default,
+                        TerminalColor::Default,
+                        TerminalColor::Default,
                     )
                     .unwrap();
                     9 * 10 / 2

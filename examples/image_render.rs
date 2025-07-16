@@ -62,24 +62,27 @@ fn main() {
         Vec::with_capacity((dimensions.0 * dimensions.1) as usize);
     let mut pixel_index = 0;
     for pixel in rgb.pixels() {
-        data.push(RGBColor {
-            r: pixel[0],
-            g: pixel[1],
-            b: pixel[2],
-        });
+        data.push(
+            RGBColor {
+                r: pixel[0],
+                g: pixel[1],
+                b: pixel[2],
+            }
+            .into(),
+        );
         pixel_index += 1;
         if pixel_index == dimensions.0 &&
             padded_dimensions.0 > dimensions.0
         {
             for _ in 0..padded_dimensions.0 - dimensions.0 {
-                data.push(RGBColor::BLACK);
+                data.push(RGBColor::BLACK.into());
             }
             pixel_index = 0;
         }
     }
     for _ in 0..padded_dimensions.1 - dimensions.1 {
         for _ in 0..padded_dimensions.0 {
-            data.push(RGBColor::BLACK);
+            data.push(RGBColor::BLACK.into());
         }
     }
 

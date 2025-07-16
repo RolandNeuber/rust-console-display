@@ -5,9 +5,9 @@ use crate::{
 
 pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     /// Returns the width of the display in a display specific, individually addressable unit (e.g. pixels, characters).
-    fn get_width(&self) -> usize;
+    fn width(&self) -> usize;
     /// Returns the height of the display in a display specific, individually addressable unit (e.g. pixels, characters).
-    fn get_height(&self) -> usize;
+    fn height(&self) -> usize;
 
     /// Returns a vector containing all the pixels in the display.
     ///
@@ -16,15 +16,14 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     /// This function panics if the index of a pixel is out of bounds.
     /// This should not happen and is subject to change in the future.
     #[must_use]
-    fn get_pixels(&self) -> Vec<T::U>
+    fn pixels(&self) -> Vec<T::U>
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        let mut pixels =
-            Vec::with_capacity(self.get_width() * self.get_height());
-        for x in 0..self.get_width() {
-            for y in 0..self.get_height() {
-                pixels.push(self.get_pixel(x, y).expect(
+        let mut pixels = Vec::with_capacity(self.width() * self.height());
+        for x in 0..self.width() {
+            for y in 0..self.height() {
+                pixels.push(self.pixel(x, y).expect(
                     "Invariant violated, pixel index out of range.",
                 ));
             }
@@ -46,28 +45,27 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        if data.len() != self.get_width() * self.get_height() {
+        if data.len() != self.width() * self.height() {
             return Err(format!(
                 "Data does not match specified dimensions. Expected length of {}, got {}.",
-                self.get_width() * self.get_height(),
+                self.width() * self.height(),
                 data.len()
             ));
         }
-        for x in 0..self.get_width() {
-            for y in 0..self.get_height() {
-                self.set_pixel(x, y, data[x + y * self.get_width()])
-                    .expect(
-                        "Invariant violated, pixel index out of range.",
-                    );
+        for x in 0..self.width() {
+            for y in 0..self.height() {
+                self.set_pixel(x, y, data[x + y * self.width()]).expect(
+                    "Invariant violated, pixel index out of range.",
+                );
             }
         }
         Ok(())
     }
 
     #[must_use]
-    fn get_data(&self) -> &[T];
+    fn data(&self) -> &[T];
 
-    fn get_data_mut(&mut self) -> &mut Box<[T]>;
+    fn data_mut(&mut self) -> &mut Box<[T]>;
 
     /// Returns a bool representing the state of the pixel at the specified coordinate.
     ///
@@ -100,11 +98,11 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     /// );
     /// // Replace with actual error handling
     ///
-    /// let pixel = disp.get_pixel(3, 2);
+    /// let pixel = disp.pixel(3, 2);
     ///
     /// assert_eq!(pixel, Ok(false));
     ///
-    /// let pixel = disp.get_pixel(5, 6);
+    /// let pixel = disp.pixel(5, 6);
     ///
     /// assert!(matches!(pixel, Err(_)));
     /// ```
@@ -117,11 +115,11 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     ///
     /// If the index of a subpixel is out of bounds.
     /// This should not happen and is subject to change in the future.
-    fn get_pixel(&self, x: usize, y: usize) -> Result<T::U, String>
+    fn pixel(&self, x: usize, y: usize) -> Result<T::U, String>
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        if x >= self.get_width() || y >= self.get_height() {
+        if x >= self.width() || y >= self.height() {
             return Err(format!(
                 "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
             ));
@@ -133,7 +131,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
         let offset_y: usize = y % T::HEIGHT;
 
         let pixel =
-            &self.get_data()[block_x + block_y * self.width_characters()];
+            &self.data()[block_x + block_y * self.width_characters()];
 
         Ok(pixel
             .subpixel(offset_x, offset_y)
@@ -159,7 +157,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        if x >= self.get_width() || y >= self.get_height() {
+        if x >= self.width() || y >= self.height() {
             return Err(format!(
                 "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
             ));
@@ -172,7 +170,7 @@ pub trait ConsoleDisplay<T: Pixel>: DynamicWidget {
 
         let width_characters = self.width_characters();
         let pixel =
-            &mut self.get_data_mut()[block_x + block_y * width_characters];
+            &mut self.data_mut()[block_x + block_y * width_characters];
         pixel
             .set_subpixel(offset_x, offset_y, value)
             .expect("Offset should be 0 or 1.");

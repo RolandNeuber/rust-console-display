@@ -100,11 +100,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             stdout,
             terminal::EnterAlternateScreen, // use alternate screen
             terminal::SetSize(
-                self.get_child()
+                self.child()
                     .width_characters()
                     .try_into()
                     .unwrap_or(u16::MAX),
-                self.get_child()
+                self.child()
                     .height_characters()
                     .try_into()
                     .unwrap_or(u16::MAX)
@@ -117,19 +117,19 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         Ok(())
     }
 
-    const fn get_original_width(&self) -> &u16 {
+    const fn original_width(&self) -> &u16 {
         &self.original_width
     }
 
-    const fn get_orignal_height(&self) -> &u16 {
+    const fn orignal_height(&self) -> &u16 {
         &self.original_height
     }
 
-    fn get_child(&self) -> &T {
+    fn child(&self) -> &T {
         &self.display
     }
 
-    fn get_child_mut(&mut self) -> &mut T {
+    fn child_mut(&mut self) -> &mut T {
         &mut self.display
     }
 
@@ -215,13 +215,13 @@ impl<T: DynamicWidget> Deref for DisplayDriver<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.get_child()
+        self.child()
     }
 }
 
 impl<T: DynamicWidget> DerefMut for DisplayDriver<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.get_child_mut()
+        self.child_mut()
     }
 }
 
@@ -237,14 +237,12 @@ impl<T: DynamicWidget> Drop for DisplayDriver<T> {
         );
 
         // reset dimensions of screen
-        if *self.get_original_width() != 0 &&
-            *self.get_orignal_height() != 0
-        {
+        if *self.original_width() != 0 && *self.orignal_height() != 0 {
             let _ = crossterm::execute!(
                 stdout,
                 terminal::SetSize(
-                    *self.get_original_width(),
-                    *self.get_orignal_height()
+                    *self.original_width(),
+                    *self.orignal_height()
                 )
             );
         }
