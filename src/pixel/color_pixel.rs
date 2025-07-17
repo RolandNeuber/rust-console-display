@@ -6,7 +6,6 @@ use crate::{
         Pixel,
         monochrome_pixel::{
             HexPixel,
-            MultiPixel,
             OctPixel,
             QuadPixel,
         },
@@ -360,9 +359,7 @@ impl Pixel for ColorSinglePixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 
     impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
-}
 
-impl MultiPixel for ColorSinglePixel {
     impl_new!(Self, pixels: [Self::U; 1]);
 }
 
@@ -401,9 +398,7 @@ impl Pixel for ColorDualPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 
     impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
-}
 
-impl MultiPixel for ColorDualPixel {
     impl_new!(Self, pixels: [Self::U; 2]);
 }
 
@@ -442,9 +437,7 @@ impl Pixel for ColorQuadPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 
     impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
-}
 
-impl MultiPixel for ColorQuadPixel {
     impl_new!(Self, pixels: [Self::U; 4]);
 }
 
@@ -518,9 +511,7 @@ impl Pixel for ColorHexPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 
     impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
-}
 
-impl MultiPixel for ColorHexPixel {
     impl_new!(Self, pixels: [Self::U; 6]);
 }
 
@@ -594,9 +585,7 @@ impl Pixel for ColorOctPixel {
     impl_getters!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 
     impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
-}
 
-impl MultiPixel for ColorOctPixel {
     impl_new!(Self, pixels: [Self::U; 8]);
 }
 

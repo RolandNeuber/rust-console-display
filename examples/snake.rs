@@ -2,8 +2,8 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    character_display::CharacterDisplay,
-    console_display::ConsoleDisplay,
+    character_display::StaticCharacterDisplay,
+    console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -175,10 +175,10 @@ fn main() {
 type Display = DisplayDriver<
     BorderWidget<
         VerticalTilingWidget<
-            CharacterDisplay<CharacterPixel, 100, 1>,
+            StaticCharacterDisplay<CharacterPixel, 100, 1>,
             AlternativeWidget<
                 StaticPixelDisplay<ColorDualPixel, 100, 42>,
-                CharacterDisplay<CharacterPixel, 100, 21>,
+                StaticCharacterDisplay<CharacterPixel, 100, 21>,
             >,
         >,
         BorderDefault,
@@ -188,7 +188,7 @@ type Display = DisplayDriver<
 fn construct_display() -> Display {
     DisplayDriver::new(BorderWidget::new(
         VerticalTilingWidget::new(
-            CharacterDisplay::<_, 100, 1>::new(
+            StaticCharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::build(
                     ' ',
                     TerminalColor::ARGBColor(RGBColor::BLACK.into()),
@@ -200,7 +200,7 @@ fn construct_display() -> Display {
                 StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(
                     RGBColor::BLACK.into(),
                 ),
-                CharacterDisplay::<CharacterPixel, 100, 21>::new(
+                StaticCharacterDisplay::<CharacterPixel, 100, 21>::new(
                     CharacterPixel::build(
                         ' ',
                         TerminalColor::Default,
@@ -249,7 +249,7 @@ fn construct_display() -> Display {
 }
 
 fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
-    endscreen: &mut CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>,
+    endscreen: &mut StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>,
 ) {
     for (i, sym) in "You lost".chars().enumerate() {
         endscreen

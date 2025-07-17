@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
-use crate::widget::DataCell;
+use crate::{
+    constraint,
+    widget::DataCell,
+};
 
 pub mod character_pixel;
 pub mod color_pixel;
@@ -59,5 +62,49 @@ where
         else {
             Err("Coordinates out of range.".to_string())
         }
+    }
+
+    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> Self;
+
+    /// Builds a block of pixels from a slice of pixels.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error, if the number of pixels does not match the dimensions of the block.
+    fn build(args: &[Self::U]) -> Result<Self, String>
+    where
+        [(); Self::WIDTH * Self::HEIGHT]:,
+    {
+        <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args)
+            .map_or_else(
+                |_| {
+                    Err(format!(
+                        "Invalid number of arguments. Expected {}, got {}",
+                        Self::WIDTH * Self::HEIGHT,
+                        args.len()
+                    ))
+                },
+                |pixels| Ok(Self::new(pixels)),
+            )
+    }
+
+    fn subpixel_static<const X: usize, const Y: usize>(&self) -> Self::U
+    where
+        [(); Self::WIDTH * Self::HEIGHT]:,
+        constraint!(X < Self::WIDTH):,
+        constraint!(Y < Self::HEIGHT):,
+    {
+        self.pixels()[X + Y * Self::WIDTH]
+    }
+
+    fn set_subpixel_static<const X: usize, const Y: usize>(
+        &mut self,
+        value: Self::U,
+    ) where
+        [(); Self::WIDTH * Self::HEIGHT]:,
+        constraint!(X < Self::WIDTH):,
+        constraint!(Y < Self::HEIGHT):,
+    {
+        self.pixels_mut()[X + Y * Self::WIDTH] = value;
     }
 }

@@ -4,7 +4,7 @@
 use std::array;
 
 use console_display::{
-    console_display::ConsoleDisplay,
+    console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,

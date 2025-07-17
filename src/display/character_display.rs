@@ -1,7 +1,10 @@
 use std::fmt::Display;
 
 use crate::{
-    console_display::ConsoleDisplay,
+    console_display::{
+        DynamicConsoleDisplay,
+        StaticConsoleDisplay,
+    },
     impl_display_for_dynamic_widget,
     pixel::character_pixel::CharacterPixel,
     widget::{
@@ -12,7 +15,7 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct CharacterDisplay<
+pub struct StaticCharacterDisplay<
     CharacterPixel,
     const WIDTH: usize,
     const HEIGHT: usize,
@@ -21,8 +24,17 @@ pub struct CharacterDisplay<
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize>
-    ConsoleDisplay<CharacterPixel>
-    for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    StaticConsoleDisplay<CharacterPixel>
+    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+{
+    const WIDTH: usize = WIDTH;
+
+    const HEIGHT: usize = HEIGHT;
+}
+
+impl<const WIDTH: usize, const HEIGHT: usize>
+    DynamicConsoleDisplay<CharacterPixel>
+    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
     fn width(&self) -> usize {
         WIDTH
@@ -42,7 +54,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
-    for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
     fn width_characters(&self) -> usize {
         WIDTH
@@ -88,7 +100,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize>
-    CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
     /// Convenience method to build a blank display struct with specified dimensions
     ///
@@ -174,7 +186,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
-    for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
     const WIDTH_CHARACTERS: usize = WIDTH;
 
@@ -182,7 +194,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> Display
-    for CharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
     impl_display_for_dynamic_widget!();
 }
@@ -195,25 +207,28 @@ mod tests {
 
     #[test]
     fn build_from_data_success() {
-        let character_display =
-            CharacterDisplay::<CharacterPixel, 1, 1>::build_from_data(
-                vec![
-                    CharacterPixel::build(
-                        ' ',
-                        TerminalColor::Default,
-                        TerminalColor::Default,
-                    )
-                    .unwrap(),
-                ],
-            );
+        let character_display = StaticCharacterDisplay::<
+            CharacterPixel,
+            1,
+            1,
+        >::build_from_data(vec![
+            CharacterPixel::build(
+                ' ',
+                TerminalColor::Default,
+                TerminalColor::Default,
+            )
+            .unwrap(),
+        ]);
         assert!(character_display.is_ok());
     }
 
     #[test]
     fn build_from_data_failure_dimensions() {
-        let character_display =
-            CharacterDisplay::<CharacterPixel, 8, 10>::build_from_data(
-                vec![
+        let character_display = StaticCharacterDisplay::<
+            CharacterPixel,
+            8,
+            10,
+        >::build_from_data(vec![
                     CharacterPixel::build(
                         ' ',
                         TerminalColor::Default,
@@ -221,16 +236,17 @@ mod tests {
                     )
                     .unwrap();
                     8 * 10 - 1
-                ],
-            );
+                ]);
         assert!(character_display.is_err());
     }
 
     #[test]
     fn build_from_data_failure_fit() {
-        let character_display =
-            CharacterDisplay::<CharacterPixel, 9, 10>::build_from_data(
-                vec![
+        let character_display = StaticCharacterDisplay::<
+            CharacterPixel,
+            9,
+            10,
+        >::build_from_data(vec![
                     CharacterPixel::build(
                         'あ',
                         TerminalColor::Default,
@@ -238,8 +254,7 @@ mod tests {
                     )
                     .unwrap();
                     9 * 10 / 2
-                ],
-            );
+                ]);
         assert!(character_display.is_err());
     }
 }

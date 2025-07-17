@@ -21,14 +21,14 @@ use console_display_macros::{
 };
 
 use crate::{
-    console_display::ConsoleDisplay,
+    console_display::DynamicConsoleDisplay,
     impl_display_for_dynamic_widget,
     impl_getters,
     impl_new,
     impl_setters,
     pixel::{
+        Pixel,
         character_pixel::CharacterPixel,
-        monochrome_pixel::MultiPixel,
     },
     pixel_display::StaticPixelDisplay,
     widget::{
@@ -56,7 +56,7 @@ pub trait SingleWidget<T: DynamicWidget>:
 }
 
 #[derive(StaticWidget, DynamicWidget)]
-pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+pub struct UvWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     pixel_type: PhantomData<S>,
     child: T,
     uv_x_min: f32,
@@ -65,7 +65,7 @@ pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
     uv_y_max: f32,
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
     pub fn new(child: T) -> Self {
         let (width, height) = (child.width(), child.height());
         Self {
@@ -79,7 +79,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
     }
 }
 
-impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
+impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
     UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>, S>
 {
     impl_setters!(pub uv_x_min: f32, pub uv_x_max: f32, pub uv_y_min: f32, pub uv_y_max: f32);
@@ -339,7 +339,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> SingleWidget<T>
     for UvWidget<T, S>
 {
     type Borrowed<'a>
@@ -363,11 +363,11 @@ impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Display for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> Display for UvWidget<T, S> {
     impl_display_for_dynamic_widget!();
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref for UvWidget<T, S> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -375,21 +375,21 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DerefMut for UvWidget<T, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }
 }
 
 #[derive(StaticWidget)]
-pub struct DoubleBufferWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+pub struct DoubleBufferWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     pixel_type: PhantomData<S>,
     child: RefCell<T>,
     backbuffer: RefCell<Box<[S]>>,
     is_write: Cell<bool>,
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DoubleBufferWidget<T, S> {
     pub fn new(child: T) -> Self
     where
         [(); S::WIDTH * S::HEIGHT]:,
@@ -412,7 +412,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicWidget
     for DoubleBufferWidget<T, S>
 {
     fn width_characters(&self) -> usize {
@@ -432,7 +432,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> SingleWidget<T>
     for DoubleBufferWidget<T, S>
 {
     type Borrowed<'a>
@@ -456,13 +456,13 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Display
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> Display
     for DoubleBufferWidget<T, S>
 {
     impl_display_for_dynamic_widget!();
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref
     for DoubleBufferWidget<T, S>
 {
     type Target = T;
@@ -477,7 +477,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DerefMut
     for DoubleBufferWidget<T, S>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {

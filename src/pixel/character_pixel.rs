@@ -49,6 +49,10 @@ impl Pixel for CharacterPixel {
     ) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
         &mut self.data
     }
+
+    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> Self {
+        Self { data: pixels }
+    }
 }
 
 impl From<CharacterPixel> for DataCell {

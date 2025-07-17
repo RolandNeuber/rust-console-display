@@ -532,7 +532,7 @@ mod tests {
 
     mod overlay_widget {
         use crate::{
-            console_display::ConsoleDisplay,
+            console_display::DynamicConsoleDisplay,
             pixel::color_pixel::{
                 ARGBColor,
                 RGBColor,

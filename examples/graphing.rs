@@ -2,8 +2,11 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    character_display::CharacterDisplay,
-    console_display::ConsoleDisplay,
+    character_display::StaticCharacterDisplay,
+    console_display::{
+        DynamicConsoleDisplay,
+        StaticConsoleDisplay,
+    },
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -36,11 +39,11 @@ fn main() {
         color: RGBColor::BLACK,
     };
 
-    let mut axis: CharacterDisplay<
+    let mut axis: StaticCharacterDisplay<
         CharacterPixel,
         { DIMENSIONS.0 / PixelType::WIDTH },
         { DIMENSIONS.1 / PixelType::HEIGHT },
-    > = CharacterDisplay::new(CharacterPixel::new::<' '>(
+    > = StaticCharacterDisplay::new(CharacterPixel::new::<' '>(
         transparent.into(),
         transparent.into(),
     ));
@@ -70,16 +73,15 @@ fn main() {
         )
         .into(),
     );
-    axis.set_pixel(
-        DIMENSIONS.0 / PixelType::WIDTH / 2,
-        DIMENSIONS.1 / PixelType::HEIGHT / 2,
+    axis.set_pixel_static::<
+        {DIMENSIONS.0 / PixelType::WIDTH / 2},
+        {DIMENSIONS.1 / PixelType::HEIGHT / 2}>(
         CharacterPixel::new::<'┼'>(
             RGBColor::WHITE.into(),
             transparent.into(),
         )
         .into(),
-    )
-    .unwrap();
+    );
 
     let mut graph = UvWidget::new(StaticPixelDisplay::<
         PixelType,
