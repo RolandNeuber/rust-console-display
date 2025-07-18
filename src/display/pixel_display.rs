@@ -2,7 +2,10 @@ use core::array;
 use std::fmt::Display;
 
 use crate::{
-    console_display::DynamicConsoleDisplay,
+    console_display::{
+        DynamicConsoleDisplay,
+        StaticConsoleDisplay,
+    },
     constraint,
     impl_display_for_dynamic_widget,
     pixel::Pixel,
@@ -286,6 +289,14 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
 }
 
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    StaticConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
+{
+    const WIDTH: usize = WIDTH;
+
+    const HEIGHT: usize = HEIGHT;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     DynamicConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
     fn width(&self) -> usize {
@@ -305,6 +316,14 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
+    for StaticPixelDisplay<T, WIDTH, HEIGHT>
+{
+    const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
+
+    const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
+}
+
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
@@ -322,14 +341,6 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
             .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
             .collect()
     }
-}
-
-impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
-    for StaticPixelDisplay<T, WIDTH, HEIGHT>
-{
-    const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
-
-    const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
 }
 
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> Display

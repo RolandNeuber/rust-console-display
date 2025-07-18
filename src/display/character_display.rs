@@ -6,13 +6,165 @@ use crate::{
         StaticConsoleDisplay,
     },
     impl_display_for_dynamic_widget,
-    pixel::character_pixel::CharacterPixel,
+    pixel::{
+        Pixel,
+        character_pixel::CharacterPixel,
+    },
     widget::{
         DataCell,
         DynamicWidget,
         StaticWidget,
     },
 };
+
+pub struct DynamicCharacterDisplay<CharacterPixel> {
+    width: usize,
+    height: usize,
+    data: Box<[CharacterPixel]>,
+}
+
+impl DynamicCharacterDisplay<CharacterPixel> {
+    /// Convenience method to build a blank display struct with specified dimensions
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the data generated from the fill does not match the dimensions of the display.
+    /// This should not happen and is subject to change in the future.
+    #[must_use]
+    pub fn new(width: usize, height: usize, fill: CharacterPixel) -> Self {
+        let character_width = fill.width();
+        let full_columns = width / character_width;
+        let padding = width % character_width;
+        let total_columns = full_columns + padding;
+
+        let mut data: Vec<CharacterPixel> =
+            vec![fill; total_columns * height];
+
+        for i in 0..padding {
+            for y in 0..height {
+                let x = full_columns + i;
+                data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
+                    .expect("Invariant violated. Should not be a control character.");
+            }
+        }
+
+        Self::build_from_data(width, height, &data).expect(
+            "Invariant violated, data does not mach specified dimensions.",
+        )
+    }
+
+    /// Builds a display struct from the given data with the specified dimensions.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the length of the data does not match the dimensions of the display.
+    pub fn build_from_data(
+        width: usize,
+        height: usize,
+        data: &[CharacterPixel],
+    ) -> Result<Self, String> {
+        let mut new_data = Vec::with_capacity(data.len());
+        let mut row_length = 0;
+        for i in data {
+            new_data.push(*i);
+            for _ in 1..i.width() {
+                new_data.push(i.make_copy());
+            }
+            row_length += i.width();
+            if row_length > width && row_length - i.width() < width {
+                return Err(
+                    "Data is malformed, character spans multiple rows."
+                        .to_string(),
+                );
+            }
+            if row_length >= width {
+                row_length = 0;
+            }
+        }
+
+        if new_data.len() != width * height {
+            return Err(format!(
+                "Data does not match specified dimensions. Expected length of {}, got {}.",
+                width * height,
+                new_data.len()
+            ));
+        }
+
+        Ok(Self {
+            width,
+            height,
+            data: new_data.into_boxed_slice(),
+        })
+    }
+}
+
+impl DynamicConsoleDisplay<CharacterPixel>
+    for DynamicCharacterDisplay<CharacterPixel>
+{
+    fn width(&self) -> usize {
+        self.width
+    }
+
+    fn height(&self) -> usize {
+        self.height
+    }
+
+    fn data(&self) -> &[CharacterPixel] {
+        &self.data
+    }
+
+    fn data_mut(&mut self) -> &mut Box<[CharacterPixel]> {
+        &mut self.data
+    }
+}
+
+impl DynamicWidget for DynamicCharacterDisplay<CharacterPixel> {
+    fn width_characters(&self) -> usize {
+        self.width / CharacterPixel::WIDTH
+    }
+
+    fn height_characters(&self) -> usize {
+        self.height / CharacterPixel::HEIGHT
+    }
+
+    fn string_data(&self) -> Vec<Vec<DataCell>> {
+        let mut result = Vec::new();
+        let mut row = Vec::new();
+        let mut width = 0;
+
+        let mut iter = self.data.iter();
+        while let Some(cell) = iter.next() {
+            if width >= self.width_characters() {
+                result.push(row);
+                row = Vec::new();
+                width = 0;
+            }
+
+            if cell.is_copy() {
+                row.push(CharacterPixel::default().into());
+                width += 1;
+                continue;
+            }
+
+            row.push((*cell).into());
+            width += cell.width();
+
+            for _ in 1..cell.width() {
+                iter.next();
+            }
+        }
+
+        if !row.is_empty() {
+            result.push(row);
+        }
+
+        result
+    }
+}
+
+impl Display for DynamicCharacterDisplay<CharacterPixel> {
+    impl_display_for_dynamic_widget!();
+}
 
 #[derive(Clone)]
 pub struct StaticCharacterDisplay<
@@ -21,6 +173,82 @@ pub struct StaticCharacterDisplay<
     const HEIGHT: usize,
 > {
     data: Box<[CharacterPixel]>,
+}
+
+impl<const WIDTH: usize, const HEIGHT: usize>
+    StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+{
+    /// Convenience method to build a blank display struct with specified dimensions
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the data generated from the fill does not match the dimensions of the display.
+    /// This should not happen and is subject to change in the future.
+    #[must_use]
+    pub fn new(fill: CharacterPixel) -> Self
+    where
+        [(); WIDTH * HEIGHT]:,
+    {
+        let character_width = fill.width();
+        let full_columns = WIDTH / character_width;
+        let padding = WIDTH % character_width;
+        let total_columns = full_columns + padding;
+
+        let mut data: Vec<CharacterPixel> =
+            vec![fill; total_columns * HEIGHT];
+
+        for i in 0..padding {
+            for y in 0..HEIGHT {
+                let x = full_columns + i;
+                data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
+                    .expect("Invariant violated. Should not be a control character.");
+            }
+        }
+
+        Self::build_from_data(&data).expect(
+            "Invariant violated, data does not mach specified dimensions.",
+        )
+    }
+
+    /// Builds a display struct with the specified dimensions from the given data.
+    ///
+    /// # Errors
+    /// Returns an error when the data length does not match the dimensions of the display.
+    /// This also applies if double-width characters, like あ, are used and exceed the dimensions of the display.
+    pub fn build_from_data(
+        data: &[CharacterPixel],
+    ) -> Result<Self, String> {
+        let mut new_data = Vec::with_capacity(data.len());
+        let mut row_length = 0;
+        for i in data {
+            new_data.push(*i);
+            for _ in 1..i.width() {
+                new_data.push(i.make_copy());
+            }
+            row_length += i.width();
+            if row_length > WIDTH && row_length - i.width() < WIDTH {
+                return Err(
+                    "Data is malformed, character spans multiple rows."
+                        .to_string(),
+                );
+            }
+            if row_length >= WIDTH {
+                row_length = 0;
+            }
+        }
+
+        if new_data.len() != WIDTH * HEIGHT {
+            return Err(format!(
+                "Data does not match specified dimensions. Expected length of {}, got {}.",
+                WIDTH * HEIGHT,
+                new_data.len()
+            ));
+        }
+
+        Ok(Self {
+            data: new_data.into_boxed_slice(),
+        })
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize>
@@ -99,92 +327,6 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     }
 }
 
-impl<const WIDTH: usize, const HEIGHT: usize>
-    StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
-{
-    /// Convenience method to build a blank display struct with specified dimensions
-    ///
-    /// # Panics
-    ///
-    /// This function panics if the data generated from the fill does not match the dimensions of the display.
-    /// This should not happen and is subject to change in the future.
-    #[must_use]
-    pub fn new(fill: CharacterPixel) -> Self
-    where
-        [(); WIDTH * HEIGHT]:,
-    {
-        let character_width = fill.width();
-        let full_columns = WIDTH / character_width;
-        let padding = WIDTH % character_width;
-        let total_columns = full_columns + padding;
-
-        let mut data: Vec<CharacterPixel> =
-            vec![fill; total_columns * HEIGHT];
-
-        for i in 0..padding {
-            for y in 0..HEIGHT {
-                let x = full_columns + i;
-                data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
-                    .expect("Invariant violated. Should not be a control character.");
-            }
-        }
-
-        Self::build_from_data(data).expect(
-            "Invariant violated, data does not mach specified dimensions.",
-        )
-    }
-
-    /// Builds a display struct with the specified dimensions from the given data.
-    ///
-    /// # Errors
-    /// Returns an error when the data length does not match the dimensions of the display.
-    /// This also applies if double-width characters, like あ, are used and exceed the dimensions of the display.
-    pub fn build_from_data(
-        data: Vec<CharacterPixel>,
-    ) -> Result<Self, String> {
-        let mut new_data = Vec::with_capacity(data.capacity());
-        let mut row_length = 0;
-        for i in data {
-            new_data.push(i);
-            for _ in 1..i.width() {
-                new_data.push(i.make_copy());
-            }
-            row_length += i.width();
-            if row_length > WIDTH && row_length - i.width() < WIDTH {
-                return Err(
-                    "Data is malformed, character spans multiple rows."
-                        .to_string(),
-                );
-            }
-            if row_length >= WIDTH {
-                row_length = 0;
-            }
-        }
-
-        if new_data.len() != WIDTH * HEIGHT {
-            return Err(format!(
-                "Data does not match specified dimensions. Expected length of {}, got {}.",
-                WIDTH * HEIGHT,
-                new_data.len()
-            ));
-        }
-
-        Ok(Self {
-            data: new_data.into_boxed_slice(),
-        })
-    }
-
-    #[must_use]
-    pub const fn width(&self) -> usize {
-        WIDTH
-    }
-
-    #[must_use]
-    pub const fn height(&self) -> usize {
-        HEIGHT
-    }
-}
-
 impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
     for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
@@ -211,7 +353,7 @@ mod tests {
             CharacterPixel,
             1,
             1,
-        >::build_from_data(vec![
+        >::build_from_data(&[
             CharacterPixel::build(
                 ' ',
                 TerminalColor::Default,
@@ -228,7 +370,7 @@ mod tests {
             CharacterPixel,
             8,
             10,
-        >::build_from_data(vec![
+        >::build_from_data(&vec![
                     CharacterPixel::build(
                         ' ',
                         TerminalColor::Default,
@@ -246,7 +388,7 @@ mod tests {
             CharacterPixel,
             9,
             10,
-        >::build_from_data(vec![
+        >::build_from_data(&vec![
                     CharacterPixel::build(
                         'あ',
                         TerminalColor::Default,
