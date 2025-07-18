@@ -1,9 +1,6 @@
-use std::{
-    fmt::Display,
-    ops::{
-        Deref,
-        DerefMut,
-    },
+use std::ops::{
+    Deref,
+    DerefMut,
 };
 
 use console_display_macros::{
@@ -13,13 +10,12 @@ use console_display_macros::{
 
 use crate::{
     constraint,
-    impl_display_for_dynamic_widget,
     impl_getters,
     impl_setters,
     pixel::color_pixel::TerminalColor,
     widget::{
-        DataCell,
         DynamicWidget,
+        StringData,
     },
 };
 
@@ -97,7 +93,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
         self.children.0.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
+    fn string_data(&self) -> StringData {
         if self.child1_on_top {
             self.children.0.string_data()
         }
@@ -105,12 +101,6 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
             self.children.1.string_data()
         }
     }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> Display
-    for AlternativeWidget<S, T>
-{
-    impl_display_for_dynamic_widget!();
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Deref
@@ -189,22 +179,19 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
         self.children.0.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        self.0
-            .string_data()
-            .into_iter()
-            .zip(self.children.1.string_data())
-            .map(|lines| [lines.0, lines.1].concat())
-            .collect()
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .0
+                .string_data()
+                .data
+                .into_iter()
+                .zip(self.children.1.string_data().data)
+                .map(|lines| [lines.0, lines.1].concat())
+                .collect(),
+        }
     }
 }
-
-impl<S: DynamicWidget, T: DynamicWidget> Display
-    for HorizontalTilingWidget<S, T>
-{
-    impl_display_for_dynamic_widget!();
-}
-
 impl<S: DynamicWidget, T: DynamicWidget> Deref
     for HorizontalTilingWidget<S, T>
 {
@@ -281,15 +268,12 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
             self.children.1.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        [self.0.string_data(), self.1.string_data()].concat()
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: [self.0.string_data().data, self.1.string_data().data]
+                .concat(),
+        }
     }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> Display
-    for VerticalTilingWidget<S, T>
-{
-    impl_display_for_dynamic_widget!();
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Deref
@@ -362,46 +346,44 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
         self.children.0.height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        let overlay = self.0.string_data();
-        let display = self.1.string_data();
-        overlay
-            .into_iter()
-            .zip(display)
-            .map(|(overlay_row, display_row)| {
-                overlay_row
-                    .into_iter()
-                    .zip(display_row)
-                    .map(|(cell_top, cell_bottom)| {
-                        let mut cell = cell_top;
-                        if let TerminalColor::ARGBColor(foreground) =
-                            cell.foreground &&
-                            let TerminalColor::ARGBColor(background) =
-                                cell.background &&
-                            background.opacity < u8::MAX / 2 &&
-                            foreground.opacity < u8::MAX / 2
-                        {
-                            cell.character = cell_bottom.character;
-                        }
+    fn string_data(&self) -> StringData {
+        let overlay = self.0.string_data().data;
+        let display = self.1.string_data().data;
+        StringData {
+            data: overlay
+                .into_iter()
+                .zip(display)
+                .map(|(overlay_row, display_row)| {
+                    overlay_row
+                        .into_iter()
+                        .zip(display_row)
+                        .map(|(cell_top, cell_bottom)| {
+                            let mut cell = cell_top;
+                            if let TerminalColor::ARGBColor(foreground) =
+                                cell.foreground &&
+                                let TerminalColor::ARGBColor(background) =
+                                    cell.background &&
+                                background.opacity < u8::MAX / 2 &&
+                                foreground.opacity < u8::MAX / 2
+                            {
+                                cell.character = cell_bottom.character;
+                            }
 
-                        cell.background = TerminalColor::blend(
-                            &cell.background,
-                            &cell_bottom.background,
-                        );
-                        cell.foreground = TerminalColor::blend(
-                            &cell.foreground,
-                            &cell_bottom.foreground,
-                        );
-                        cell
-                    })
-                    .collect()
-            })
-            .collect()
+                            cell.background = TerminalColor::blend(
+                                &cell.background,
+                                &cell_bottom.background,
+                            );
+                            cell.foreground = TerminalColor::blend(
+                                &cell.foreground,
+                                &cell_bottom.foreground,
+                            );
+                            cell
+                        })
+                        .collect()
+                })
+                .collect(),
+        }
     }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
-    impl_display_for_dynamic_widget!();
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
@@ -588,11 +570,17 @@ mod tests {
 
             let mut overlay = OverlayWidget::build(top, bottom).unwrap();
 
-            assert_eq!(overlay.to_string(), overlay.1.to_string());
+            assert_eq!(
+                overlay.string_data().to_string(),
+                overlay.1.string_data().to_string()
+            );
 
             overlay.0.set_pixel(10, 10, RGBColor::BLACK.into()).unwrap();
 
-            assert_ne!(overlay.to_string(), overlay.1.to_string());
+            assert_ne!(
+                overlay.string_data().to_string(),
+                overlay.1.string_data().to_string()
+            );
         }
     }
 }

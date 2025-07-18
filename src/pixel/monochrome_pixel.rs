@@ -1,9 +1,9 @@
-// TODO: Deprecate monochrome pixel in favor of color pixel.
-use std::fmt::Display;
-
-use crate::pixel::{
-    Pixel,
-    color_pixel::TerminalColor,
+use crate::{
+    impl_from_mono_chrome_pixel_for_datacell,
+    pixel::{
+        Pixel,
+        color_pixel::TerminalColor,
+    },
 };
 
 use crate::{
@@ -68,21 +68,7 @@ impl Pixel for SinglePixel {
     impl_new!(SinglePixel, pixels: [bool; 1]);
 }
 
-impl Display for SinglePixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<SinglePixel> for DataCell {
-    fn from(val: SinglePixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(SinglePixel);
 
 /// Specifies a block of pixels with dimensions 1 (width) by 2 (height).
 #[derive(Clone, Copy)]
@@ -156,21 +142,7 @@ impl Pixel for DualPixel {
     impl_new!(DualPixel, pixels: [bool; 2]);
 }
 
-impl Display for DualPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<DualPixel> for DataCell {
-    fn from(val: DualPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(DualPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 2 (height).
 #[derive(Clone, Copy)]
@@ -225,12 +197,6 @@ impl QuadPixel {
     }
 }
 
-impl Display for QuadPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
 impl Pixel for QuadPixel {
     type U = bool;
 
@@ -245,15 +211,7 @@ impl Pixel for QuadPixel {
     impl_new!(QuadPixel, pixels: [bool; 4]);
 }
 
-impl From<QuadPixel> for DataCell {
-    fn from(val: QuadPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(QuadPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
 #[derive(Clone, Copy)]
@@ -325,21 +283,7 @@ impl Pixel for HexPixel {
     impl_new!(HexPixel, pixels: [bool; 6]);
 }
 
-impl Display for HexPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<HexPixel> for DataCell {
-    fn from(val: HexPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(HexPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height).
 #[derive(Clone, Copy)]
@@ -426,21 +370,7 @@ impl Pixel for OctPixel {
     impl_new!(OctPixel, pixels: [bool; 8]);
 }
 
-impl Display for OctPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<OctPixel> for DataCell {
-    fn from(val: OctPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(OctPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
 #[derive(Clone, Copy)]
@@ -523,18 +453,4 @@ impl Pixel for BrailleOctPixel {
     impl_new!(BrailleOctPixel, pixels: [bool; 8]);
 }
 
-impl Display for BrailleOctPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<BrailleOctPixel> for DataCell {
-    fn from(val: BrailleOctPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(BrailleOctPixel);

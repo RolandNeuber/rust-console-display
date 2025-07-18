@@ -1,5 +1,4 @@
 use core::array;
-use std::fmt::Display;
 
 use crate::{
     console_display::{
@@ -7,12 +6,11 @@ use crate::{
         StaticConsoleDisplay,
     },
     constraint,
-    impl_display_for_dynamic_widget,
     pixel::Pixel,
     widget::{
-        DataCell,
         DynamicWidget,
         StaticWidget,
+        StringData,
     },
 };
 
@@ -130,16 +128,15 @@ impl<T: Pixel> DynamicWidget for DynamicPixelDisplay<T> {
         self.height / T::HEIGHT
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        self.data
-            .chunks(self.width_characters())
-            .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
-            .collect()
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(self.width_characters())
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
     }
-}
-
-impl<T: Pixel> Display for DynamicPixelDisplay<T> {
-    impl_display_for_dynamic_widget!();
 }
 
 /// Represents a console display with a width and height in pixels.
@@ -335,18 +332,15 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
         Self::HEIGHT_CHARACTERS
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        self.data
-            .chunks(Self::WIDTH_CHARACTERS)
-            .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
-            .collect()
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(Self::WIDTH_CHARACTERS)
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
     }
-}
-
-impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> Display
-    for StaticPixelDisplay<T, WIDTH, HEIGHT>
-{
-    impl_display_for_dynamic_widget!();
 }
 
 #[cfg(test)]

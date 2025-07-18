@@ -186,21 +186,48 @@ macro_rules! and {
 }
 
 #[macro_export]
-macro_rules! impl_display_for_dynamic_widget {
-    () => {
-        fn fmt(
-            &self,
-            f: &mut std::fmt::Formatter<'_>,
-        ) -> std::fmt::Result {
-            let mut str_repr = String::new();
-            for row in self.string_data() {
-                for cell in row {
-                    str_repr.push_str(&cell.to_string());
+macro_rules! impl_from_mono_chrome_pixel_for_datacell {
+    ($type:ty) => {
+        impl From<$type> for DataCell {
+            fn from(val: $type) -> Self {
+                Self {
+                    character: val.character(),
+                    foreground: TerminalColor::Default,
+                    background: TerminalColor::Default,
                 }
-                str_repr.push_str("\r\n");
             }
-            str_repr = str_repr.trim_end_matches("\r\n").to_string();
-            write!(f, "{str_repr}")
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! impl_from_color_pixel_for_datacell {
+    ($type:ty, $base:ty) => {
+        impl From<$type> for DataCell {
+            fn from(val: $type) -> Self {
+                let colors = val.pixels();
+                let grouping = TerminalColor::group(&colors);
+                let symb = <$base>::new(grouping).character();
+
+                let mut col1 = vec![];
+                let mut col2 = vec![];
+                for i in 0..grouping.len() {
+                    if grouping[i] {
+                        col1.push(colors[i]);
+                    }
+                    else {
+                        col2.push(colors[i]);
+                    }
+                }
+                let col1 = TerminalColor::mix(&col1);
+                let col2 = TerminalColor::mix(&col2);
+
+                Self {
+                    character: symb,
+                    foreground: col1,
+                    background: col2,
+                }
+            }
         }
     };
 }

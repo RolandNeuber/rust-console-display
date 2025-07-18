@@ -1,4 +1,5 @@
 use crate::{
+    impl_from_color_pixel_for_datacell,
     impl_getters,
     impl_getters_mut,
     impl_new,
@@ -12,7 +13,6 @@ use crate::{
     },
     widget::DataCell,
 };
-use std::fmt::Display;
 
 pub trait Color
 where
@@ -363,16 +363,6 @@ impl Pixel for ColorSinglePixel {
     impl_new!(Self, pixels: [Self::U; 1]);
 }
 
-impl Display for ColorSinglePixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            TerminalColor::color("█", &self.pixels[0], &self.pixels[0])
-        )
-    }
-}
-
 impl From<ColorSinglePixel> for DataCell {
     fn from(val: ColorSinglePixel) -> Self {
         Self {
@@ -400,16 +390,6 @@ impl Pixel for ColorDualPixel {
     impl_getters_mut!(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]);
 
     impl_new!(Self, pixels: [Self::U; 2]);
-}
-
-impl Display for ColorDualPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            TerminalColor::color("▀", &self.pixels[0], &self.pixels[1])
-        )
-    }
 }
 
 impl From<ColorDualPixel> for DataCell {
@@ -441,60 +421,7 @@ impl Pixel for ColorQuadPixel {
     impl_new!(Self, pixels: [Self::U; 4]);
 }
 
-impl Display for ColorQuadPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let colors = self.pixels;
-        let grouping = TerminalColor::group(&colors);
-        let symb =
-            QuadPixel::new(grouping).to_string().chars().next().unwrap();
-
-        let mut col1 = vec![];
-        let mut col2 = vec![];
-        for i in 0..grouping.len() {
-            if grouping[i] {
-                col1.push(colors[i]);
-            }
-            else {
-                col2.push(colors[i]);
-            }
-        }
-        let col1 = TerminalColor::mix(&col1);
-        let col2 = TerminalColor::mix(&col2);
-
-        write!(
-            f,
-            "{}",
-            TerminalColor::color(symb.to_string().as_str(), &col1, &col2)
-        )
-    }
-}
-
-impl From<ColorQuadPixel> for DataCell {
-    fn from(val: ColorQuadPixel) -> Self {
-        let colors = val.pixels;
-        let grouping = TerminalColor::group(&colors);
-        let symb = QuadPixel::new(grouping).character();
-
-        let mut col1 = vec![];
-        let mut col2 = vec![];
-        for i in 0..grouping.len() {
-            if grouping[i] {
-                col1.push(colors[i]);
-            }
-            else {
-                col2.push(colors[i]);
-            }
-        }
-        let col1 = TerminalColor::mix(&col1);
-        let col2 = TerminalColor::mix(&col2);
-
-        Self {
-            character: symb,
-            foreground: col1,
-            background: col2,
-        }
-    }
-}
+impl_from_color_pixel_for_datacell!(ColorQuadPixel, QuadPixel);
 
 #[derive(Clone, Copy)]
 pub struct ColorHexPixel {
@@ -515,60 +442,7 @@ impl Pixel for ColorHexPixel {
     impl_new!(Self, pixels: [Self::U; 6]);
 }
 
-impl Display for ColorHexPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let colors = self.pixels;
-        let grouping = TerminalColor::group(&colors);
-        let symb =
-            HexPixel::new(grouping).to_string().chars().next().unwrap();
-
-        let mut col1 = vec![];
-        let mut col2 = vec![];
-        for i in 0..grouping.len() {
-            if grouping[i] {
-                col1.push(colors[i]);
-            }
-            else {
-                col2.push(colors[i]);
-            }
-        }
-        let col1 = TerminalColor::mix(&col1);
-        let col2 = TerminalColor::mix(&col2);
-
-        write!(
-            f,
-            "{}",
-            TerminalColor::color(symb.to_string().as_str(), &col1, &col2)
-        )
-    }
-}
-
-impl From<ColorHexPixel> for DataCell {
-    fn from(val: ColorHexPixel) -> Self {
-        let colors = val.pixels;
-        let grouping = TerminalColor::group(&colors);
-        let symb = HexPixel::new(grouping).character();
-
-        let mut col1 = vec![];
-        let mut col2 = vec![];
-        for i in 0..grouping.len() {
-            if grouping[i] {
-                col1.push(colors[i]);
-            }
-            else {
-                col2.push(colors[i]);
-            }
-        }
-        let col1 = TerminalColor::mix(&col1);
-        let col2 = TerminalColor::mix(&col2);
-
-        Self {
-            character: symb,
-            foreground: col1,
-            background: col2,
-        }
-    }
-}
+impl_from_color_pixel_for_datacell!(ColorHexPixel, HexPixel);
 
 #[derive(Clone, Copy)]
 pub struct ColorOctPixel {
@@ -589,57 +463,4 @@ impl Pixel for ColorOctPixel {
     impl_new!(Self, pixels: [Self::U; 8]);
 }
 
-impl Display for ColorOctPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let colors = self.pixels;
-        let grouping = TerminalColor::group(&colors);
-        let symb =
-            OctPixel::new(grouping).to_string().chars().next().unwrap();
-
-        let mut col1 = vec![];
-        let mut col2 = vec![];
-        for i in 0..grouping.len() {
-            if grouping[i] {
-                col1.push(colors[i]);
-            }
-            else {
-                col2.push(colors[i]);
-            }
-        }
-        let col1 = TerminalColor::mix(&col1);
-        let col2 = TerminalColor::mix(&col2);
-
-        write!(
-            f,
-            "{}",
-            TerminalColor::color(symb.to_string().as_str(), &col1, &col2)
-        )
-    }
-}
-
-impl From<ColorOctPixel> for DataCell {
-    fn from(val: ColorOctPixel) -> Self {
-        let colors = val.pixels;
-        let grouping = TerminalColor::group(&colors);
-        let symb = OctPixel::new(grouping).character();
-
-        let mut col1 = vec![];
-        let mut col2 = vec![];
-        for i in 0..grouping.len() {
-            if grouping[i] {
-                col1.push(colors[i]);
-            }
-            else {
-                col2.push(colors[i]);
-            }
-        }
-        let col1 = TerminalColor::mix(&col1);
-        let col2 = TerminalColor::mix(&col2);
-
-        Self {
-            character: symb,
-            foreground: col1,
-            background: col2,
-        }
-    }
-}
+impl_from_color_pixel_for_datacell!(ColorOctPixel, OctPixel);

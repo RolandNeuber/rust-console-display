@@ -5,7 +5,6 @@ use std::{
         RefCell,
         RefMut,
     },
-    fmt::Display,
     marker::PhantomData,
     mem,
     ops::{
@@ -22,7 +21,6 @@ use console_display_macros::{
 
 use crate::{
     console_display::DynamicConsoleDisplay,
-    impl_display_for_dynamic_widget,
     impl_getters,
     impl_new,
     impl_setters,
@@ -32,8 +30,8 @@ use crate::{
     },
     pixel_display::StaticPixelDisplay,
     widget::{
-        DataCell,
         DynamicWidget,
+        StringData,
     },
 };
 
@@ -363,10 +361,6 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> SingleWidget<T>
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> Display for UvWidget<T, S> {
-    impl_display_for_dynamic_widget!();
-}
-
 impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref for UvWidget<T, S> {
     type Target = T;
 
@@ -423,7 +417,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicWidget
         self.child.borrow().height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
+    fn string_data(&self) -> StringData {
         if self.is_write.get() {
             self.swap_buffers();
             self.is_write.set(false);
@@ -454,12 +448,6 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> SingleWidget<T>
     fn child_mut(&mut self) -> RefMut<'_, T> {
         self.child.borrow_mut()
     }
-}
-
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> Display
-    for DoubleBufferWidget<T, S>
-{
-    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref
@@ -517,8 +505,8 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
             self.padding_bottom
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        let mut data = self.child.string_data();
+    fn string_data(&self) -> StringData {
+        let mut data = self.child.string_data().data;
         let padding_top = vec![
             vec![
                 CharacterPixel::default().into();
@@ -550,12 +538,10 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
                 .concat()
             })
             .collect();
-        [padding_top, data, padding_bottom].concat()
+        StringData {
+            data: [padding_top, data, padding_bottom].concat(),
+        }
     }
-}
-
-impl<T: DynamicWidget> Display for PaddingWidget<T> {
-    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget> Deref for PaddingWidget<T> {
@@ -680,11 +666,11 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
             self.border.width_bottom()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
+    fn string_data(&self) -> StringData {
         let border_at = self
             .border
             .border_at(self.width_characters(), self.height_characters());
-        let mut data = self.child.string_data();
+        let mut data = self.child.string_data().data;
         let border_top = (0..self.border.width_top())
             .map(|y| {
                 (0..self.width_characters())
@@ -723,12 +709,10 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
                 .concat()
             })
             .collect();
-        [border_top, data, border_bottom].concat()
+        StringData {
+            data: [border_top, data, border_bottom].concat(),
+        }
     }
-}
-
-impl<T: DynamicWidget, S: Border> Display for BorderWidget<T, S> {
-    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget, S: Border> Deref for BorderWidget<T, S> {
@@ -774,8 +758,8 @@ impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
             .saturating_sub(self.inset_bottom)
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        let mut data = self.child.string_data();
+    fn string_data(&self) -> StringData {
+        let mut data = self.child.string_data().data;
 
         data = data
             .into_iter()
@@ -783,18 +767,17 @@ impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
             .take(self.height_characters())
             .collect::<Vec<_>>();
 
-        data.into_iter()
-            .map(|line| {
-                line[self.inset_left..
-                    self.width_characters() + self.inset_left]
-                    .to_vec()
-            })
-            .collect()
+        StringData {
+            data: data
+                .into_iter()
+                .map(|line| {
+                    line[self.inset_left..
+                        self.width_characters() + self.inset_left]
+                        .to_vec()
+                })
+                .collect(),
+        }
     }
-}
-
-impl<T: DynamicWidget> Display for InsetWidget<T> {
-    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget> Deref for InsetWidget<T> {
@@ -861,8 +844,8 @@ mod tests {
             widget.swap_buffers();
             let buffer2 = widget.backbuffer;
             assert_ne!(
-                buffer1.borrow()[0].to_string(),
-                buffer2.borrow()[0].to_string()
+                buffer1.borrow()[0].character().to_string(),
+                buffer2.borrow()[0].character().to_string()
             );
         }
     }

@@ -1,19 +1,16 @@
-use std::fmt::Display;
-
 use crate::{
     console_display::{
         DynamicConsoleDisplay,
         StaticConsoleDisplay,
     },
-    impl_display_for_dynamic_widget,
     pixel::{
         Pixel,
         character_pixel::CharacterPixel,
     },
     widget::{
-        DataCell,
         DynamicWidget,
         StaticWidget,
+        StringData,
     },
 };
 
@@ -127,7 +124,7 @@ impl DynamicWidget for DynamicCharacterDisplay<CharacterPixel> {
         self.height / CharacterPixel::HEIGHT
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
+    fn string_data(&self) -> StringData {
         let mut result = Vec::new();
         let mut row = Vec::new();
         let mut width = 0;
@@ -158,12 +155,8 @@ impl DynamicWidget for DynamicCharacterDisplay<CharacterPixel> {
             result.push(row);
         }
 
-        result
+        StringData { data: result }
     }
-}
-
-impl Display for DynamicCharacterDisplay<CharacterPixel> {
-    impl_display_for_dynamic_widget!();
 }
 
 #[derive(Clone)]
@@ -292,7 +285,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
         HEIGHT
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
+    fn string_data(&self) -> StringData {
         let mut result = Vec::new();
         let mut row = Vec::new();
         let mut width = 0;
@@ -323,7 +316,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
             result.push(row);
         }
 
-        result
+        StringData { data: result }
     }
 }
 
@@ -333,12 +326,6 @@ impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
     const WIDTH_CHARACTERS: usize = WIDTH;
 
     const HEIGHT_CHARACTERS: usize = HEIGHT;
-}
-
-impl<const WIDTH: usize, const HEIGHT: usize> Display
-    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
-{
-    impl_display_for_dynamic_widget!();
 }
 
 #[cfg(test)]
