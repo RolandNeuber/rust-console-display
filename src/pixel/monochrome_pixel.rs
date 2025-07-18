@@ -35,17 +35,17 @@ impl SinglePixel {
     ///     true,
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "█");
+    /// assert_eq!(symbol, '█');
     ///
     /// let pixel = SinglePixel::new ([
     ///     false,
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, " ");
+    /// assert_eq!(symbol, ' ');
     ///
     /// ```
     #[must_use]
@@ -108,18 +108,18 @@ impl DualPixel {
     ///     false, // _
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "▀");
+    /// assert_eq!(symbol, '▀');
     ///
     /// let pixel = DualPixel::new ([
     ///     false, // _
     ///     false, // _
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, " ");
+    /// assert_eq!(symbol, ' ');
     ///
     /// ```
     #[must_use]
@@ -187,9 +187,9 @@ impl QuadPixel {
     ///     false, true, // _#
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "▚")
+    /// assert_eq!(symbol, '▚')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
@@ -259,9 +259,9 @@ impl HexPixel {
     ///     true, true,  // ##
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "🬶")
+    /// assert_eq!(symbol, '🬶')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
@@ -346,9 +346,9 @@ impl OctPixel {
     ///     false, false // __
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "𜴰")
+    /// assert_eq!(symbol, '𜴰')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
@@ -429,9 +429,9 @@ impl BrailleOctPixel {
     ///     false, false // __
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "⠵")
+    /// assert_eq!(symbol, '⠵')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
