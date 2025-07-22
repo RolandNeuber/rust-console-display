@@ -9,7 +9,10 @@ use console_display_macros::{
 };
 
 use crate::{
-    color::TerminalColor,
+    color::{
+        Color,
+        TerminalColor,
+    },
     constraint,
     impl_getters,
     impl_setters,

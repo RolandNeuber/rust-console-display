@@ -6,7 +6,10 @@ use std::{
     },
 };
 
-use crate::color::TerminalColor;
+use crate::color::{
+    Color,
+    TerminalColor,
+};
 
 pub mod single_widget;
 pub mod two_widget;
