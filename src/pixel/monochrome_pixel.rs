@@ -1,9 +1,7 @@
 use crate::{
+    color::TerminalColor,
     impl_from_mono_chrome_pixel_for_datacell,
-    pixel::{
-        Pixel,
-        color_pixel::TerminalColor,
-    },
+    pixel::Pixel,
 };
 
 use crate::{

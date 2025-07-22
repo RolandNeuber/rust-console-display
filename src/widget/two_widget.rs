@@ -9,10 +9,10 @@ use console_display_macros::{
 };
 
 use crate::{
+    color::TerminalColor,
     constraint,
     impl_getters,
     impl_setters,
-    pixel::color_pixel::TerminalColor,
     widget::{
         DynamicWidget,
         StringData,
@@ -514,11 +514,11 @@ mod tests {
 
     mod overlay_widget {
         use crate::{
-            console_display::DynamicConsoleDisplay,
-            pixel::color_pixel::{
+            color::{
                 ARGBColor,
                 RGBColor,
             },
+            console_display::DynamicConsoleDisplay,
             pixel_display::DynamicPixelDisplay,
         };
 

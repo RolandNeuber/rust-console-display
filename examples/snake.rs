@@ -3,6 +3,10 @@
 
 use console_display::{
     character_display::StaticCharacterDisplay,
+    color::{
+        RGBColor,
+        TerminalColor,
+    },
     console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
@@ -10,11 +14,7 @@ use console_display::{
     },
     pixel::{
         character_pixel::CharacterPixel,
-        color_pixel::{
-            ColorDualPixel,
-            RGBColor,
-            TerminalColor,
-        },
+        color_pixel::ColorDualPixel,
     },
     pixel_display::StaticPixelDisplay,
     widget::{

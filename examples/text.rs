@@ -3,12 +3,10 @@
 
 use console_display::{
     character_display::StaticCharacterDisplay,
+    color::TerminalColor,
     console_display::DynamicConsoleDisplay,
     display_driver::DisplayDriver,
-    pixel::{
-        character_pixel::CharacterPixel,
-        color_pixel::TerminalColor,
-    },
+    pixel::character_pixel::CharacterPixel,
 };
 
 fn main() {

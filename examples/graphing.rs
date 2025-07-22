@@ -3,6 +3,10 @@
 
 use console_display::{
     character_display::StaticCharacterDisplay,
+    color::{
+        ARGBColor,
+        RGBColor,
+    },
     console_display::{
         DynamicConsoleDisplay,
         StaticConsoleDisplay,
@@ -14,11 +18,7 @@ use console_display::{
     pixel::{
         Pixel,
         character_pixel::CharacterPixel,
-        color_pixel::{
-            ARGBColor,
-            ColorOctPixel,
-            RGBColor,
-        },
+        color_pixel::ColorOctPixel,
     },
     pixel_display::StaticPixelDisplay,
     widget::{

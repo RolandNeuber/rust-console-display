@@ -10,7 +10,7 @@ use crate::{
     widget::DataCell,
 };
 
-use super::color_pixel::TerminalColor;
+use crate::color::TerminalColor;
 use unicode_width::UnicodeWidthChar;
 
 #[derive(Clone, Copy, Default)]

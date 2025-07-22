@@ -330,7 +330,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
 
 #[cfg(test)]
 mod tests {
-    use crate::pixel::color_pixel::TerminalColor;
+    use crate::color::TerminalColor;
 
     use super::*;
 
