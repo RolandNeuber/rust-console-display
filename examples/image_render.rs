@@ -7,13 +7,11 @@ use std::io::{
 };
 
 use console_display::{
+    color::RGBColor,
     display_driver::DisplayDriver,
     pixel::{
         Pixel,
-        color_pixel::{
-            ColorOctPixel,
-            RGBColor,
-        },
+        color_pixel::ColorOctPixel,
     },
     pixel_display::DynamicPixelDisplay,
 };

@@ -2,18 +2,16 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    character_display::CharacterDisplay,
-    console_display::ConsoleDisplay,
+    character_display::StaticCharacterDisplay,
+    color::TerminalColor,
+    console_display::DynamicConsoleDisplay,
     display_driver::DisplayDriver,
-    pixel::{
-        character_pixel::CharacterPixel,
-        color_pixel::TerminalColor,
-    },
+    pixel::character_pixel::CharacterPixel,
 };
 
 fn main() {
-    let mut char_disp: CharacterDisplay<CharacterPixel, 40, 20> =
-        CharacterDisplay::new(CharacterPixel::new::<'あ'>(
+    let mut char_disp: StaticCharacterDisplay<CharacterPixel, 40, 20> =
+        StaticCharacterDisplay::new(CharacterPixel::new::<'あ'>(
             TerminalColor::Default,
             TerminalColor::Default,
         ));
@@ -38,7 +36,7 @@ fn main() {
             TerminalColor::Default,
         )
         .unwrap();
-        let _ = char_disp.set_pixel(x, y, pixel.into());
+        char_disp.set_pixel(x, y, pixel.into()).unwrap();
         if x + pixel.width() > char_disp.width() {
             y += 1;
             x = 0;

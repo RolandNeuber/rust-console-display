@@ -56,6 +56,7 @@ use console_display::{
         ColorOctPixel,
     },
     pixel_display::StaticPixelDisplay,
+    color::RGBColor,
 };
 
 // Construct the display with the ColorOctPixel Type
@@ -63,7 +64,7 @@ use console_display::{
 // Set dimensions to 100 by 100 pixels (50 by 25 characters)
 // with a red fill.
 let disp = StaticPixelDisplay::<ColorOctPixel, 100, 100>::new(
-    color_pixel::RGBColor::RED.into(),
+    RGBColor::RED.into(),
 );
 
 // Wrap the display in a driver to manage interactions with the terminal

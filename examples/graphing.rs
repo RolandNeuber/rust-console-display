@@ -2,8 +2,15 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    character_display::CharacterDisplay,
-    console_display::ConsoleDisplay,
+    character_display::StaticCharacterDisplay,
+    color::{
+        ARGBColor,
+        RGBColor,
+    },
+    console_display::{
+        DynamicConsoleDisplay,
+        StaticConsoleDisplay,
+    },
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -11,11 +18,7 @@ use console_display::{
     pixel::{
         Pixel,
         character_pixel::CharacterPixel,
-        color_pixel::{
-            ARGBColor,
-            ColorOctPixel,
-            RGBColor,
-        },
+        color_pixel::ColorOctPixel,
     },
     pixel_display::StaticPixelDisplay,
     widget::{
@@ -27,6 +30,10 @@ use console_display::{
 fn main() {
     type PixelType = ColorOctPixel;
     const DIMENSIONS: (usize, usize) = (200, 200);
+    const DIMENSIONS_CHARS: (usize, usize) = (
+        DIMENSIONS.0 / PixelType::WIDTH,
+        DIMENSIONS.1 / PixelType::HEIGHT,
+    );
 
     let uv_x = (-10.0, 10.0);
     let uv_y = (2.0, -2.0);
@@ -36,11 +43,11 @@ fn main() {
         color: RGBColor::BLACK,
     };
 
-    let mut axis: CharacterDisplay<
+    let mut axis: StaticCharacterDisplay<
         CharacterPixel,
-        { DIMENSIONS.0 / PixelType::WIDTH },
-        { DIMENSIONS.1 / PixelType::HEIGHT },
-    > = CharacterDisplay::new(CharacterPixel::new::<' '>(
+        { DIMENSIONS_CHARS.0 },
+        { DIMENSIONS_CHARS.1 },
+    > = StaticCharacterDisplay::new(CharacterPixel::new::<' '>(
         transparent.into(),
         transparent.into(),
     ));
@@ -48,9 +55,9 @@ fn main() {
     #[allow(clippy::cast_possible_wrap)]
     axis.draw_line(
         0,
-        (DIMENSIONS.1 / PixelType::HEIGHT) as i32 / 2,
-        (DIMENSIONS.0 / PixelType::WIDTH) as i32,
-        (DIMENSIONS.1 / PixelType::HEIGHT) as i32 / 2,
+        DIMENSIONS_CHARS.1 as i32 / 2,
+        DIMENSIONS_CHARS.0 as i32,
+        DIMENSIONS_CHARS.1 as i32 / 2,
         CharacterPixel::new::<'─'>(
             RGBColor::WHITE.into(),
             transparent.into(),
@@ -60,26 +67,25 @@ fn main() {
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_possible_wrap)]
     axis.draw_line(
-        (DIMENSIONS.0 / PixelType::WIDTH) as i32 / 2,
+        DIMENSIONS_CHARS.0 as i32 / 2,
         0,
-        (DIMENSIONS.0 / PixelType::WIDTH) as i32 / 2,
-        (DIMENSIONS.1 / PixelType::HEIGHT) as i32,
+        DIMENSIONS_CHARS.0 as i32 / 2,
+        DIMENSIONS_CHARS.1 as i32,
         CharacterPixel::new::<'│'>(
             RGBColor::WHITE.into(),
             transparent.into(),
         )
         .into(),
     );
-    axis.set_pixel(
-        DIMENSIONS.0 / PixelType::WIDTH / 2,
-        DIMENSIONS.1 / PixelType::HEIGHT / 2,
+    axis.set_pixel_static::<
+        {DIMENSIONS_CHARS.0 / 2},
+        {DIMENSIONS_CHARS.1 / 2}>(
         CharacterPixel::new::<'┼'>(
             RGBColor::WHITE.into(),
             transparent.into(),
         )
         .into(),
-    )
-    .unwrap();
+    );
 
     let mut graph = UvWidget::new(StaticPixelDisplay::<
         PixelType,

@@ -45,7 +45,7 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
         fn height_characters(&self) -> usize {
             self.child.height_characters()
         }
-        fn string_data(&self) -> Vec<Vec<DataCell>> {
+        fn string_data(&self) -> StringData {
             self.child.string_data()
         }
     }))

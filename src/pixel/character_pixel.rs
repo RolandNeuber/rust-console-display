@@ -10,7 +10,10 @@ use crate::{
     widget::DataCell,
 };
 
-use super::color_pixel::TerminalColor;
+use crate::color::{
+    Color,
+    TerminalColor,
+};
 use unicode_width::UnicodeWidthChar;
 
 #[derive(Clone, Copy, Default)]
@@ -48,6 +51,10 @@ impl Pixel for CharacterPixel {
         &mut self,
     ) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
         &mut self.data
+    }
+
+    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> Self {
+        Self { data: pixels }
     }
 }
 

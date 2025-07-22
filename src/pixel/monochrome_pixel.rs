@@ -1,107 +1,15 @@
-// TODO: Deprecate monochrome pixel in favor of color pixel.
-use std::fmt::Display;
-
-use crate::pixel::{
-    Pixel,
-    color_pixel::TerminalColor,
+use crate::{
+    color::TerminalColor,
+    impl_from_mono_chrome_pixel_for_datacell,
+    pixel::Pixel,
 };
 
 use crate::{
-    constraint,
     impl_getters,
     impl_getters_mut,
     impl_new,
     widget::DataCell,
 };
-
-/// Specifies a block of pixels with specified dimensions.
-pub trait MultiPixel: Pixel
-where
-    Self: Sized,
-{
-    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> Self;
-
-    /// Builds a block of pixels from a slice of pixels.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error, if the number of pixels does not match the dimensions of the block.
-    fn build(args: &[Self::U]) -> Result<Self, String>
-    where
-        [(); Self::WIDTH * Self::HEIGHT]:,
-    {
-        <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args)
-            .map_or_else(
-                |_| {
-                    Err(format!(
-                        "Invalid number of arguments. Expected {}, got {}",
-                        Self::WIDTH * Self::HEIGHT,
-                        args.len()
-                    ))
-                },
-                |pixels| Ok(Self::new(pixels)),
-            )
-    }
-
-    /// Returns the value of the block at the specified coordinates.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error, if the coordinates are out of bounds.
-    fn subpixel(&self, x: usize, y: usize) -> Result<Self::U, String>
-    where
-        [(); Self::WIDTH * Self::HEIGHT]:,
-    {
-        self.pixels().get(x + y * Self::WIDTH).map_or_else(
-            || Err("Coordinates out of range.".to_string()),
-            |subpixel| Ok(*subpixel),
-        )
-    }
-
-    fn subpixel_static<const X: usize, const Y: usize>(&self) -> Self::U
-    where
-        [(); Self::WIDTH * Self::HEIGHT]:,
-        constraint!(X < Self::WIDTH):,
-        constraint!(Y < Self::HEIGHT):,
-    {
-        self.pixels()[X + Y * Self::WIDTH]
-    }
-
-    /// Returns the value of the block at the specified coordinates.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error, if the coordinates are out of bounds.
-    fn set_subpixel(
-        &mut self,
-        x: usize,
-        y: usize,
-        value: Self::U,
-    ) -> Result<(), String>
-    where
-        [(); Self::WIDTH * Self::HEIGHT]:,
-    {
-        let index = x + y * Self::WIDTH;
-        if index < self.pixels().len() {
-            self.pixels_mut()[index] = value;
-            Ok(())
-        }
-        else {
-            Err("Coordinates out of range.".to_string())
-        }
-    }
-
-    fn set_subpixel_static<const X: usize, const Y: usize>(
-        &mut self,
-        value: Self::U,
-    ) where
-        [(); Self::WIDTH * Self::HEIGHT]:,
-        constraint!(X < Self::WIDTH):,
-        constraint!(Y < Self::HEIGHT):,
-    {
-        self.pixels_mut()[X + Y * Self::WIDTH] = value;
-    }
-}
 
 /// Represents a singular pixel implementing the [`MultiPixel`] trait.
 #[derive(Clone, Copy)]
@@ -116,26 +24,26 @@ impl SinglePixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use console_display::pixel::monochrome_pixel::{
-    ///     MultiPixel,
-    ///     SinglePixel
+    /// use console_display::pixel::{
+    ///     Pixel,
+    ///     monochrome_pixel::SinglePixel
     /// };
     ///
     /// let pixel = SinglePixel::new ([
     ///     true,
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "█");
+    /// assert_eq!(symbol, '█');
     ///
     /// let pixel = SinglePixel::new ([
     ///     false,
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, " ");
+    /// assert_eq!(symbol, ' ');
     ///
     /// ```
     #[must_use]
@@ -154,27 +62,11 @@ impl Pixel for SinglePixel {
     impl_getters!(pixels: [bool; 1]);
 
     impl_getters_mut!(pixels: [bool; 1]);
-}
 
-impl MultiPixel for SinglePixel {
     impl_new!(SinglePixel, pixels: [bool; 1]);
 }
 
-impl Display for SinglePixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<SinglePixel> for DataCell {
-    fn from(val: SinglePixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(SinglePixel);
 
 /// Specifies a block of pixels with dimensions 1 (width) by 2 (height).
 #[derive(Clone, Copy)]
@@ -205,27 +97,27 @@ impl DualPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use console_display::pixel::monochrome_pixel::{
-    ///     MultiPixel,
-    ///     DualPixel
+    /// use console_display::pixel::{
+    ///     Pixel,
+    ///     monochrome_pixel::DualPixel
     /// };
     /// let pixel = DualPixel::new ([
     ///     true,  // #
     ///     false, // _
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "▀");
+    /// assert_eq!(symbol, '▀');
     ///
     /// let pixel = DualPixel::new ([
     ///     false, // _
     ///     false, // _
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, " ");
+    /// assert_eq!(symbol, ' ');
     ///
     /// ```
     #[must_use]
@@ -244,27 +136,11 @@ impl Pixel for DualPixel {
     impl_getters!(pixels: [bool; 2]);
 
     impl_getters_mut!(pixels: [bool; 2]);
-}
 
-impl MultiPixel for DualPixel {
     impl_new!(DualPixel, pixels: [bool; 2]);
 }
 
-impl Display for DualPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<DualPixel> for DataCell {
-    fn from(val: DualPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(DualPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 2 (height).
 #[derive(Clone, Copy)]
@@ -299,29 +175,23 @@ impl QuadPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use console_display::pixel::monochrome_pixel::{
-    ///     MultiPixel,
-    ///     QuadPixel
+    /// use console_display::pixel::{
+    ///     Pixel,
+    ///     monochrome_pixel::QuadPixel,
     /// };
     ///
-    /// let pixel = QuadPixel::new ([
+    /// let pixel = QuadPixel::new([
     ///     true, false, // #_
     ///     false, true, // _#
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "▚")
+    /// assert_eq!(symbol, '▚')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
         Self::CHARS[self.index()]
-    }
-}
-
-impl Display for QuadPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
     }
 }
 
@@ -335,21 +205,11 @@ impl Pixel for QuadPixel {
     impl_getters!(pixels: [bool; 4]);
 
     impl_getters_mut!(pixels: [bool; 4]);
-}
 
-impl MultiPixel for QuadPixel {
     impl_new!(QuadPixel, pixels: [bool; 4]);
 }
 
-impl From<QuadPixel> for DataCell {
-    fn from(val: QuadPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(QuadPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
 #[derive(Clone, Copy)]
@@ -386,9 +246,9 @@ impl HexPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use console_display::pixel::monochrome_pixel::{
-    ///     MultiPixel,
-    ///     HexPixel
+    /// use console_display::pixel::{
+    ///     Pixel,
+    ///     monochrome_pixel::HexPixel
     /// };
     ///
     /// let pixel = HexPixel::new ([
@@ -397,9 +257,9 @@ impl HexPixel {
     ///     true, true,  // ##
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "🬶")
+    /// assert_eq!(symbol, '🬶')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
@@ -417,27 +277,11 @@ impl Pixel for HexPixel {
     impl_getters!(pixels: [bool; 6]);
 
     impl_getters_mut!(pixels: [bool; 6]);
-}
 
-impl MultiPixel for HexPixel {
     impl_new!(HexPixel, pixels: [bool; 6]);
 }
 
-impl Display for HexPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<HexPixel> for DataCell {
-    fn from(val: HexPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(HexPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height).
 #[derive(Clone, Copy)]
@@ -488,10 +332,11 @@ impl OctPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use console_display::pixel::monochrome_pixel::{
-    ///     MultiPixel,
-    ///     OctPixel
+    /// use console_display::pixel::{
+    ///     Pixel,
+    ///     monochrome_pixel::OctPixel
     /// };
+    /// 
     /// let pixel = OctPixel::new ([
     ///     true, false, // #_
     ///     false, true, // _#
@@ -499,9 +344,9 @@ impl OctPixel {
     ///     false, false // __
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "𜴰")
+    /// assert_eq!(symbol, '𜴰')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
@@ -519,27 +364,11 @@ impl Pixel for OctPixel {
     impl_getters!(pixels: [bool; 8]);
 
     impl_getters_mut!(pixels: [bool; 8]);
-}
 
-impl MultiPixel for OctPixel {
     impl_new!(OctPixel, pixels: [bool; 8]);
 }
 
-impl Display for OctPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<OctPixel> for DataCell {
-    fn from(val: OctPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(OctPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
 #[derive(Clone, Copy)]
@@ -586,9 +415,9 @@ impl BrailleOctPixel {
     /// #![allow(incomplete_features)]
     /// #![feature(generic_const_exprs)]
     ///
-    /// use console_display::pixel::monochrome_pixel::{
-    ///     MultiPixel,
-    ///     BrailleOctPixel
+    /// use console_display::pixel::{
+    ///     Pixel,
+    ///     monochrome_pixel::BrailleOctPixel
     /// };
     ///
     /// let pixel = BrailleOctPixel::new ([
@@ -598,9 +427,9 @@ impl BrailleOctPixel {
     ///     false, false // __
     /// ]);
     ///
-    /// let symbol = pixel.to_string();
+    /// let symbol = pixel.character();
     ///
-    /// assert_eq!(symbol, "⠵")
+    /// assert_eq!(symbol, '⠵')
     /// ```
     #[must_use]
     pub const fn character(self) -> char {
@@ -618,24 +447,8 @@ impl Pixel for BrailleOctPixel {
     impl_getters!(pixels: [bool; 8]);
 
     impl_getters_mut!(pixels: [bool; 8]);
-}
 
-impl MultiPixel for BrailleOctPixel {
     impl_new!(BrailleOctPixel, pixels: [bool; 8]);
 }
 
-impl Display for BrailleOctPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.character())
-    }
-}
-
-impl From<BrailleOctPixel> for DataCell {
-    fn from(val: BrailleOctPixel) -> Self {
-        Self {
-            character: val.character(),
-            foreground: TerminalColor::Default,
-            background: TerminalColor::Default,
-        }
-    }
-}
+impl_from_mono_chrome_pixel_for_datacell!(BrailleOctPixel);

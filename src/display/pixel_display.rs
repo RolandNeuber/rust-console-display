@@ -1,25 +1,26 @@
 use core::array;
-use std::fmt::Display;
 
 use crate::{
-    console_display::ConsoleDisplay,
+    console_display::{
+        DynamicConsoleDisplay,
+        StaticConsoleDisplay,
+    },
     constraint,
-    impl_display_for_dynamic_widget,
-    pixel::monochrome_pixel::MultiPixel,
+    pixel::Pixel,
     widget::{
-        DataCell,
         DynamicWidget,
         StaticWidget,
+        StringData,
     },
 };
 
-pub struct DynamicPixelDisplay<T: MultiPixel> {
+pub struct DynamicPixelDisplay<T: Pixel> {
     data: Box<[T]>,
     width: usize,
     height: usize,
 }
 
-impl<T: MultiPixel> DynamicPixelDisplay<T> {
+impl<T: Pixel> DynamicPixelDisplay<T> {
     /// Convenience method to build a blank display struct with specified dimensions.
     ///
     /// # Panics
@@ -100,7 +101,7 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
     }
 }
 
-impl<T: MultiPixel> ConsoleDisplay<T> for DynamicPixelDisplay<T> {
+impl<T: Pixel> DynamicConsoleDisplay<T> for DynamicPixelDisplay<T> {
     fn width(&self) -> usize {
         self.width
     }
@@ -118,7 +119,7 @@ impl<T: MultiPixel> ConsoleDisplay<T> for DynamicPixelDisplay<T> {
     }
 }
 
-impl<T: MultiPixel> DynamicWidget for DynamicPixelDisplay<T> {
+impl<T: Pixel> DynamicWidget for DynamicPixelDisplay<T> {
     fn width_characters(&self) -> usize {
         self.width / T::WIDTH
     }
@@ -127,28 +128,27 @@ impl<T: MultiPixel> DynamicWidget for DynamicPixelDisplay<T> {
         self.height / T::HEIGHT
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        self.data
-            .chunks(self.width_characters())
-            .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
-            .collect()
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(self.width_characters())
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
     }
-}
-
-impl<T: MultiPixel> Display for DynamicPixelDisplay<T> {
-    impl_display_for_dynamic_widget!();
 }
 
 /// Represents a console display with a width and height in pixels.
 pub struct StaticPixelDisplay<
-    T: MultiPixel,
+    T: Pixel,
     const WIDTH: usize,
     const HEIGHT: usize,
 > {
     data: Box<[T]>,
 }
 
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
     /// Convenience method to create a blank display struct with specified dimensions known at compile time.
@@ -195,44 +195,6 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
         }
     }
 
-    /// Returns a vector containing all the pixels in the display.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if the index of a pixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    #[must_use]
-    pub fn pixels(&self) -> [T::U; WIDTH * HEIGHT]
-    where
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        array::from_fn(|i| {
-            let x = i % self.width();
-            let y = i / self.width();
-            self.pixel(x, y)
-                .expect("Invariant violated, pixel index out of range.")
-        })
-    }
-
-    /// Sets the pixels of the display to the provided data.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if the index of a pixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    pub fn set_pixels(&mut self, data: &[T::U; WIDTH * HEIGHT])
-    where
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        for x in 0..self.width() {
-            for y in 0..self.height() {
-                self.set_pixel(x, y, data[x + y * self.width()]).expect(
-                    "Invariant violated, pixel index out of range.",
-                );
-            }
-        }
-    }
-
     // TODO: Update docs
     /// Returns a bool representing the state of the pixel at the specified coordinate.
     ///
@@ -243,7 +205,7 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     /// #![feature(generic_const_exprs)]
     ///
     /// use console_display::{
-    ///     console_display::ConsoleDisplay,
+    ///     console_display::DynamicConsoleDisplay,
     ///     display_driver::DisplayDriver,
     ///     pixel::monochrome_pixel::SinglePixel,
     ///     pixel_display::StaticPixelDisplay
@@ -323,8 +285,16 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
-    ConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    StaticConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
+{
+    const WIDTH: usize = WIDTH;
+
+    const HEIGHT: usize = HEIGHT;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    DynamicConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
     fn width(&self) -> usize {
         WIDTH
@@ -343,7 +313,15 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
+    for StaticPixelDisplay<T, WIDTH, HEIGHT>
+{
+    const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
+
+    const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
     fn width_characters(&self) -> usize {
@@ -354,26 +332,15 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
         Self::HEIGHT_CHARACTERS
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        self.data
-            .chunks(Self::WIDTH_CHARACTERS)
-            .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
-            .collect()
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(Self::WIDTH_CHARACTERS)
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
     }
-}
-
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
-    for StaticPixelDisplay<T, WIDTH, HEIGHT>
-{
-    const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
-
-    const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
-}
-
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> Display
-    for StaticPixelDisplay<T, WIDTH, HEIGHT>
-{
-    impl_display_for_dynamic_widget!();
 }
 
 #[cfg(test)]

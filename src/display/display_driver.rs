@@ -75,7 +75,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         let mut stdout = io::stdout();
 
         write!(stdout, "\x1B[H")?;
-        write!(stdout, "{}", self.display)?;
+        write!(stdout, "{}", self.display.string_data())?;
 
         Ok(())
     }

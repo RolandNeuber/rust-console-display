@@ -5,7 +5,6 @@ use std::{
         RefCell,
         RefMut,
     },
-    fmt::Display,
     marker::PhantomData,
     mem,
     ops::{
@@ -21,19 +20,18 @@ use console_display_macros::{
 };
 
 use crate::{
-    console_display::ConsoleDisplay,
-    impl_display_for_dynamic_widget,
+    console_display::DynamicConsoleDisplay,
     impl_getters,
     impl_new,
     impl_setters,
     pixel::{
+        Pixel,
         character_pixel::CharacterPixel,
-        monochrome_pixel::MultiPixel,
     },
     pixel_display::StaticPixelDisplay,
     widget::{
-        DataCell,
         DynamicWidget,
+        StringData,
     },
 };
 
@@ -56,7 +54,7 @@ pub trait SingleWidget<T: DynamicWidget>:
 }
 
 #[derive(StaticWidget, DynamicWidget)]
-pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+pub struct UvWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     pixel_type: PhantomData<S>,
     child: T,
     uv_x_min: f32,
@@ -65,7 +63,7 @@ pub struct UvWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
     uv_y_max: f32,
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
     pub fn new(child: T) -> Self {
         let (width, height) = (child.width(), child.height());
         Self {
@@ -79,7 +77,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> UvWidget<T, S> {
     }
 }
 
-impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
+impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
     UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>, S>
 {
     impl_setters!(pub uv_x_min: f32, pub uv_x_max: f32, pub uv_y_min: f32, pub uv_y_max: f32);
@@ -339,7 +337,7 @@ impl<S: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> SingleWidget<T>
     for UvWidget<T, S>
 {
     type Borrowed<'a>
@@ -363,11 +361,7 @@ impl<T: ConsoleDisplay<S> + StaticWidget, S: MultiPixel> SingleWidget<T>
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Display for UvWidget<T, S> {
-    impl_display_for_dynamic_widget!();
-}
-
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref for UvWidget<T, S> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -375,21 +369,21 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref for UvWidget<T, S> {
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DerefMut for UvWidget<T, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }
 }
 
 #[derive(StaticWidget)]
-pub struct DoubleBufferWidget<T: ConsoleDisplay<S>, S: MultiPixel> {
+pub struct DoubleBufferWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     pixel_type: PhantomData<S>,
     child: RefCell<T>,
     backbuffer: RefCell<Box<[S]>>,
     is_write: Cell<bool>,
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DoubleBufferWidget<T, S> {
     pub fn new(child: T) -> Self
     where
         [(); S::WIDTH * S::HEIGHT]:,
@@ -412,7 +406,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DoubleBufferWidget<T, S> {
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicWidget
     for DoubleBufferWidget<T, S>
 {
     fn width_characters(&self) -> usize {
@@ -423,7 +417,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
         self.child.borrow().height_characters()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
+    fn string_data(&self) -> StringData {
         if self.is_write.get() {
             self.swap_buffers();
             self.is_write.set(false);
@@ -432,7 +426,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> DynamicWidget
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> SingleWidget<T>
     for DoubleBufferWidget<T, S>
 {
     type Borrowed<'a>
@@ -456,13 +450,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> SingleWidget<T>
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Display
-    for DoubleBufferWidget<T, S>
-{
-    impl_display_for_dynamic_widget!();
-}
-
-impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref
     for DoubleBufferWidget<T, S>
 {
     type Target = T;
@@ -477,7 +465,7 @@ impl<T: ConsoleDisplay<S>, S: MultiPixel> Deref
     }
 }
 
-impl<T: ConsoleDisplay<S>, S: MultiPixel> DerefMut
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DerefMut
     for DoubleBufferWidget<T, S>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -517,8 +505,8 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
             self.padding_bottom
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        let mut data = self.child.string_data();
+    fn string_data(&self) -> StringData {
+        let mut data = self.child.string_data().data;
         let padding_top = vec![
             vec![
                 CharacterPixel::default().into();
@@ -550,12 +538,10 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
                 .concat()
             })
             .collect();
-        [padding_top, data, padding_bottom].concat()
+        StringData {
+            data: [padding_top, data, padding_bottom].concat(),
+        }
     }
-}
-
-impl<T: DynamicWidget> Display for PaddingWidget<T> {
-    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget> Deref for PaddingWidget<T> {
@@ -680,11 +666,11 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
             self.border.width_bottom()
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
+    fn string_data(&self) -> StringData {
         let border_at = self
             .border
             .border_at(self.width_characters(), self.height_characters());
-        let mut data = self.child.string_data();
+        let mut data = self.child.string_data().data;
         let border_top = (0..self.border.width_top())
             .map(|y| {
                 (0..self.width_characters())
@@ -723,12 +709,10 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
                 .concat()
             })
             .collect();
-        [border_top, data, border_bottom].concat()
+        StringData {
+            data: [border_top, data, border_bottom].concat(),
+        }
     }
-}
-
-impl<T: DynamicWidget, S: Border> Display for BorderWidget<T, S> {
-    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget, S: Border> Deref for BorderWidget<T, S> {
@@ -774,8 +758,8 @@ impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
             .saturating_sub(self.inset_bottom)
     }
 
-    fn string_data(&self) -> Vec<Vec<DataCell>> {
-        let mut data = self.child.string_data();
+    fn string_data(&self) -> StringData {
+        let mut data = self.child.string_data().data;
 
         data = data
             .into_iter()
@@ -783,18 +767,17 @@ impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
             .take(self.height_characters())
             .collect::<Vec<_>>();
 
-        data.into_iter()
-            .map(|line| {
-                line[self.inset_left..
-                    self.width_characters() + self.inset_left]
-                    .to_vec()
-            })
-            .collect()
+        StringData {
+            data: data
+                .into_iter()
+                .map(|line| {
+                    line[self.inset_left..
+                        self.width_characters() + self.inset_left]
+                        .to_vec()
+                })
+                .collect(),
+        }
     }
-}
-
-impl<T: DynamicWidget> Display for InsetWidget<T> {
-    impl_display_for_dynamic_widget!();
 }
 
 impl<T: DynamicWidget> Deref for InsetWidget<T> {
@@ -861,8 +844,8 @@ mod tests {
             widget.swap_buffers();
             let buffer2 = widget.backbuffer;
             assert_ne!(
-                buffer1.borrow()[0].to_string(),
-                buffer2.borrow()[0].to_string()
+                buffer1.borrow()[0].character().to_string(),
+                buffer2.borrow()[0].character().to_string()
             );
         }
     }
