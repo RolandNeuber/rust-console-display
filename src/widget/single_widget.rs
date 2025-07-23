@@ -28,7 +28,6 @@ use crate::{
         Pixel,
         character_pixel::CharacterPixel,
     },
-    pixel_display::StaticPixelDisplay,
     widget::{
         DynamicWidget,
         StringData,
@@ -77,9 +76,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
     }
 }
 
-impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
-    UvWidget<StaticPixelDisplay<S, WIDTH, HEIGHT>, S>
-{
+impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     impl_setters!(pub uv_x_min: f32, pub uv_x_max: f32, pub uv_y_min: f32, pub uv_y_max: f32);
 
     /// Gets the pixel at the _uv_ coordinate (x, y).
@@ -149,7 +146,7 @@ impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
                 y,
                 self.uv_y_min,
                 self.uv_y_max,
-                display.width(),
+                display.height(),
             ),
         );
         self.child_mut().set_pixel(uv.0, uv.1, value)
@@ -177,7 +174,7 @@ impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
                 y1,
                 self.uv_y_min,
                 self.uv_y_max,
-                display.width() as f32,
+                display.height() as f32,
             ),
         );
         let uv2 = (
@@ -191,7 +188,7 @@ impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
                 y2,
                 self.uv_y_min,
                 self.uv_y_max,
-                display.width() as f32,
+                display.height() as f32,
             ),
         );
         self.child_mut()
@@ -297,9 +294,7 @@ impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// assert_eq!(vec![-0.7, -0.1, 0.5, 1.1, 1.7], widget.x_values().map(|x| (x * 100.).round() / 100.).collect::<Vec<_>>())
     /// ```
-    pub fn x_values(
-        &self,
-    ) -> impl Iterator<Item = f32> + use<'_, S, WIDTH, HEIGHT> {
+    pub fn x_values(&self) -> impl Iterator<Item = f32> {
         let width = self.child().width();
         (0..width).map(|x| self.texture_to_uv_x(x))
     }
@@ -329,9 +324,7 @@ impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize>
     ///
     /// assert_eq!(vec![-0.8, -0.4, 0.0, 0.4, 0.8], widget.y_values().map(|y| (y * 100.).round() / 100.).collect::<Vec<_>>())
     /// ```
-    pub fn y_values(
-        &self,
-    ) -> impl Iterator<Item = f32> + use<'_, S, WIDTH, HEIGHT> {
+    pub fn y_values(&self) -> impl Iterator<Item = f32> {
         let height = self.child().height();
         (0..height).map(|x| self.texture_to_uv_y(x))
     }

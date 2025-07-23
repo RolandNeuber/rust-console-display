@@ -196,16 +196,16 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicWidget {
         let dy = y2 - y1;
 
         let steps = dx.abs().max(dy.abs());
-        let x_inc = dx / steps;
-        let y_inc = dy / steps;
+        let x_inc = dx as f32 / steps as f32;
+        let y_inc = dy as f32 / steps as f32;
 
-        let mut x = x1;
-        let mut y = y1;
+        let mut x = x1 as f32;
+        let mut y = y1 as f32;
 
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_sign_loss)]
         for _ in 0..=steps {
-            if x >= 0 && y >= 0 {
+            if x >= 0. && y >= 0. {
                 let _ = self.set_pixel(x as usize, y as usize, value);
             }
             x += x_inc;
@@ -236,7 +236,7 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicWidget {
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_sign_loss)]
         for _ in 0..=steps.round() as usize {
-            if x >= 0. && y >= 0. {
+            if x > -0.5 && y > -0.5 {
                 let _ = self.set_pixel(
                     x.round() as usize,
                     y.round() as usize,

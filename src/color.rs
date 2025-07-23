@@ -66,7 +66,9 @@ impl Color for TerminalColor {
                 color_bottom,
             ));
         }
-        if let Self::ARGBColor(_) = color_top {
+        if let Self::ARGBColor(color) = color_top &&
+            color.opacity > 0
+        {
             *color_top
         }
         else {
@@ -319,6 +321,13 @@ impl Color for ARGBColor {
             ),
         }
     }
+}
+
+impl ARGBColor {
+    pub const TRANSPARENT: Self = Self {
+        opacity: 0,
+        color: RGBColor::BLACK,
+    };
 }
 
 impl From<RGBColor> for ARGBColor {
