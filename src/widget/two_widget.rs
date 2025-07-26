@@ -80,9 +80,9 @@ impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
         })
     }
 
-    impl_getters!(pub child1_on_top: bool);
+    impl_getters!(pub const child1_on_top: bool);
 
-    impl_setters!(pub child1_on_top: bool);
+    impl_setters!(pub const child1_on_top: bool);
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget

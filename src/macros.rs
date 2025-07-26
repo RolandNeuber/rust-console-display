@@ -26,6 +26,14 @@ macro_rules! impl_getters {
             }
         )*
     };
+    ($($(#[$attr:meta])* $visibility:vis const $field:ident: $type:ty),*) => {
+        $(
+            $(#[$attr])*
+            $visibility const fn $field(&self) -> &$type {
+                &self.$field
+            }
+        )*
+    };
 }
 
 /// Implements mutable getters for properties on a struct.
@@ -53,6 +61,13 @@ macro_rules! impl_getters_mut {
             }
         })*
     };
+    ($($visibility:vis const $field:ident: $type:ty),*) => {
+        $(paste::paste!{
+            $visibility const fn [<$field _mut>](&mut self) -> &mut $type {
+                &mut self.$field
+            }
+        })*
+    };
 }
 
 /// Implements setters for properties on a struct.
@@ -76,6 +91,13 @@ macro_rules! impl_setters {
     ($($visibility:vis $field:ident: $type:ty),*) => {
         $(paste::paste!{
             $visibility fn [<set_ $field>](&mut self, val: $type) {
+                self.$field = val;
+            }
+        })*
+    };
+    ($($visibility:vis const $field:ident: $type:ty),*) => {
+        $(paste::paste!{
+            $visibility const fn [<set_ $field>](&mut self, val: $type) {
                 self.$field = val;
             }
         })*
@@ -108,7 +130,7 @@ macro_rules! impl_setters {
 ///
 /// impl<T> GenericExample<T> {
 ///     impl_new!(
-///         pub GenericExample, <, T, >,
+///         pub GenericExample<T>,
 ///         flag: T,
 ///         data: [String; 8]
 ///     );
@@ -116,17 +138,17 @@ macro_rules! impl_setters {
 /// ```
 #[macro_export]
 macro_rules! impl_new {
-    ($(#[$attr:meta])* $visibility:vis $struct:ident, $($arg:ident: $type:ty), *) => {
-        #[allow(clippy::too_many_arguments)]
+    ($(#[$attr:meta])* $visibility:vis $struct:ident$(< $($generic:ty),* >)?, $($arg:ident: $type:ty), *) => {
         $(#[$attr])*
-        $visibility fn new($($arg: $type),*) -> $struct {
+        $visibility fn new($($arg: $type),*) -> $struct$(< $($generic),* >)?  {
             $struct {
                 $($arg), *
             }
         }
     };
-    ($visibility:vis $struct:ident, <, $($generic:ty), *, >, $($arg:ident: $type:ty), *) => {
-        $visibility fn new($($arg: $type),*) -> $struct<$($generic,)*> {
+    ($(#[$attr:meta])* $visibility:vis const $struct:ident$(< $($generic:ty),* >)?, $($arg:ident: $type:ty), *) => {
+        $(#[$attr])*
+        $visibility const fn new($($arg: $type),*) -> $struct$(< $($generic),* >)?  {
             $struct {
                 $($arg), *
             }

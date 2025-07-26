@@ -80,7 +80,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
 }
 
 impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
-    impl_setters!(pub uv_x_min: f32, pub uv_x_max: f32, pub uv_y_min: f32, pub uv_y_max: f32);
+    impl_setters!(pub const uv_x_min: f32, pub const uv_x_max: f32, pub const uv_y_min: f32, pub const uv_y_max: f32);
 
     /// Gets the pixel at the _uv_ coordinate (x, y).
     /// Using coordinates outside the uv mapping is considered
@@ -483,9 +483,9 @@ pub struct PaddingWidget<T: DynamicWidget> {
 }
 
 impl<T: DynamicWidget> PaddingWidget<T> {
-    impl_new!(pub PaddingWidget, <, T, >, child: T, padding_left: usize, padding_right: usize, padding_top: usize, padding_bottom: usize);
+    impl_new!(pub const PaddingWidget<T>, child: T, padding_left: usize, padding_right: usize, padding_top: usize, padding_bottom: usize);
 
-    impl_setters!(pub padding_left: usize, pub padding_right: usize, pub padding_top: usize, pub padding_bottom: usize);
+    impl_setters!(pub const padding_left: usize, pub const padding_right: usize, pub const padding_top: usize, pub const padding_bottom: usize);
 }
 
 impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
@@ -579,7 +579,8 @@ pub struct BorderDefault {
 
 impl BorderDefault {
     impl_new!(
-        #[must_use] pub BorderDefault,
+        #[allow(clippy::too_many_arguments)]
+        #[must_use] pub const BorderDefault,
         top: CharacterPixel,
         top_left: CharacterPixel,
         left: CharacterPixel,
@@ -591,14 +592,14 @@ impl BorderDefault {
     );
 
     impl_getters!(
-        #[must_use] pub top: CharacterPixel,
-        #[must_use] pub top_left: CharacterPixel,
-        #[must_use] pub left: CharacterPixel,
-        #[must_use] pub bottom_left: CharacterPixel,
-        #[must_use] pub bottom: CharacterPixel,
-        #[must_use] pub bottom_right: CharacterPixel,
-        #[must_use] pub right: CharacterPixel,
-        #[must_use] pub top_right: CharacterPixel
+        #[must_use] pub const top: CharacterPixel,
+        #[must_use] pub const top_left: CharacterPixel,
+        #[must_use] pub const left: CharacterPixel,
+        #[must_use] pub const bottom_left: CharacterPixel,
+        #[must_use] pub const bottom: CharacterPixel,
+        #[must_use] pub const bottom_right: CharacterPixel,
+        #[must_use] pub const right: CharacterPixel,
+        #[must_use] pub const top_right: CharacterPixel
     );
 
     /// # Errors
@@ -859,7 +860,7 @@ pub struct BorderWidget<T: DynamicWidget, S: Border> {
 }
 
 impl<T: DynamicWidget, S: Border> BorderWidget<T, S> {
-    impl_new!(pub BorderWidget, <, T, S, >, child: T, border: S);
+    impl_new!(pub const BorderWidget<T, S>, child: T, border: S);
 }
 
 impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
@@ -947,9 +948,9 @@ pub struct InsetWidget<T: DynamicWidget> {
 }
 
 impl<T: DynamicWidget> InsetWidget<T> {
-    impl_new!(pub InsetWidget, <, T, >, child: T, inset_left: usize, inset_right: usize, inset_top: usize, inset_bottom: usize);
+    impl_new!(pub const InsetWidget<T>, child: T, inset_left: usize, inset_right: usize, inset_top: usize, inset_bottom: usize);
 
-    impl_getters!(pub child: T);
+    impl_getters!(pub const child: T);
 }
 
 impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
