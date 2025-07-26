@@ -45,7 +45,7 @@ fn main() {
 
     let mut char_disp = OverlayWidget::new(
         UvWidget::new(StaticCharacterDisplay::<_, WIDTH, HEIGHT>::new(
-            CharacterPixel::new::<'.'>(
+            CharacterPixel::new::<' '>(
                 ARGBColor::TRANSPARENT.into(),
                 ARGBColor::TRANSPARENT.into(),
             ),
@@ -99,11 +99,8 @@ fn main() {
         .set_pixel(
             1.5,
             1.5,
-            CharacterPixel::new::<'X'>(
-                RGBColor::GREEN.into(),
-                ARGBColor::TRANSPARENT.into(),
-            )
-            .into(),
+            CharacterPixel::new::<'X'>(RGBColor::GREEN.into(), background)
+                .into(),
         )
         .unwrap();
 
@@ -112,104 +109,98 @@ fn main() {
             return UpdateStatus::Continue;
         }
 
-        #[allow(clippy::cast_sign_loss)]
-        #[allow(clippy::cast_possible_truncation)]
-        #[allow(clippy::cast_possible_wrap)]
-        if let Some(key_event) = latest_event {
-            if key_event.code == KeyCode::Enter &&
-                state[cursor_pos.1][cursor_pos.0].is_none()
-            {
-                state[cursor_pos.1][cursor_pos.0] = Some(symbol);
-                disp.0
-                    .set_pixel(
-                        cursor_pos.0 as f32 + 0.5,
-                        cursor_pos.1 as f32 + 0.5,
-                        CharacterPixel::build(
-                            symbol,
-                            RGBColor::WHITE.into(),
-                            ARGBColor::TRANSPARENT.into(),
-                        )
-                        .unwrap()
-                        .into(),
-                    )
-                    .unwrap();
-                symbol = if symbol == 'X' { 'O' } else { 'X' };
-                return UpdateStatus::Continue;
-            }
+        let Some(key_event) = latest_event
+        else {
+            return UpdateStatus::Continue;
+        };
 
-            let mut direction: (i32, i32) = (0, 0);
-            if let KeyCode::Char(key) = key_event.code {
-                match key {
-                    'a' | 'A' => direction = (-1, 0),
-                    'd' | 'D' => direction = (1, 0),
-                    'w' | 'W' => direction = (0, -1),
-                    's' | 'S' => direction = (0, 1),
-                    _ => (),
-                }
-            }
-            else {
-                match key_event.code {
-                    KeyCode::Left => direction = (-1, 0),
-                    KeyCode::Right => direction = (1, 0),
-                    KeyCode::Up => direction = (0, -1),
-                    KeyCode::Down => direction = (0, 1),
-                    _ => (),
-                }
-            }
-
-            if state[cursor_pos.1][cursor_pos.0].is_none() {
-                disp.0
-                    .set_pixel(
-                        cursor_pos.0 as f32 + 0.5,
-                        cursor_pos.1 as f32 + 0.5,
-                        CharacterPixel::new::<' '>(
-                            ARGBColor::TRANSPARENT.into(),
-                            ARGBColor::TRANSPARENT.into(),
-                        )
-                        .into(),
-                    )
-                    .unwrap();
-            }
-            else {
-                disp.0
-                    .set_pixel(
-                        cursor_pos.0 as f32 + 0.5,
-                        cursor_pos.1 as f32 + 0.5,
-                        CharacterPixel::build(
-                            state[cursor_pos.1][cursor_pos.0].unwrap(),
-                            foreground,
-                            background,
-                        )
-                        .unwrap()
-                        .into(),
-                    )
-                    .unwrap();
-            }
-
-            cursor_pos.0 =
-                (cursor_pos.0 as i32 + direction.0).clamp(0, 2) as usize;
-            cursor_pos.1 =
-                (cursor_pos.1 as i32 + direction.1).clamp(0, 2) as usize;
-
+        if state[cursor_pos.1][cursor_pos.0].is_none() &&
+            key_event.code == KeyCode::Enter
+        {
+            // Place symbol
+            state[cursor_pos.1][cursor_pos.0] = Some(symbol);
             disp.0
                 .set_pixel(
                     cursor_pos.0 as f32 + 0.5,
                     cursor_pos.1 as f32 + 0.5,
-                    CharacterPixel::build(
-                        symbol,
-                        if state[cursor_pos.1][cursor_pos.0].is_some() {
-                            RGBColor::RED.into()
-                        }
-                        else {
-                            RGBColor::GREEN.into()
-                        },
-                        ARGBColor::TRANSPARENT.into(),
-                    )
-                    .unwrap()
-                    .into(),
+                    CharacterPixel::build(symbol, foreground, background)
+                        .unwrap()
+                        .into(),
                 )
                 .unwrap();
+            symbol = if symbol == 'X' { 'O' } else { 'X' };
+            return UpdateStatus::Continue;
         }
+
+        let pixel = if state[cursor_pos.1][cursor_pos.0].is_none() {
+            // Remove preview symbol on empty tiles
+            CharacterPixel::new::<' '>(
+                ARGBColor::TRANSPARENT.into(),
+                background,
+            )
+        }
+        else {
+            // Remove preview symbol on filled tiles
+            CharacterPixel::build(
+                state[cursor_pos.1][cursor_pos.0].unwrap(),
+                foreground,
+                background,
+            )
+            .unwrap()
+        };
+
+        disp.0
+            .set_pixel(
+                cursor_pos.0 as f32 + 0.5,
+                cursor_pos.1 as f32 + 0.5,
+                pixel.into(),
+            )
+            .unwrap();
+
+        let mut direction: (i32, i32) = (0, 0);
+        match key_event.code {
+            KeyCode::Char(key) => match key {
+                'a' | 'A' => direction = (-1, 0),
+                'd' | 'D' => direction = (1, 0),
+                'w' | 'W' => direction = (0, -1),
+                's' | 'S' => direction = (0, 1),
+                _ => (),
+            },
+            KeyCode::Left => direction = (-1, 0),
+            KeyCode::Right => direction = (1, 0),
+            KeyCode::Up => direction = (0, -1),
+            KeyCode::Down => direction = (0, 1),
+            _ => (),
+        }
+
+        #[allow(clippy::cast_sign_loss)]
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_possible_wrap)]
+        {
+            cursor_pos.0 =
+                (cursor_pos.0 as i32 + direction.0).clamp(0, 2) as usize;
+            cursor_pos.1 =
+                (cursor_pos.1 as i32 + direction.1).clamp(0, 2) as usize;
+        }
+
+        disp.0
+            .set_pixel(
+                cursor_pos.0 as f32 + 0.5,
+                cursor_pos.1 as f32 + 0.5,
+                CharacterPixel::build(
+                    symbol,
+                    if state[cursor_pos.1][cursor_pos.0].is_some() {
+                        RGBColor::RED.into()
+                    }
+                    else {
+                        RGBColor::GREEN.into()
+                    },
+                    background,
+                )
+                .unwrap()
+                .into(),
+            )
+            .unwrap();
         UpdateStatus::Continue
     });
 
@@ -225,19 +216,12 @@ fn check_winner(
     background: TerminalColor,
 ) -> Option<char> {
     let mut winner = None;
-    let mut line;
 
     for (row_index, row) in state.iter().enumerate() {
-        line = false;
-        if row.iter().all(|x| *x == Some('X')) {
-            winner = Some('X');
-            line = true;
-        }
-        if row.iter().all(|x| *x == Some('O')) {
-            winner = Some('O');
-            line = true;
-        }
-        if line {
+        if row.iter().all(|x| *x == Some('X')) ||
+            row.iter().all(|x| *x == Some('O'))
+        {
+            winner = row[0];
             disp.1.draw_line(
                 0.5,
                 row_index as f32 + 0.5,
@@ -265,16 +249,10 @@ fn check_winner(
     }
 
     for column_index in 0..3 {
-        line = false;
-        if state.iter().all(|x| x[column_index] == Some('X')) {
-            winner = Some('X');
-            line = true;
-        }
-        if state.iter().all(|x| x[column_index] == Some('O')) {
-            winner = Some('O');
-            line = true;
-        }
-        if line {
+        if state.iter().all(|x| x[column_index] == Some('X')) ||
+            state.iter().all(|x| x[column_index] == Some('O'))
+        {
+            winner = state[column_index][0];
             disp.1.draw_line(
                 column_index as f32 + 0.5,
                 0.5,
@@ -304,16 +282,10 @@ fn check_winner(
     let diagonal1 = [state[0][0], state[1][1], state[2][2]];
     let diagonal2 = [state[0][2], state[1][1], state[2][0]];
 
-    line = false;
-    if diagonal1.iter().all(|x| *x == Some('X')) {
-        line = true;
-        winner = Some('X');
-    }
-    if diagonal1.iter().all(|x| *x == Some('O')) {
-        line = true;
-        winner = Some('O');
-    }
-    if line {
+    if diagonal1.iter().all(|x| *x == Some('X')) ||
+        diagonal1.iter().all(|x| *x == Some('O'))
+    {
+        winner = diagonal1[0];
         disp.1.draw_line(
             0.5,
             0.5,
@@ -324,16 +296,10 @@ fn check_winner(
         );
     }
 
-    line = false;
-    if diagonal2.iter().all(|x| *x == Some('X')) {
-        line = true;
-        winner = Some('X');
-    }
-    if diagonal2.iter().all(|x| *x == Some('O')) {
-        line = true;
-        winner = Some('O');
-    }
-    if line {
+    if diagonal2.iter().all(|x| *x == Some('X')) ||
+        diagonal2.iter().all(|x| *x == Some('O'))
+    {
+        winner = diagonal2[0];
         disp.1.draw_line(
             0.5,
             2.5,
