@@ -10,11 +10,13 @@ use console_display::{
 };
 
 fn main() {
-    let mut char_disp: StaticCharacterDisplay<CharacterPixel, 40, 20> =
-        StaticCharacterDisplay::new(CharacterPixel::new::<'あ'>(
-            TerminalColor::Default,
-            TerminalColor::Default,
-        ));
+    let mut char_disp =
+        StaticCharacterDisplay::<CharacterPixel, 40, 20>::new(
+            CharacterPixel::new::<'あ'>(
+                TerminalColor::Default,
+                TerminalColor::Default,
+            ),
+        );
 
     let mut x = 0;
     let mut y = 0;
