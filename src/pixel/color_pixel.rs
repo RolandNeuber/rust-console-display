@@ -18,7 +18,7 @@ use crate::{
     widget::DataCell,
 };
 
-/// Represents a singular pixel implementing the [`MultiPixel`] trait.
+/// Represents a singular pixel implementing the [`Pixel`] trait.
 #[derive(Clone, Copy)]
 pub struct ColorSinglePixel {
     pixels: [TerminalColor; 1],

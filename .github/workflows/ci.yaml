@@ -10,6 +10,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
+  RUSTDOCFLAGS: "-Dwarnings"
   AUTO_FORMAT: "$AUTO_FORMAT"
 
 jobs:
@@ -77,3 +78,6 @@ jobs:
       run: |
         cargo +nightly test --all-targets --all-features; 
         cargo +nightly test --doc;
+
+    - name: Build documentation
+      run: cargo +nightly doc;
