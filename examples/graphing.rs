@@ -7,10 +7,6 @@ use console_display::{
         ARGBColor,
         RGBColor,
     },
-    console_display::{
-        DynamicConsoleDisplay,
-        StaticConsoleDisplay,
-    },
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -38,54 +34,51 @@ fn main() {
     let uv_x = (-10.0, 10.0);
     let uv_y = (2.0, -2.0);
 
+    let foreground = RGBColor::WHITE.into();
     let transparent = ARGBColor {
         opacity: 63,
         color: RGBColor::BLACK,
-    };
+    }
+    .into();
 
-    let mut axis: StaticCharacterDisplay<
+    let mut axis = UvWidget::new(StaticCharacterDisplay::<
         CharacterPixel,
         { DIMENSIONS_CHARS.0 },
         { DIMENSIONS_CHARS.1 },
-    > = StaticCharacterDisplay::new(CharacterPixel::new::<' '>(
-        transparent.into(),
-        transparent.into(),
-    ));
+    >::new(CharacterPixel::new::<' '>(
+        transparent,
+        transparent,
+    )));
+
+    axis.set_uv_x_min(0.);
+    axis.set_uv_x_max(1.);
+    axis.set_uv_y_min(0.);
+    axis.set_uv_y_max(1.);
+
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_possible_wrap)]
     axis.draw_line(
-        0,
-        DIMENSIONS_CHARS.1 as i32 / 2,
-        DIMENSIONS_CHARS.0 as i32,
-        DIMENSIONS_CHARS.1 as i32 / 2,
-        CharacterPixel::new::<'─'>(
-            RGBColor::WHITE.into(),
-            transparent.into(),
-        )
-        .into(),
+        0.,
+        0.5,
+        1.,
+        0.5,
+        CharacterPixel::new::<'─'>(foreground, transparent).into(),
     );
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_possible_wrap)]
     axis.draw_line(
-        DIMENSIONS_CHARS.0 as i32 / 2,
-        0,
-        DIMENSIONS_CHARS.0 as i32 / 2,
-        DIMENSIONS_CHARS.1 as i32,
-        CharacterPixel::new::<'│'>(
-            RGBColor::WHITE.into(),
-            transparent.into(),
-        )
-        .into(),
+        0.5,
+        0.,
+        0.5,
+        1.,
+        CharacterPixel::new::<'│'>(foreground, transparent).into(),
     );
-    axis.set_pixel_static::<
-        {DIMENSIONS_CHARS.0 / 2},
-        {DIMENSIONS_CHARS.1 / 2}>(
-        CharacterPixel::new::<'┼'>(
-            RGBColor::WHITE.into(),
-            transparent.into(),
-        )
-        .into(),
-    );
+    axis.set_pixel(
+        0.0,
+        0.5,
+        CharacterPixel::new::<'┼'>(foreground, transparent).into(),
+    )
+    .unwrap();
 
     let mut graph = UvWidget::new(StaticPixelDisplay::<
         PixelType,
