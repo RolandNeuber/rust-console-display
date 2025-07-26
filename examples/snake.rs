@@ -7,7 +7,10 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::DynamicConsoleDisplay,
+    console_display::{
+        DynamicConsoleDisplay,
+        StaticConsoleDisplay,
+    },
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -39,12 +42,10 @@ fn main() {
 
     let mut disp = construct_display();
 
-    let _ = disp.0.set_pixel(
-        99,
-        0,
+    disp.0.set_pixel_static::<99, 0>(
         CharacterPixel::new::<'1'>(
-            TerminalColor::ARGBColor(RGBColor::BLACK.into()),
-            TerminalColor::ARGBColor(RGBColor::WHITE.into()),
+            RGBColor::BLACK.into(),
+            RGBColor::WHITE.into(),
         )
         .into(),
     );
@@ -115,8 +116,8 @@ fn main() {
                     0,
                     CharacterPixel::build(
                         digit,
-                        TerminalColor::ARGBColor(RGBColor::BLACK.into()),
-                        TerminalColor::ARGBColor(RGBColor::WHITE.into()),
+                        RGBColor::BLACK.into(),
+                        RGBColor::WHITE.into(),
                     )
                     .unwrap()
                     .into(),
@@ -191,8 +192,8 @@ fn construct_display() -> Display {
             StaticCharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::build(
                     ' ',
-                    TerminalColor::ARGBColor(RGBColor::BLACK.into()),
-                    TerminalColor::ARGBColor(RGBColor::WHITE.into()),
+                    RGBColor::BLACK.into(),
+                    RGBColor::WHITE.into(),
                 )
                 .unwrap(),
             ),
@@ -211,39 +212,9 @@ fn construct_display() -> Display {
                 true,
             ),
         ),
-        BorderDefault::new(
-            CharacterPixel::new::<'═'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
-            CharacterPixel::new::<'╔'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
-            CharacterPixel::new::<'║'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
-            CharacterPixel::new::<'╚'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
-            CharacterPixel::new::<'═'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
-            CharacterPixel::new::<'╝'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
-            CharacterPixel::new::<'║'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
-            CharacterPixel::new::<'╗'>(
-                TerminalColor::Default,
-                RGBColor::BLACK.into(),
-            ),
+        BorderDefault::double_stroke(
+            TerminalColor::Default,
+            RGBColor::BLACK.into(),
         ),
     ))
 }
