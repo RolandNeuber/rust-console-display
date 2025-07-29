@@ -50,7 +50,7 @@ fn main() {
         .into(),
     );
 
-    initialize_end_screen(&mut disp.1.1);
+    initialize_end_screen(&mut disp.bottom_mut().1);
 
     let mut fps = 10.;
     let mut score = 1;
@@ -88,11 +88,11 @@ fn main() {
         }
 
         if lost {
-            disp.1.set_child1_on_top(false);
+            disp.bottom_mut().set_child1_on_top(false);
             return UpdateStatus::Continue;
         }
 
-        let map_display = &mut disp.1.0;
+        let map_display = &mut disp.bottom_mut().0;
         // place new segment in front (direction) of snake head
         snake.insert(
             0,
@@ -111,7 +111,7 @@ fn main() {
         if snake[0] == apple {
             score += 1;
             for (i, digit) in score.to_string().chars().rev().enumerate() {
-                let _ = disp.0.set_pixel(
+                let _ = disp.top_mut().set_pixel(
                     99 - i,
                     0,
                     CharacterPixel::build(
@@ -124,7 +124,7 @@ fn main() {
                 );
             }
 
-            let map_display = &mut disp.1.0;
+            let map_display = &mut disp.bottom_mut().0;
             if score == map_display.width() * map_display.height() {
                 return UpdateStatus::Break;
             }
@@ -156,7 +156,7 @@ fn main() {
         }
 
         // place pixel at snake head
-        disp.1
+        disp.bottom_mut()
             .0
             .set_pixel(snake[0].0, snake[0].1, snake_color)
             .expect("Could not set pixel.");
