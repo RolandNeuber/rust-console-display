@@ -101,7 +101,13 @@ fn main() {
         for x in xs {
             let y = function(x);
 
-            this.1.draw_line(old_x, old_y, x, y, RGBColor::WHITE.into());
+            this.base_mut().draw_line(
+                old_x,
+                old_y,
+                x,
+                y,
+                RGBColor::WHITE.into(),
+            );
 
             old_x = x;
             old_y = y;

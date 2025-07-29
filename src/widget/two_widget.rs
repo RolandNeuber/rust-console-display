@@ -148,6 +148,22 @@ impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
             children: (child1, child2),
         })
     }
+
+    pub fn left(&self) -> &S {
+        &self.0
+    }
+
+    pub fn left_mut(&mut self) -> &mut S {
+        &mut self.0
+    }
+
+    pub fn right(&self) -> &T {
+        &self.1
+    }
+
+    pub fn right_mut(&mut self) -> &mut T {
+        &mut self.1
+    }
 }
 
 impl<S: StaticWidget, T: StaticWidget> HorizontalTilingWidget<S, T> {
@@ -237,6 +253,22 @@ impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
             children: (child1, child2),
         })
     }
+
+    pub fn top(&self) -> &S {
+        &self.0
+    }
+
+    pub fn top_mut(&mut self) -> &mut S {
+        &mut self.0
+    }
+
+    pub fn bottom(&self) -> &T {
+        &self.1
+    }
+
+    pub fn bottom_mut(&mut self) -> &mut T {
+        &mut self.1
+    }
 }
 
 impl<S: StaticWidget, T: StaticWidget> VerticalTilingWidget<S, T> {
@@ -311,6 +343,22 @@ impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
         Self {
             children: (overlay, base),
         }
+    }
+
+    pub fn overlay(&self) -> &S {
+        &self.0
+    }
+
+    pub fn overlay_mut(&mut self) -> &mut S {
+        &mut self.0
+    }
+
+    pub fn base(&self) -> &T {
+        &self.1
+    }
+
+    pub fn base_mut(&mut self) -> &mut T {
+        &mut self.1
     }
 }
 

@@ -20,15 +20,9 @@ use console_display::{
 };
 use crossterm::event::KeyCode;
 
-type Display = OverlayWidget<
-    UvWidget<
-        StaticCharacterDisplay<CharacterPixel, 29, 11>,
-        CharacterPixel,
-    >,
-    UvWidget<
-        StaticCharacterDisplay<CharacterPixel, 29, 11>,
-        CharacterPixel,
-    >,
+type Base = UvWidget<
+    StaticCharacterDisplay<CharacterPixel, 29, 11>,
+    CharacterPixel,
 >;
 
 #[allow(clippy::too_many_lines)]
@@ -55,25 +49,27 @@ fn main() {
         )),
     );
 
-    char_disp.0.set_uv_x_min(0.);
-    char_disp.0.set_uv_x_max(3.);
-    char_disp.0.set_uv_y_min(0.);
-    char_disp.0.set_uv_y_max(3.);
+    let overlay = char_disp.overlay_mut();
+    overlay.set_uv_x_min(0.);
+    overlay.set_uv_x_max(3.);
+    overlay.set_uv_y_min(0.);
+    overlay.set_uv_y_max(3.);
 
-    char_disp.1.set_uv_x_min(0.);
-    char_disp.1.set_uv_x_max(3.);
-    char_disp.1.set_uv_y_min(0.);
-    char_disp.1.set_uv_y_max(3.);
+    let base = char_disp.base_mut();
+    base.set_uv_x_min(0.);
+    base.set_uv_x_max(3.);
+    base.set_uv_y_min(0.);
+    base.set_uv_y_max(3.);
 
     for i in 0..4 {
-        char_disp.1.draw_line(
+        base.draw_line(
             0.,
             i as f32,
             3.,
             i as f32,
             CharacterPixel::new::<'━'>(foreground, background).into(),
         );
-        char_disp.1.draw_line(
+        base.draw_line(
             i as f32,
             0.,
             i as f32,
@@ -84,7 +80,7 @@ fn main() {
 
     for x in 1..3 {
         for y in 1..3 {
-            let _ = char_disp.1.set_pixel(
+            let _ = base.set_pixel(
                 x as f32,
                 y as f32,
                 CharacterPixel::new::<'╋'>(foreground, background).into(),
@@ -105,7 +101,9 @@ fn main() {
         .unwrap();
 
     display.set_on_update(move |disp, latest_event| {
-        if check_winner(disp, state, foreground, background).is_some() {
+        if check_winner(disp.base_mut(), state, foreground, background)
+            .is_some()
+        {
             return UpdateStatus::Continue;
         }
 
@@ -210,7 +208,7 @@ fn main() {
 
 #[allow(clippy::too_many_lines)]
 fn check_winner(
-    disp: &mut Display,
+    base: &mut Base,
     state: [[Option<char>; 3]; 3],
     foreground: TerminalColor,
     background: TerminalColor,
@@ -222,7 +220,7 @@ fn check_winner(
             row.iter().all(|x| *x == Some('O'))
         {
             winner = row[0];
-            disp.1.draw_line(
+            base.draw_line(
                 0.5,
                 row_index as f32 + 0.5,
                 2.5,
@@ -234,16 +232,13 @@ fn check_winner(
                 .into(),
             );
             for column_index in 1..3 {
-                disp.1
-                    .set_pixel(
-                        column_index as f32,
-                        row_index as f32 + 0.5,
-                        CharacterPixel::new::<'╂'>(
-                            foreground, background,
-                        )
+                base.set_pixel(
+                    column_index as f32,
+                    row_index as f32 + 0.5,
+                    CharacterPixel::new::<'╂'>(foreground, background)
                         .into(),
-                    )
-                    .unwrap();
+                )
+                .unwrap();
             }
         }
     }
@@ -253,7 +248,7 @@ fn check_winner(
             state.iter().all(|x| x[column_index] == Some('O'))
         {
             winner = state[column_index][0];
-            disp.1.draw_line(
+            base.draw_line(
                 column_index as f32 + 0.5,
                 0.5,
                 column_index as f32 + 0.5,
@@ -265,16 +260,13 @@ fn check_winner(
                 .into(),
             );
             for row_index in 1..3 {
-                disp.1
-                    .set_pixel(
-                        column_index as f32 + 0.5,
-                        row_index as f32,
-                        CharacterPixel::new::<'┿'>(
-                            foreground, background,
-                        )
+                base.set_pixel(
+                    column_index as f32 + 0.5,
+                    row_index as f32,
+                    CharacterPixel::new::<'┿'>(foreground, background)
                         .into(),
-                    )
-                    .unwrap();
+                )
+                .unwrap();
             }
         }
     }
@@ -286,7 +278,7 @@ fn check_winner(
         diagonal1.iter().all(|x| *x == Some('O'))
     {
         winner = diagonal1[0];
-        disp.1.draw_line(
+        base.draw_line(
             0.5,
             0.5,
             2.5,
@@ -300,7 +292,7 @@ fn check_winner(
         diagonal2.iter().all(|x| *x == Some('O'))
     {
         winner = diagonal2[0];
-        disp.1.draw_line(
+        base.draw_line(
             0.5,
             2.5,
             2.5,
