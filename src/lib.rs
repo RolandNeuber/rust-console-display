@@ -4,6 +4,7 @@
 
 pub mod color;
 mod display;
+pub mod drawing;
 mod macros;
 pub mod pixel;
 pub mod widget;

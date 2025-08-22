@@ -166,6 +166,7 @@ dependencies = [
  "console-display-macros",
  "crossterm",
  "image",
+ "num-traits",
  "paste",
  "rand",
  "unicode-width",
