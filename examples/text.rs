@@ -6,6 +6,7 @@ use console_display::{
     color::TerminalColor,
     console_display::DynamicConsoleDisplay,
     display_driver::DisplayDriver,
+    drawing::DynamicCanvas,
     pixel::character_pixel::CharacterPixel,
 };
 

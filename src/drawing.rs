@@ -1,16 +1,10 @@
-use std::{
-    array,
-    marker::PhantomData,
-};
+use std::marker::PhantomData;
 
-use num_traits::{Num, NumCast};
+use num_traits::NumCast;
 
 use crate::{
     pixel::Pixel,
-    widget::{
-        DynamicWidget,
-        StaticWidget,
-    },
+    widget::DynamicWidget,
 };
 
 pub trait FillType {}
@@ -22,12 +16,77 @@ impl FillType for Filled {}
 
 /// TODO: Improve docs
 /// Implement on all displays and widgets you can draw on and query pixels from.
-pub trait DynamicCanvas<S: Pixel, A: NumCast>: DynamicWidget {
-    fn pixel(&self, x: A, y: A) -> Result<S::U, String>
+pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
+    type A: NumCast;
+    /// Returns a bool representing the state of the pixel at the specified coordinate.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    ///
+    /// use console_display::{
+    ///     console_display::DynamicConsoleDisplay,
+    ///     display_driver::DisplayDriver,
+    ///     pixel::monochrome_pixel::SinglePixel,
+    ///     pixel_display::DynamicPixelDisplay,
+    ///     drawing::DynamicCanvas
+    /// };
+    ///
+    /// let disp: DisplayDriver<DynamicPixelDisplay<SinglePixel>> = DisplayDriver::new(
+    ///     DynamicPixelDisplay::<SinglePixel>::build_from_data(
+    ///         6,
+    ///         6,
+    ///         &vec![
+    ///             true, true, true, true,  true, true, // 0
+    ///             true, true, true, true,  true, true, // 1
+    ///             true, true, true, false, true, true, //-2-
+    ///             true, true, true, true,  true, true, // 3
+    ///             true, true, true, true,  true, true, // 4
+    ///             true, true, true, true,  true, true, // 5
+    ///         ] //  0     1     2   --3--    4     5
+    ///     ).expect("Could not construct display.")
+    /// );
+    /// // Replace with actual error handling
+    ///
+    /// let pixel = disp.pixel(3, 2);
+    ///
+    /// assert_eq!(pixel, Ok(false));
+    ///
+    /// let pixel = disp.pixel(5, 6);
+    ///
+    /// assert!(matches!(pixel, Err(_)));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates are out of bounds.
+    ///
+    /// # Panics
+    ///
+    /// If the index of a subpixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
     where
         [(); S::WIDTH * S::HEIGHT]:;
 
-    fn set_pixel(&mut self, x: A, y: A, value: S::U) -> Result<(), String>
+    /// Set a pixel at the specified coordinate with a given value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the pixel coordinates are out of bounds.
+    ///
+    /// # Panics
+    ///
+    /// If the index of a subpixel is out of bounds.
+    /// This should not happen and is subject to change in the future.
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), String>
     where
         [(); S::WIDTH * S::HEIGHT]:;
 
@@ -44,7 +103,7 @@ pub trait DynamicCanvas<S: Pixel, A: NumCast>: DynamicWidget {
 }
 
 pub trait DynamicDrawable<const N: usize> {
-    fn draw<T: DynamicCanvas<S, A>, S: Pixel, A: NumCast>(
+    fn draw<T: DynamicCanvas<S>, S: Pixel>(
         &self,
         display: &mut T,
         value: S::U,
@@ -56,6 +115,7 @@ pub trait DynamicDrawable<const N: usize> {
     ) -> Self;
 }
 
+#[derive(PartialEq, Debug)]
 pub struct Line {
     pub x1: f32,
     pub y1: f32,
@@ -64,7 +124,7 @@ pub struct Line {
 }
 
 impl DynamicDrawable<2> for Line {
-    fn draw<T: DynamicCanvas<S, A>, S: Pixel, A: NumCast>(
+    fn draw<T: DynamicCanvas<S>, S: Pixel>(
         &self,
         display: &mut T,
         value: S::U,
@@ -87,12 +147,10 @@ impl DynamicDrawable<2> for Line {
             if x > -0.5 && y > -0.5 {
                 let x = NumCast::from(x.round());
                 let y = NumCast::from(y.round());
-                if let Some(x) = x && let Some(y) = y {
-                    let _ = display.set_pixel(
-                        x,
-                        y,
-                        value,
-                    );
+                if let Some(x) = x &&
+                    let Some(y) = y
+                {
+                    let _ = display.set_pixel(x, y, value);
                 }
             }
             x += x_inc;
@@ -115,6 +173,7 @@ impl DynamicDrawable<2> for Line {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub struct Rectangle<FILL: FillType> {
     pub x1: f32,
     pub y1: f32,
@@ -124,7 +183,7 @@ pub struct Rectangle<FILL: FillType> {
 }
 
 impl DynamicDrawable<2> for Rectangle<NoFill> {
-    fn draw<T: DynamicCanvas<S, A>, S: Pixel, A: NumCast>(
+    fn draw<T: DynamicCanvas<S>, S: Pixel>(
         &self,
         display: &mut T,
         value: S::U,
@@ -180,7 +239,7 @@ impl DynamicDrawable<2> for Rectangle<NoFill> {
 }
 
 impl DynamicDrawable<2> for Rectangle<Filled> {
-    fn draw<T: DynamicCanvas<S, A>, S: Pixel, A: NumCast>(
+    fn draw<T: DynamicCanvas<S>, S: Pixel>(
         &self,
         display: &mut T,
         value: S::U,
@@ -210,6 +269,34 @@ impl DynamicDrawable<2> for Rectangle<Filled> {
             x2: trans_p2.0,
             y2: trans_p2.1,
             fill: PhantomData::<Filled>,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    mod line {
+        use crate::drawing::{
+            DynamicDrawable,
+            Line,
+        };
+
+        #[test]
+        fn line_transform() {
+            let expected = Line {
+                x1: 1.,
+                y1: 1.,
+                x2: 3.,
+                y2: 3.,
+            };
+            let line = Line {
+                x1: 0.,
+                y1: 1.,
+                x2: 2.,
+                y2: 3.,
+            };
+            let transform = line.transform(|(x, y)| (x + 1., y));
+            assert_eq!(expected, transform);
         }
     }
 }

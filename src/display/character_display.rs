@@ -1,11 +1,17 @@
+use num_traits::NumCast;
+
 use crate::{
     console_display::{
         DynamicConsoleDisplay,
         StaticConsoleDisplay,
     },
+    drawing::DynamicCanvas,
     pixel::{
         Pixel,
-        character_pixel::CharacterPixel,
+        character_pixel::{
+            CharacterPixel,
+            CharacterPixelData,
+        },
     },
     widget::{
         DynamicWidget,
@@ -156,6 +162,87 @@ impl DynamicWidget for DynamicCharacterDisplay<CharacterPixel> {
         }
 
         StringData { data: result }
+    }
+}
+
+impl<S: Pixel<U = CharacterPixelData>> DynamicCanvas<S>
+    for DynamicCharacterDisplay<CharacterPixel>
+{
+    type A = usize;
+
+    fn pixel(
+        &self,
+        x: Self::A,
+        y: Self::A,
+    ) -> Result<CharacterPixelData, String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let pixel =
+                &self.data()[block_x + block_y * self.width_characters()];
+
+            Ok(pixel
+                .subpixel(offset_x, offset_y)
+                .expect("Offset should be 0 or 1."))
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let width_characters = self.width_characters();
+            let pixel =
+                &mut self.data_mut()[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(offset_x, offset_y, value)
+                .expect("Offset should be 0 or 1.");
+
+            Ok(())
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
     }
 }
 
@@ -326,6 +413,81 @@ impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
     const WIDTH_CHARACTERS: usize = WIDTH;
 
     const HEIGHT_CHARACTERS: usize = HEIGHT;
+}
+
+impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
+    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+{
+    type A = usize;
+
+    fn pixel(
+        &self,
+        x: Self::A,
+        y: Self::A,
+    ) -> Result<CharacterPixelData, String>
+    where
+        [(); CharacterPixel::WIDTH * CharacterPixel::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / CharacterPixel::WIDTH;
+            let block_y: usize = y / CharacterPixel::HEIGHT;
+
+            let pixel =
+                &self.data()[block_x + block_y * self.width_characters()];
+
+            Ok(pixel.subpixel(0, 0).expect("Offset should be 0."))
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: CharacterPixelData,
+    ) -> Result<(), String>
+    where
+        [(); CharacterPixel::WIDTH * CharacterPixel::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / CharacterPixel::WIDTH;
+            let block_y: usize = y / CharacterPixel::HEIGHT;
+
+            let width_characters = self.width_characters();
+            let pixel =
+                &mut self.data_mut()[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(0, 0, value)
+                .expect("Offset should be 0.");
+
+            Ok(())
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
 }
 
 #[cfg(test)]

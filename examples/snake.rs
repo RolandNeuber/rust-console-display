@@ -15,6 +15,7 @@ use console_display::{
         DisplayDriver,
         UpdateStatus,
     },
+    drawing::DynamicCanvas,
     pixel::{
         character_pixel::CharacterPixel,
         color_pixel::ColorDualPixel,

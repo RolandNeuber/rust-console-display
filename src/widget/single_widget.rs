@@ -18,11 +18,13 @@ use console_display_macros::{
     SingleWidget,
     StaticWidget,
 };
+use num_traits::NumCast;
 
 use crate::{
     color::TerminalColor,
     console_display::DynamicConsoleDisplay,
     constraint,
+    drawing::DynamicCanvas,
     impl_getters,
     impl_new,
     impl_setters,
@@ -65,22 +67,10 @@ pub struct UvWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     uv_y_max: f32,
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
-    pub fn new(child: T) -> Self {
-        let (width, height) = (child.width(), child.height());
-        Self {
-            pixel_type: PhantomData::<S>,
-            child,
-            uv_x_min: 0.0,
-            uv_x_max: width as f32,
-            uv_y_min: 0.0,
-            uv_y_max: height as f32,
-        }
-    }
-}
-
-impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
-    impl_setters!(pub const uv_x_min: f32, pub const uv_x_max: f32, pub const uv_y_min: f32, pub const uv_y_max: f32);
+impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
+    for UvWidget<T, S>
+{
+    type A = f32;
 
     /// Gets the pixel at the _uv_ coordinate (x, y).
     /// Using coordinates outside the uv mapping is considered
@@ -89,9 +79,13 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     /// # Errors
     ///
     /// Returns an error if the pixel coordinates calculated by the UV mapping are out of bounds.
-    pub fn pixel(&self, x: f32, y: f32) -> Result<S::U, String>
+    fn pixel(
+        &self,
+        x: Self::A,
+        y: Self::A,
+    ) -> Result<<S as Pixel>::U, String>
     where
-        [(); S::WIDTH * S::HEIGHT]:,
+        [(); <S as Pixel>::WIDTH * <S as Pixel>::HEIGHT]:,
     {
         let display = self.child();
         let uv = (
@@ -108,7 +102,10 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
                 display.width(),
             ),
         );
-        display.pixel(uv.0, uv.1)
+        display.pixel(
+            NumCast::from(uv.0).unwrap(),
+            NumCast::from(uv.1).unwrap(),
+        )
     }
 
     /// Sets the pixel at the _uv_ coordinate (x, y).
@@ -116,14 +113,14 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     /// # Errors
     ///
     /// Returns an error if the coordinates are outside the uv mapping.
-    pub fn set_pixel(
+    fn set_pixel(
         &mut self,
-        x: f32,
-        y: f32,
-        value: S::U,
+        x: Self::A,
+        y: Self::A,
+        value: <S as Pixel>::U,
     ) -> Result<(), String>
     where
-        [(); S::WIDTH * S::HEIGHT]:,
+        [(); <S as Pixel>::WIDTH * <S as Pixel>::HEIGHT]:,
     {
         let display = self.child();
         // Note: Checks need to consider that uv_max < uv_min.
@@ -152,51 +149,57 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
                 display.height(),
             ),
         );
-        self.child_mut().set_pixel(uv.0, uv.1, value)
+        self.child_mut().set_pixel(
+            NumCast::from(uv.0).unwrap(),
+            NumCast::from(uv.1).unwrap(),
+            value,
+        )
     }
 
-    pub fn draw_line(
+    fn draw<D: crate::drawing::DynamicDrawable<N>, const N: usize>(
         &mut self,
-        x1: f32,
-        y1: f32,
-        x2: f32,
-        y2: f32,
-        value: S::U,
+        drawable: &D,
+        value: <S as Pixel>::U,
     ) where
-        [(); S::WIDTH * S::HEIGHT]:,
+        Self: Sized,
+        [(); <S as Pixel>::WIDTH * <S as Pixel>::HEIGHT]:,
     {
-        let display = self.child();
-        let uv1 = (
-            Self::uv_to_texture_f32(
-                x1,
-                self.uv_x_min,
-                self.uv_x_max,
-                display.width() as f32,
-            ),
-            Self::uv_to_texture_f32(
-                y1,
-                self.uv_y_min,
-                self.uv_y_max,
-                display.height() as f32,
-            ),
-        );
-        let uv2 = (
-            Self::uv_to_texture_f32(
-                x2,
-                self.uv_x_min,
-                self.uv_x_max,
-                display.width() as f32,
-            ),
-            Self::uv_to_texture_f32(
-                y2,
-                self.uv_y_min,
-                self.uv_y_max,
-                display.height() as f32,
-            ),
-        );
-        self.child_mut()
-            .draw_line_f32(uv1.0, uv1.1, uv2.0, uv2.1, value);
+        let drawable = drawable.transform(|(x, y)| {
+            (
+                Self::uv_to_texture_f32(
+                    x,
+                    self.uv_x_min,
+                    self.uv_x_max,
+                    self.width() as f32,
+                ),
+                Self::uv_to_texture_f32(
+                    y,
+                    self.uv_y_min,
+                    self.uv_y_max,
+                    self.height() as f32,
+                ),
+            )
+        });
+        drawable.draw(self.child_mut(), value);
     }
+}
+
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
+    pub fn new(child: T) -> Self {
+        let (width, height) = (child.width(), child.height());
+        Self {
+            pixel_type: PhantomData::<S>,
+            child,
+            uv_x_min: 0.0,
+            uv_x_max: width as f32,
+            uv_y_min: 0.0,
+            uv_y_max: height as f32,
+        }
+    }
+}
+
+impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
+    impl_setters!(pub const uv_x_min: f32, pub const uv_x_max: f32, pub const uv_y_min: f32, pub const uv_y_max: f32);
 
     #[must_use]
     pub fn uv_x_to_texture(&self, x: f32) -> usize {

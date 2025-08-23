@@ -11,6 +11,10 @@ use console_display::{
         DisplayDriver,
         UpdateStatus,
     },
+    drawing::{
+        DynamicCanvas,
+        Line,
+    },
     pixel::{
         Pixel,
         character_pixel::CharacterPixel,
@@ -57,20 +61,24 @@ fn main() {
 
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_possible_wrap)]
-    axis.draw_line(
-        0.,
-        0.5,
-        1.,
-        0.5,
+    axis.draw(
+        &Line {
+            x1: 0.,
+            y1: 0.5,
+            x2: 1.,
+            y2: 0.5,
+        },
         CharacterPixel::new::<'─'>(foreground, transparent).into(),
     );
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_possible_wrap)]
-    axis.draw_line(
-        0.5,
-        0.,
-        0.5,
-        1.,
+    axis.draw(
+        &Line {
+            x1: 0.5,
+            y1: 0.,
+            x2: 0.5,
+            y2: 1.,
+        },
         CharacterPixel::new::<'│'>(foreground, transparent).into(),
     );
     axis.set_pixel(
@@ -101,11 +109,13 @@ fn main() {
         for x in xs {
             let y = function(x);
 
-            this.base_mut().draw_line(
-                old_x,
-                old_y,
-                x,
-                y,
+            this.base_mut().draw(
+                &Line {
+                    x1: old_x,
+                    y1: old_y,
+                    x2: x,
+                    y2: y,
+                },
                 RGBColor::WHITE.into(),
             );
 
