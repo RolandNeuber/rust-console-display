@@ -569,7 +569,7 @@ mod tests {
                 ARGBColor,
                 RGBColor,
             },
-            console_display::DynamicConsoleDisplay,
+            drawing::DynamicCanvas,
             pixel_display::DynamicPixelDisplay,
         };
 

@@ -1,11 +1,13 @@
 use core::array;
 
+use num_traits::NumCast;
+
 use crate::{
     console_display::{
         DynamicConsoleDisplay,
         StaticConsoleDisplay,
     },
-    constraint,
+    drawing::DynamicCanvas,
     pixel::Pixel,
     widget::{
         DynamicWidget,
@@ -139,6 +141,81 @@ impl<T: Pixel> DynamicWidget for DynamicPixelDisplay<T> {
     }
 }
 
+impl<S: Pixel> DynamicCanvas<S> for DynamicPixelDisplay<S> {
+    type A = usize;
+
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let pixel =
+                &self.data()[block_x + block_y * self.width_characters()];
+
+            Ok(pixel
+                .subpixel(offset_x, offset_y)
+                .expect("Offset should be 0 or 1."))
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let width_characters = self.width_characters();
+            let pixel =
+                &mut self.data_mut()[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(offset_x, offset_y, value)
+                .expect("Offset should be 0 or 1.");
+
+            Ok(())
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+}
+
 /// Represents a console display with a width and height in pixels.
 pub struct StaticPixelDisplay<
     T: Pixel,
@@ -193,95 +270,6 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
         Self {
             data: multi_pixels.into_boxed_slice(),
         }
-    }
-
-    // TODO: Update docs
-    /// Returns a bool representing the state of the pixel at the specified coordinate.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #![allow(incomplete_features)]
-    /// #![feature(generic_const_exprs)]
-    ///
-    /// use console_display::{
-    ///     console_display::DynamicConsoleDisplay,
-    ///     display_driver::DisplayDriver,
-    ///     pixel::monochrome_pixel::SinglePixel,
-    ///     pixel_display::StaticPixelDisplay
-    /// };
-    ///
-    /// let disp: DisplayDriver<StaticPixelDisplay<SinglePixel, 6, 6>> = DisplayDriver::new(
-    ///     StaticPixelDisplay::<SinglePixel, 6, 6>::new_from_data(
-    ///         &[
-    ///             true, true, true, true,  true, true, // 0
-    ///             true, true, true, true,  true, true, // 1
-    ///             true, true, true, false, true, true, //-2-
-    ///             true, true, true, true,  true, true, // 3
-    ///             true, true, true, true,  true, true, // 4
-    ///             true, true, true, true,  true, true, // 5
-    ///         ] //  0     1     2   --3--    4     5
-    ///     )
-    /// );
-    /// // Replace with actual error handling
-    ///
-    /// let pixel = disp.pixel(3, 2);
-    ///
-    /// assert_eq!(pixel, Ok(false));
-    ///
-    /// let pixel = disp.pixel(5, 6);
-    ///
-    /// assert!(matches!(pixel, Err(_)));
-    /// ```
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the pixel coordinates are out of bounds.
-    ///
-    /// # Panics
-    ///
-    /// If the index of a subpixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    #[must_use]
-    pub fn pixel_static<const X: usize, const Y: usize>(&self) -> T::U
-    where
-        constraint!(X <= WIDTH):,
-        constraint!(Y <= HEIGHT):,
-        constraint!(X % T::WIDTH < T::WIDTH):,
-        constraint!(Y % T::HEIGHT < T::HEIGHT):,
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        let pixel = &self.data()
-            [X / T::WIDTH + Y / T::HEIGHT * Self::WIDTH_CHARACTERS];
-        pixel.subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>()
-    }
-
-    // TODO: Update docs
-    /// Set a pixel at the specified coordinate with a given value.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the pixel coordinates are out of bounds.
-    ///
-    /// # Panics
-    ///
-    /// If the index of a subpixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    pub fn set_pixel_static<const X: usize, const Y: usize>(
-        &mut self,
-        value: T::U,
-    ) where
-        constraint!(X <= WIDTH):,
-        constraint!(Y <= HEIGHT):,
-        constraint!(X % T::WIDTH < T::WIDTH):,
-        constraint!(Y % T::HEIGHT < T::HEIGHT):,
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        let pixel = &mut self.data_mut()
-            [X / T::WIDTH + Y / T::HEIGHT * Self::WIDTH_CHARACTERS];
-        pixel.set_subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>(
-            value,
-        );
     }
 }
 
@@ -343,6 +331,83 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     }
 }
 
+impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<S>
+    for StaticPixelDisplay<S, WIDTH, HEIGHT>
+{
+    type A = usize;
+
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let pixel =
+                &self.data()[block_x + block_y * self.width_characters()];
+
+            Ok(pixel
+                .subpixel(offset_x, offset_y)
+                .expect("Offset should be 0 or 1."))
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let width_characters = self.width_characters();
+            let pixel =
+                &mut self.data_mut()[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(offset_x, offset_y, value)
+                .expect("Offset should be 0 or 1.");
+
+            Ok(())
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::pixel::monochrome_pixel::SinglePixel;
@@ -350,6 +415,8 @@ mod tests {
     use super::*;
 
     mod dynamic_pixel_display {
+        use crate::drawing::DynamicCanvas;
+
         use super::*;
 
         #[test]

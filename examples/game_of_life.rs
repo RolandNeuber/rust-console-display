@@ -9,6 +9,7 @@ use console_display::{
         DisplayDriver,
         UpdateStatus,
     },
+    drawing::DynamicCanvas,
     pixel::monochrome_pixel::OctPixel,
     pixel_display::StaticPixelDisplay,
     widget::single_widget::DoubleBufferWidget,

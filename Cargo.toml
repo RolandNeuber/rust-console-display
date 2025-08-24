@@ -15,6 +15,7 @@ categories = ["command-line-interface", "gui", "graphics"]
 [dependencies]
 console-display-macros = { path = "./rust-console-display-macros" }
 crossterm = "0.28.1"
+num-traits = "0.2.19"
 paste = "1.0.15"
 rand = "0.8.5"
 unicode-width = "0.2.0"

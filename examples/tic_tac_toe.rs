@@ -12,12 +12,17 @@ use console_display::{
         DisplayDriver,
         UpdateStatus,
     },
+    drawing::{
+        DynamicCanvas,
+        Line,
+    },
     pixel::character_pixel::CharacterPixel,
     widget::{
         single_widget::UvWidget,
         two_widget::OverlayWidget,
     },
 };
+
 use crossterm::event::KeyCode;
 
 type Base = UvWidget<
@@ -62,18 +67,22 @@ fn main() {
     base.set_uv_y_max(3.);
 
     for i in 0..4 {
-        base.draw_line(
-            0.,
-            i as f32,
-            3.,
-            i as f32,
+        base.draw(
+            &Line {
+                x1: 0.,
+                y1: i as f32,
+                x2: 3.,
+                y2: i as f32,
+            },
             CharacterPixel::new::<'━'>(foreground, background).into(),
         );
-        base.draw_line(
-            i as f32,
-            0.,
-            i as f32,
-            3.,
+        base.draw(
+            &Line {
+                x1: i as f32,
+                y1: 0.,
+                x2: i as f32,
+                y2: 3.,
+            },
             CharacterPixel::new::<'┃'>(foreground, background).into(),
         );
     }
@@ -220,11 +229,13 @@ fn check_winner(
             row.iter().all(|x| *x == Some('O'))
         {
             winner = row[0];
-            base.draw_line(
-                0.5,
-                row_index as f32 + 0.5,
-                2.5,
-                row_index as f32 + 0.5,
+            base.draw(
+                &Line {
+                    x1: 0.5,
+                    y1: row_index as f32 + 0.5,
+                    x2: 2.5,
+                    y2: row_index as f32 + 0.5,
+                },
                 CharacterPixel::new::<'─'>(
                     RGBColor::RED.into(),
                     background,
@@ -248,11 +259,13 @@ fn check_winner(
             state.iter().all(|x| x[column_index] == Some('O'))
         {
             winner = state[column_index][0];
-            base.draw_line(
-                column_index as f32 + 0.5,
-                0.5,
-                column_index as f32 + 0.5,
-                2.5,
+            base.draw(
+                &Line {
+                    x1: column_index as f32 + 0.5,
+                    y1: 0.5,
+                    x2: column_index as f32 + 0.5,
+                    y2: 2.5,
+                },
                 CharacterPixel::new::<'│'>(
                     RGBColor::RED.into(),
                     background,
@@ -278,11 +291,13 @@ fn check_winner(
         diagonal1.iter().all(|x| *x == Some('O'))
     {
         winner = diagonal1[0];
-        base.draw_line(
-            0.5,
-            0.5,
-            2.5,
-            2.5,
+        base.draw(
+            &Line {
+                x1: 0.5,
+                y1: 0.5,
+                x2: 2.5,
+                y2: 2.5,
+            },
             CharacterPixel::new::<'*'>(RGBColor::RED.into(), background)
                 .into(),
         );
@@ -292,11 +307,13 @@ fn check_winner(
         diagonal2.iter().all(|x| *x == Some('O'))
     {
         winner = diagonal2[0];
-        base.draw_line(
-            0.5,
-            2.5,
-            2.5,
-            0.5,
+        base.draw(
+            &Line {
+                x1: 0.5,
+                y1: 2.5,
+                x2: 2.5,
+                y2: 0.5,
+            },
             CharacterPixel::new::<'*'>(RGBColor::RED.into(), background)
                 .into(),
         );
