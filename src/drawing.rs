@@ -11,12 +11,12 @@ use crate::{
 pub trait FillType {}
 
 /// Defines no fill on a drawable, e.g. only outline.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct NoFill;
 impl FillType for NoFill {}
 
 /// Defines flat fill on a drawable.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct Filled;
 impl FillType for Filled {}
 
@@ -121,6 +121,7 @@ pub trait DynamicDrawable<const N: usize> {
 
     /// Transforms the drawable by applying a function to all coordinate pairs that define it.
     /// Returns a new transformed drawable.
+    #[must_use]
     fn transform<F: Fn((f32, f32)) -> (f32, f32)>(
         &self,
         transform: F,
@@ -177,7 +178,7 @@ impl DynamicDrawable<2> for Line {
     ) -> Self {
         let trans_p1 = transform((self.x1, self.y1));
         let trans_p2 = transform((self.x2, self.y2));
-        Line {
+        Self {
             x1: trans_p1.0,
             y1: trans_p1.1,
             x2: trans_p2.0,
@@ -242,7 +243,7 @@ impl DynamicDrawable<2> for Rectangle<NoFill> {
     ) -> Self {
         let trans_p1 = transform((self.x1, self.y1));
         let trans_p2 = transform((self.x2, self.y2));
-        Rectangle {
+        Self {
             x1: trans_p1.0,
             y1: trans_p1.1,
             x2: trans_p2.0,
@@ -260,6 +261,7 @@ impl DynamicDrawable<2> for Rectangle<Filled> {
     ) where
         [(); S::WIDTH * S::HEIGHT]:,
     {
+        #[allow(clippy::cast_possible_truncation)]
         for x in self.x1.round() as i32..=self.x2.round() as i32 {
             let line = Line {
                 x1: x as f32,
@@ -277,7 +279,7 @@ impl DynamicDrawable<2> for Rectangle<Filled> {
     ) -> Self {
         let trans_p1 = transform((self.x1, self.y1));
         let trans_p2 = transform((self.x2, self.y2));
-        Rectangle {
+        Self {
             x1: trans_p1.0,
             y1: trans_p1.1,
             x2: trans_p2.0,
