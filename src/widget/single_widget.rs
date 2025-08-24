@@ -1042,6 +1042,8 @@ mod tests {
     }
 
     mod double_buffer_widget {
+        use crate::console_display::StaticConsoleDisplay;
+
         use super::*;
 
         #[test]

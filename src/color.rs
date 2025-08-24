@@ -48,7 +48,7 @@ where
 /// Defines a color, usually used for foreground and background.
 ///
 /// `Default` - Uses the default color provided by the terminal for foreground or background respectively.\
-/// `ARGBColor` - Displays an actual opaque color made of RGB components and an alpha/opacity channel.
+/// `ARGBColor` - Displays a color made of RGB components and an alpha/opacity channel.
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub enum TerminalColor {
     #[default]

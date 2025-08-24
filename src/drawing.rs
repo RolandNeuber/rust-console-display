@@ -7,15 +7,20 @@ use crate::{
     widget::DynamicWidget,
 };
 
+/// Defines a fill for a drawable.
 pub trait FillType {}
 
+/// Defines no fill on a drawable, e.g. only outline.
+#[derive(PartialEq, Debug)]
 pub struct NoFill;
 impl FillType for NoFill {}
+
+/// Defines flat fill on a drawable.
+#[derive(PartialEq, Debug)]
 pub struct Filled;
 impl FillType for Filled {}
 
-/// TODO: Improve docs
-/// Implement on all displays and widgets you can draw on and query pixels from.
+/// Defines an object that you can draw on and query pixels from.
 pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
     type A: NumCast;
     /// Returns a bool representing the state of the pixel at the specified coordinate.
@@ -90,6 +95,8 @@ pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
     where
         [(); S::WIDTH * S::HEIGHT]:;
 
+    /// Draw a drawable/shape onto a canvas with the specified pixel type/brush.
+    /// Convenience method for inversing `DynamicDrawable::draw` by using double dispatch.
     fn draw<D: DynamicDrawable<N>, const N: usize>(
         &mut self,
         drawable: &D,
@@ -102,19 +109,25 @@ pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
     }
 }
 
+/// Defines an object that can be drawn onto a canvas.
 pub trait DynamicDrawable<const N: usize> {
+    /// Draws the drawable onto a canvas with the specified pixel type/brush.
     fn draw<T: DynamicCanvas<S>, S: Pixel>(
         &self,
         display: &mut T,
         value: S::U,
     ) where
         [(); S::WIDTH * S::HEIGHT]:;
+
+    /// Transforms the drawable by applying a function to all coordinate pairs that define it.
+    /// Returns a new transformed drawable.
     fn transform<F: Fn((f32, f32)) -> (f32, f32)>(
         &self,
         transform: F,
     ) -> Self;
 }
 
+/// Defines a line primitive by two endpoints.
 #[derive(PartialEq, Debug)]
 pub struct Line {
     pub x1: f32,
@@ -173,6 +186,7 @@ impl DynamicDrawable<2> for Line {
     }
 }
 
+/// Defines a Rectangle by two corners.
 #[derive(PartialEq, Debug)]
 pub struct Rectangle<FILL: FillType> {
     pub x1: f32,
@@ -282,7 +296,7 @@ mod tests {
         };
 
         #[test]
-        fn line_transform() {
+        fn transform() {
             let expected = Line {
                 x1: 1.,
                 y1: 1.,
@@ -296,6 +310,38 @@ mod tests {
                 y2: 3.,
             };
             let transform = line.transform(|(x, y)| (x + 1., y));
+            assert_eq!(expected, transform);
+        }
+    }
+
+    mod rectagle {
+        use std::marker::PhantomData;
+
+        use crate::drawing::{
+            DynamicDrawable,
+            NoFill,
+            Rectangle,
+        };
+
+        #[test]
+        fn transform() {
+            let expected = Rectangle {
+                x1: -10.,
+                y1: -10.,
+                x2: 10.,
+                y2: 10.,
+                fill: PhantomData::<NoFill>,
+            };
+            let rect = Rectangle {
+                x1: 0.,
+                y1: 0.,
+                x2: 10.,
+                y2: 20.,
+                fill: PhantomData::<NoFill>,
+            };
+            let transform = rect.transform(|(x, y)| {
+                (if x == 0. { -10. } else { x }, y - 10.)
+            });
             assert_eq!(expected, transform);
         }
     }
