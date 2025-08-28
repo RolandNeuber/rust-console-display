@@ -38,7 +38,7 @@ jobs:
 
     - name: Install Rust nightly
       run: |
-        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ]; then
+        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ] && [ -f "$HOME/.cargo/bin/cargo-llvm-cov" ]; then
             echo "Rust is already installed. Skipping installation."
             rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt
         else
