@@ -49,7 +49,7 @@ where
 ///
 /// `Default` - Uses the default color provided by the terminal for foreground or background respectively.\
 /// `ARGBColor` - Displays a color made of RGB components and an alpha/opacity channel.
-#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
 pub enum TerminalColor {
     #[default]
     Default,
@@ -151,7 +151,7 @@ impl From<ARGBColor> for TerminalColor {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct RGBColor {
     pub r: u8,
     pub g: u8,
@@ -198,10 +198,8 @@ impl Color for RGBColor {
             sum.1 += u32::from(color.g);
             sum.2 += u32::from(color.b);
         }
-        let Ok(colors_len) = u32::try_from(colors.len())
-        else {
-            panic!("colors contains too many elements");
-        };
+        let colors_len = u32::try_from(colors.len())
+            .expect("colors contains too many elements");
 
         Self {
             r: (sum.0 / colors_len).clamp(0, 255) as u8,
@@ -238,7 +236,7 @@ impl RGBColor {
     };
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ARGBColor {
     pub opacity: u8,
     pub color: RGBColor,
@@ -309,10 +307,8 @@ impl Color for ARGBColor {
         for color in colors {
             sum_opacity += u32::from(color.opacity);
         }
-        let Ok(colors_len) = u32::try_from(colors.len())
-        else {
-            panic!("colors contains too many elements");
-        };
+        let colors_len = u32::try_from(colors.len())
+            .expect("colors contains too many elements");
 
         Self {
             opacity: (sum_opacity / colors_len).clamp(0, 255) as u8,
@@ -335,6 +331,203 @@ impl From<RGBColor> for ARGBColor {
         Self {
             opacity: u8::MAX,
             color: value,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    mod rgb_color {
+        use super::*;
+        use rand::{
+            Rng,
+            thread_rng,
+        };
+
+        #[test]
+        fn blend() {
+            let top = RGBColor {
+                r: thread_rng().gen_range(0..=255),
+                g: thread_rng().gen_range(0..=255),
+                b: thread_rng().gen_range(0..=255),
+            };
+            let bottom = RGBColor {
+                r: thread_rng().gen_range(0..=255),
+                g: thread_rng().gen_range(0..=255),
+                b: thread_rng().gen_range(0..=255),
+            };
+            assert_eq!(top, RGBColor::blend(&top, &bottom));
+        }
+
+        #[test]
+        fn color() {
+            let msg =
+                RGBColor::color("test", &RGBColor::RED, &RGBColor::BLACK);
+            assert!(msg.chars().count() > 4);
+        }
+
+        #[test]
+        fn group() {
+            let colors =
+                [RGBColor::BLACK, RGBColor::WHITE, RGBColor::BLACK];
+            let grouping = RGBColor::group(&colors);
+            assert_ne!(grouping[0], grouping[1]);
+            assert_ne!(grouping[1], grouping[2]);
+            assert_eq!(grouping[0], grouping[2]);
+        }
+
+        #[test]
+        fn group_equal() {
+            let colors =
+                [RGBColor::BLACK, RGBColor::BLACK, RGBColor::BLACK];
+            let grouping = RGBColor::group(&colors);
+            assert_eq!(grouping[0], grouping[1]);
+            assert_eq!(grouping[1], grouping[2]);
+            assert_eq!(grouping[0], grouping[2]);
+        }
+    }
+
+    mod terminal_color {
+        use super::*;
+
+        #[test]
+        fn color_none() {
+            let msg = TerminalColor::color(
+                "test",
+                &TerminalColor::Default,
+                &TerminalColor::Default,
+            );
+            assert_eq!(msg, "test");
+        }
+
+        #[test]
+        fn color_default() {
+            let msg = TerminalColor::color(
+                "test",
+                &RGBColor::RED.into(),
+                &TerminalColor::Default,
+            );
+            assert!(msg.chars().count() > 4);
+        }
+
+        #[test]
+        fn distance() {
+            let dist_prio = TerminalColor::distance(
+                &RGBColor::BLACK.into(),
+                &TerminalColor::Default,
+            );
+            let dist_min = TerminalColor::distance(
+                &RGBColor::BLACK.into(),
+                &RGBColor::BLACK.into(),
+            );
+            let dist = TerminalColor::distance(
+                &RGBColor::BLACK.into(),
+                &RGBColor::RED.into(),
+            );
+            let dist_max = TerminalColor::distance(
+                &RGBColor::BLACK.into(),
+                &RGBColor::WHITE.into(),
+            );
+
+            assert!(dist_prio <= dist_min);
+            assert!(dist_min < dist);
+            assert!(dist < dist_max);
+        }
+
+        #[test]
+        fn mix() {
+            let colors = [RGBColor::BLACK, RGBColor::RED, RGBColor::GREEN]
+                .map(Into::into);
+            let mix = TerminalColor::mix(&colors);
+            assert_eq!(
+                mix,
+                RGBColor {
+                    r: 255 / 3,
+                    g: 255 / 3,
+                    b: 0
+                }
+                .into()
+            );
+        }
+
+        #[test]
+        fn mix_empty() {
+            let colors = [];
+            let mix = TerminalColor::mix(&colors);
+            assert_eq!(mix, TerminalColor::Default);
+        }
+
+        #[test]
+        fn mix_only_default() {
+            let colors = [TerminalColor::Default, TerminalColor::Default];
+            let mix = TerminalColor::mix(&colors);
+            assert_eq!(mix, TerminalColor::Default);
+        }
+
+        #[test]
+        fn mix_default() {
+            let colors = [
+                RGBColor::BLACK.into(),
+                TerminalColor::Default,
+                RGBColor::WHITE.into(),
+            ];
+            let mix = TerminalColor::mix(&colors);
+            assert_eq!(
+                mix,
+                RGBColor {
+                    r: 255 / 2,
+                    g: 255 / 2,
+                    b: 255 / 2
+                }
+                .into()
+            );
+        }
+
+        #[test]
+        fn blend_translucent_default() {
+            let translucent_red = ARGBColor::mix(&[
+                RGBColor::RED.into(),
+                ARGBColor::TRANSPARENT,
+            ])
+            .into();
+            let color = TerminalColor::blend(
+                &translucent_red,
+                &TerminalColor::Default,
+            );
+            assert_eq!(color, translucent_red);
+        }
+
+        #[test]
+        fn blend_transparent_default() {
+            let color = TerminalColor::blend(
+                &ARGBColor::TRANSPARENT.into(),
+                &TerminalColor::Default,
+            );
+            assert_eq!(color, TerminalColor::Default);
+        }
+
+        #[test]
+        fn from_argb() {
+            let color: TerminalColor = ARGBColor::TRANSPARENT.into();
+            assert_eq!(
+                color,
+                TerminalColor::ARGBColor(ARGBColor::TRANSPARENT)
+            );
+        }
+    }
+
+    mod argb_color {
+        use super::*;
+
+        #[test]
+        fn color() {
+            let msg = ARGBColor::color(
+                "test",
+                &RGBColor::RED.into(),
+                &RGBColor::BLACK.into(),
+            );
+            assert!(msg.chars().count() > 4);
         }
     }
 }

@@ -77,7 +77,7 @@ jobs:
         cargo +nightly llvm-cov clean --workspace;
         cargo +nightly llvm-cov --no-report --workspace --all-features --all-targets;
         cargo +nightly llvm-cov --no-report --workspace --all-features --doctests;
-        cargo +nightly llvm-cov report --fail-under-regions 30;
+        cargo +nightly llvm-cov report --fail-under-regions 40;
         
     # Needed to catch dangling references in documentation.
     - name: Build documentation
