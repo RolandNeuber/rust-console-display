@@ -1,10 +1,60 @@
+//! Provides abstractions over colors that are used in terminal context.
+
+/// Defines a color used to color text.
 pub trait Color
 where
     Self: Sized,
 {
+    /// Blends the top with the bottom color.
+    /// In the case of opaque colors this simply returns the top color.
+    /// If the top color is completely transparent it returns the bottom color.
+    /// For a translucent top color this returns a mix of both colors weighted by their opacity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use console_display::color::{
+    ///     Color,
+    ///     RGBColor,
+    /// };
+    /// use rand::{
+    ///     Rng,
+    ///     thread_rng,
+    /// };
+    ///
+    /// let top = RGBColor {
+    ///     r: thread_rng().gen_range(0..=255),
+    ///     g: thread_rng().gen_range(0..=255),
+    ///     b: thread_rng().gen_range(0..=255),
+    /// };
+    /// let bottom = RGBColor {
+    ///     r: thread_rng().gen_range(0..=255),
+    ///     g: thread_rng().gen_range(0..=255),
+    ///     b: thread_rng().gen_range(0..=255),
+    /// };
+    ///
+    /// // Opaque top color is returned.
+    /// assert_eq!(top, RGBColor::blend(&top, &bottom));
+    /// ```
     #[must_use]
     fn blend(color_top: &Self, color_bottom: &Self) -> Self;
 
+    /// Colors a text with a foreground and background color.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use console_display::color::{
+    ///     Color,
+    ///     RGBColor,
+    /// };
+    ///
+    /// let msg =
+    ///     RGBColor::color("test", &RGBColor::RED, &RGBColor::BLACK);
+    ///
+    /// // msg contains escape sequences containing color information.
+    /// assert!(msg.chars().count() > 4);
+    /// ```
     #[must_use]
     fn color(
         text: &str,
@@ -12,12 +62,98 @@ where
         background_color: &Self,
     ) -> String;
 
+    /// Calculates the relative distance between two colors.
+    /// For smaller distances the returned value is smaller.
+    /// There are no guarantees for the exact return value, so this has only meaning in comparisons.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use console_display::color::{
+    ///     Color,
+    ///     RGBColor,
+    ///     TerminalColor,
+    /// };
+    ///
+    /// let dist_prio = TerminalColor::distance(
+    ///     &RGBColor::BLACK.into(),
+    ///     &TerminalColor::Default,
+    /// );
+    /// let dist_min = TerminalColor::distance(
+    ///     &RGBColor::BLACK.into(),
+    ///     &RGBColor::BLACK.into(),
+    /// );
+    /// let dist = TerminalColor::distance(
+    ///     &RGBColor::BLACK.into(),
+    ///     &RGBColor::RED.into(),
+    /// );
+    /// let dist_max = TerminalColor::distance(
+    ///     &RGBColor::BLACK.into(),
+    ///     &RGBColor::WHITE.into(),
+    /// );
+    ///
+    /// assert!(dist_prio <= dist_min);
+    /// assert!(dist_min < dist);
+    /// assert!(dist < dist_max);
+    /// ```
     #[must_use]
     fn distance(color1: &Self, color2: &Self) -> f32;
 
+    /// Mixes a list of colors into one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use console_display::color::{
+    ///     Color,
+    ///     RGBColor,
+    ///     TerminalColor,
+    /// };
+    ///
+    /// let colors = [
+    ///     RGBColor::BLACK.into(),
+    ///     TerminalColor::Default,
+    ///     RGBColor::WHITE.into(),
+    /// ];
+    ///
+    /// let mix = TerminalColor::mix(&colors);
+    ///
+    /// assert_eq!(
+    ///     mix,
+    ///     // gray, Default is ignored in calculation
+    ///     RGBColor {
+    ///         r: 255 / 2,
+    ///         g: 255 / 2,
+    ///         b: 255 / 2
+    ///     }
+    ///     .into()
+    /// );
+    /// ```
     #[must_use]
     fn mix(colors: &[Self]) -> Self;
 
+    /// Groups a list of colors into two groups.
+    /// The groups are formed by finding the most distant colors.
+    /// All other colors are then put into a group with one of them depending on which distance is smaller.
+    /// Returns an array of the size of the input. True and false are used to map each color into one of two groups.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use console_display::color::{
+    ///     Color,
+    ///     RGBColor,
+    /// };
+    ///
+    /// let colors =
+    ///     [RGBColor::BLACK, RGBColor::WHITE, RGBColor::BLACK];
+    ///
+    /// let grouping = RGBColor::group(&colors);
+    ///
+    /// assert_ne!(grouping[0], grouping[1]);
+    /// assert_ne!(grouping[1], grouping[2]);
+    /// assert_eq!(grouping[0], grouping[2]);
+    /// ```
     #[must_use]
     fn group<const N: usize>(colors: &[Self; N]) -> [bool; N] {
         let mut max = 0f32;
@@ -45,7 +181,7 @@ where
     }
 }
 
-/// Defines a color, usually used for foreground and background.
+/// Defines a color used for foreground and background coloring of text.
 ///
 /// `Default` - Uses the default color provided by the terminal for foreground or background respectively.\
 /// `ARGBColor` - Displays a color made of RGB components and an alpha/opacity channel.
@@ -76,10 +212,10 @@ impl Color for TerminalColor {
         }
     }
 
-    fn color<'a>(
+    fn color(
         text: &str,
-        foreground_color: &'a Self,
-        background_color: &'a Self,
+        foreground_color: &Self,
+        background_color: &Self,
     ) -> String {
         let mut codes = Vec::new();
 
@@ -151,6 +287,8 @@ impl From<ARGBColor> for TerminalColor {
     }
 }
 
+/// Defines an RGB color used for foreground and background coloring of text.
+/// `r`, `g`, `b` are the red, green and blue components of the color respectively.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct RGBColor {
     pub r: u8,
@@ -211,6 +349,21 @@ impl Color for RGBColor {
 
 impl RGBColor {
     pub const BLACK: Self = Self { r: 0, g: 0, b: 0 };
+    pub const DARK_GRAY: Self = Self {
+        r: 63,
+        g: 63,
+        b: 63,
+    };
+    pub const GRAY: Self = Self {
+        r: 127,
+        g: 127,
+        b: 127,
+    };
+    pub const LIGHT_GRAY: Self = Self {
+        r: 191,
+        g: 191,
+        b: 191,
+    };
     pub const WHITE: Self = Self {
         r: 255,
         g: 255,
@@ -236,6 +389,8 @@ impl RGBColor {
     };
 }
 
+/// Defines an ARGB color used for foreground and background coloring of text.
+/// `color` are the opaque RGB components of the color with an additional `opacity`.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ARGBColor {
     pub opacity: u8,
@@ -473,15 +628,7 @@ mod tests {
                 RGBColor::WHITE.into(),
             ];
             let mix = TerminalColor::mix(&colors);
-            assert_eq!(
-                mix,
-                RGBColor {
-                    r: 255 / 2,
-                    g: 255 / 2,
-                    b: 255 / 2
-                }
-                .into()
-            );
+            assert_eq!(mix, RGBColor::GRAY.into());
         }
 
         #[test]
