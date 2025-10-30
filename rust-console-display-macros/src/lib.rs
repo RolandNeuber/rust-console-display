@@ -20,7 +20,7 @@ pub fn derive_static_widget(input: TokenStream) -> TokenStream {
         generics.split_for_impl();
 
     TokenStream::from(quote!(
-    impl #impl_generics StaticWidget for #name #ty_generics #where_clause {
+    impl #impl_generics const StaticWidget for #name #ty_generics #where_clause {
         const WIDTH_CHARACTERS: usize = <T as StaticWidget>::WIDTH_CHARACTERS;
         const HEIGHT_CHARACTERS: usize = <T as StaticWidget>::HEIGHT_CHARACTERS;
     }))
@@ -37,6 +37,7 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) =
         generics.split_for_impl();
 
+    // TODO: Check if this can be const
     TokenStream::from(quote!(
     impl #impl_generics DynamicWidget for #name #ty_generics #where_clause {
         fn width_characters(&self) -> usize {
@@ -63,7 +64,7 @@ pub fn derive_single_widget(input: TokenStream) -> TokenStream {
         generics.split_for_impl();
 
     TokenStream::from(quote!(
-    impl #impl_generics SingleWidget<T> for #name #ty_generics #where_clause {
+    impl #impl_generics const SingleWidget<T> for #name #ty_generics #where_clause {
         type Borrowed<'a>
             = &'a T
         where
@@ -98,7 +99,7 @@ pub fn derive_two_widget(input: TokenStream) -> TokenStream {
         generics.split_for_impl();
 
     TokenStream::from(quote!(
-    impl #impl_generics TwoWidget<S, T> for #name #ty_generics #where_clause {
+    impl #impl_generics const TwoWidget<S, T> for #name #ty_generics #where_clause {
         fn children(&self) -> (&S, &T) {
             (&self.children.0, &self.children.1)
         }

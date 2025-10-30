@@ -1,5 +1,6 @@
 //! Provides abstractions over colors that are used in terminal context.
 
+// TODO: Check if this can be const
 /// Defines a color used to color text.
 pub trait Color
 where

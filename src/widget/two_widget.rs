@@ -24,6 +24,7 @@ use crate::{
 
 use super::StaticWidget;
 
+#[const_trait]
 pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
@@ -85,7 +86,7 @@ impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
     impl_setters!(pub const child1_on_top: bool);
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
+impl<S: [const] DynamicWidget, T: [const] DynamicWidget> const DynamicWidget
     for AlternativeWidget<S, T>
 {
     fn width_characters(&self) -> usize {
@@ -177,7 +178,7 @@ impl<S: StaticWidget, T: StaticWidget> HorizontalTilingWidget<S, T> {
     }
 }
 
-impl<S: StaticWidget, T: StaticWidget> StaticWidget
+impl<S: StaticWidget, T: StaticWidget> const StaticWidget
     for HorizontalTilingWidget<S, T>
 {
     const WIDTH_CHARACTERS: usize =
@@ -283,7 +284,7 @@ impl<S: StaticWidget, T: StaticWidget> VerticalTilingWidget<S, T> {
     }
 }
 
-impl<S: StaticWidget, T: StaticWidget> StaticWidget
+impl<S: StaticWidget, T: StaticWidget> const StaticWidget
     for VerticalTilingWidget<S, T>
 {
     const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;

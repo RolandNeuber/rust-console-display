@@ -407,7 +407,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     }
 }
 
-impl<const WIDTH: usize, const HEIGHT: usize> StaticWidget
+impl<const WIDTH: usize, const HEIGHT: usize> const StaticWidget
     for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
 {
     const WIDTH_CHARACTERS: usize = WIDTH;

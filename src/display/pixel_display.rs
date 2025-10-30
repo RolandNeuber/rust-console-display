@@ -301,7 +301,7 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> const StaticWidget
     for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
     const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;

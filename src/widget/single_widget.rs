@@ -41,6 +41,7 @@ use crate::{
 
 use super::StaticWidget;
 
+#[const_trait]
 pub trait SingleWidget<T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
@@ -336,7 +337,7 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> const SingleWidget<T>
     for UvWidget<T, S>
 {
     type Borrowed<'a>
@@ -425,7 +426,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicWidget
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const SingleWidget<T>
     for DoubleBufferWidget<T, S>
 {
     type Borrowed<'a>
@@ -557,6 +558,7 @@ impl<T: DynamicWidget> const DerefMut for PaddingWidget<T> {
     }
 }
 
+#[const_trait]
 pub trait Border {
     fn border_at(
         &self,
