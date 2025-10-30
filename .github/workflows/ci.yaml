@@ -11,7 +11,7 @@ env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
   RUSTDOCFLAGS: "-Dwarnings"
-  AUTO_FORMAT: "$AUTO_FORMAT"
+  AUTO_FORMAT: ${{ vars.AUTO_FORMAT }}
 
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
       run: |
         if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ] && [ -f "$HOME/.cargo/bin/cargo-llvm-cov" ]; then
             echo "Rust is already installed. Skipping installation."
-            rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt
+            rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt llvm-tools-preview
         else
             echo "Rust is not installed. Installing via rustup..."
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
@@ -81,4 +81,4 @@ jobs:
         
     # Needed to catch dangling references in documentation.
     - name: Build documentation
-      run: cargo +nightly doc;
+      run: cargo +nightly doc --no-deps;
