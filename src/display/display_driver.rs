@@ -125,11 +125,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         &self.original_height
     }
 
-    fn child(&self) -> &T {
+    const fn child(&self) -> &T {
         &self.display
     }
 
-    fn child_mut(&mut self) -> &mut T {
+    const fn child_mut(&mut self) -> &mut T {
         &mut self.display
     }
 
@@ -211,7 +211,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     }
 }
 
-impl<T: DynamicWidget> Deref for DisplayDriver<T> {
+impl<T: DynamicWidget> const Deref for DisplayDriver<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -219,7 +219,7 @@ impl<T: DynamicWidget> Deref for DisplayDriver<T> {
     }
 }
 
-impl<T: DynamicWidget> DerefMut for DisplayDriver<T> {
+impl<T: DynamicWidget> const DerefMut for DisplayDriver<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.child_mut()
     }

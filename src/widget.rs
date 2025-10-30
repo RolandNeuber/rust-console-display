@@ -53,7 +53,7 @@ impl Display for StringData {
     }
 }
 
-impl Deref for StringData {
+impl const Deref for StringData {
     type Target = Vec<Vec<DataCell>>;
 
     fn deref(&self) -> &Self::Target {
@@ -61,7 +61,7 @@ impl Deref for StringData {
     }
 }
 
-impl DerefMut for StringData {
+impl const DerefMut for StringData {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.data
     }
