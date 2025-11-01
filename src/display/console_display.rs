@@ -25,8 +25,8 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
         [(); T::WIDTH * T::HEIGHT]:,
     {
         let mut pixels = Vec::with_capacity(self.width() * self.height());
-        for x in 0..self.width() {
-            for y in 0..self.height() {
+        for y in 0..self.height() {
+            for x in 0..self.width() {
                 pixels.push(
                     self.pixel(
                         NumCast::from(x).unwrap(),
@@ -62,8 +62,8 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
                 data.len()
             ));
         }
-        for x in 0..self.width() {
-            for y in 0..self.height() {
+        for y in 0..self.height() {
+            for x in 0..self.width() {
                 self.set_pixel(
                     NumCast::from(x).unwrap(),
                     NumCast::from(y).unwrap(),

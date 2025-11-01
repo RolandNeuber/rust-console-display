@@ -410,6 +410,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
                         .zip(display_row)
                         .map(|(cell_top, cell_bottom)| {
                             let mut cell = cell_top;
+                            // TODO: Rework this blending
                             if let TerminalColor::ARGBColor(foreground) =
                                 cell.foreground &&
                                 let TerminalColor::ARGBColor(background) =
@@ -418,16 +419,32 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
                                 foreground.opacity < u8::MAX / 2
                             {
                                 cell.character = cell_bottom.character;
-                            }
 
-                            cell.background = TerminalColor::blend(
-                                &cell.background,
-                                &cell_bottom.background,
-                            );
-                            cell.foreground = TerminalColor::blend(
-                                &cell.foreground,
-                                &cell_bottom.foreground,
-                            );
+                                cell.background = TerminalColor::blend(
+                                    &cell.background,
+                                    &cell_bottom.background,
+                                );
+                                cell.foreground = TerminalColor::blend(
+                                    &cell.foreground,
+                                    &cell_bottom.foreground,
+                                );
+                            }
+                            else if cell.background ==
+                                TerminalColor::Default ||
+                                cell.foreground ==
+                                    TerminalColor::Default
+                            {
+                                cell.character = cell_bottom.character;
+
+                                cell.background = TerminalColor::blend(
+                                    &cell.background,
+                                    &cell_bottom.background,
+                                );
+                                cell.foreground = TerminalColor::blend(
+                                    &cell.foreground,
+                                    &cell_bottom.foreground,
+                                );
+                            }
                             cell
                         })
                         .collect()
