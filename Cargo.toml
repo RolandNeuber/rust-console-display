@@ -13,7 +13,7 @@ keywords = ["console", "terminal", "tui", "ui", "widget"]
 categories = ["command-line-interface", "gui", "graphics"]
 
 [dependencies]
-console-display-macros = { path = "./console-display-macros", version = "0.1.0"}
+console-display-macros = { path = "./console-display-macros", version = "0.1.0" }
 crossterm = "0.28.1"
 num-traits = "0.2.19"
 paste = "1.0.15"
