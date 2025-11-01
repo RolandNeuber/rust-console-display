@@ -337,8 +337,8 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> const SingleWidget<T>
-    for UvWidget<T, S>
+impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> const
+    SingleWidget<T> for UvWidget<T, S>
 {
     type Borrowed<'a>
         = &'a T
@@ -361,7 +361,9 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> const SingleWidget<T>
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> const Deref for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const Deref
+    for UvWidget<T, S>
+{
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -369,7 +371,9 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> const Deref for UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> const DerefMut for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const DerefMut
+    for UvWidget<T, S>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }

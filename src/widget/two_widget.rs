@@ -86,8 +86,8 @@ impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
     impl_setters!(pub const child1_on_top: bool);
 }
 
-impl<S: [const] DynamicWidget, T: [const] DynamicWidget> const DynamicWidget
-    for AlternativeWidget<S, T>
+impl<S: [const] DynamicWidget, T: [const] DynamicWidget> const
+    DynamicWidget for AlternativeWidget<S, T>
 {
     fn width_characters(&self) -> usize {
         self.children.0.width_characters()
@@ -456,7 +456,9 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> const Deref for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> const Deref
+    for OverlayWidget<S, T>
+{
     type Target = (S, T);
 
     fn deref(&self) -> &Self::Target {
@@ -464,7 +466,9 @@ impl<S: DynamicWidget, T: DynamicWidget> const Deref for OverlayWidget<S, T> {
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> const DerefMut for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
+    for OverlayWidget<S, T>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.children
     }

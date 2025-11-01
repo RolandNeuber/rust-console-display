@@ -1,7 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 #![feature(const_trait_impl)]
-#![feature(const_deref)]
+#![feature(const_convert)]
 #![feature(const_ref_cell)]
 #![doc = include_str!("../README.md")]
 
