@@ -7,6 +7,7 @@ use crate::{
     widget::StaticWidget,
 };
 
+// TODO: Check if this can be const
 pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
     /// Returns the width of the display in a display specific, individually addressable unit (e.g. pixels, characters).
     fn width(&self) -> usize;
@@ -81,6 +82,7 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
     fn data_mut(&mut self) -> &mut Box<[T]>;
 }
 
+// TODO: Check if this can be const
 pub trait StaticConsoleDisplay<T: Pixel>:
     DynamicConsoleDisplay<T> + StaticWidget
 {

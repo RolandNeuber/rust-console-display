@@ -9,19 +9,21 @@ use crate::{
 };
 
 /// Defines a fill for a drawable.
+#[const_trait]
 pub trait FillType {}
 
 /// Defines no fill on a drawable, e.g. only outline.
 #[derive(PartialEq, Eq, Debug)]
 pub struct NoFill;
-impl FillType for NoFill {}
+impl const FillType for NoFill {}
 
 /// Defines flat fill on a drawable.
 #[derive(PartialEq, Eq, Debug)]
 pub struct Filled;
-impl FillType for Filled {}
+impl const FillType for Filled {}
 
 /// Defines an object that you can draw on and query pixels from.
+#[const_trait]
 pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
     type A: NumCast;
     /// Returns a bool representing the state of the pixel at the specified coordinate.
@@ -98,7 +100,7 @@ pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
 
     /// Draw a drawable/shape onto a canvas with the specified pixel type/brush.
     /// Convenience method for inversing `DynamicDrawable::draw` by using double dispatch.
-    fn draw<D: DynamicDrawable<N>, const N: usize>(
+    fn draw<D: [const] DynamicDrawable<N>, const N: usize>(
         &mut self,
         drawable: &D,
         value: S::U,
@@ -111,6 +113,7 @@ pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
 }
 
 /// Defines an object that can be drawn onto a canvas.
+#[const_trait]
 pub trait DynamicDrawable<const N: usize> {
     /// Draws the drawable onto a canvas with the specified pixel type/brush.
     fn draw<T: DynamicCanvas<S>, S: Pixel>(
@@ -123,7 +126,7 @@ pub trait DynamicDrawable<const N: usize> {
     /// Transforms the drawable by applying a function to all coordinate pairs that define it.
     /// Returns a new transformed drawable.
     #[must_use]
-    fn transform<F: Fn((f32, f32)) -> (f32, f32)>(
+    fn transform<F: [const] Fn((f32, f32)) -> (f32, f32)>(
         &self,
         transform: F,
     ) -> Self;

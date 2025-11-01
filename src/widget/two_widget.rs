@@ -24,6 +24,7 @@ use crate::{
 
 use super::StaticWidget;
 
+#[const_trait]
 pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
@@ -85,8 +86,8 @@ impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
     impl_setters!(pub const child1_on_top: bool);
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
-    for AlternativeWidget<S, T>
+impl<S: [const] DynamicWidget, T: [const] DynamicWidget> const
+    DynamicWidget for AlternativeWidget<S, T>
 {
     fn width_characters(&self) -> usize {
         self.children.0.width_characters()
@@ -106,7 +107,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Deref
+impl<S: DynamicWidget, T: DynamicWidget> const Deref
     for AlternativeWidget<S, T>
 {
     type Target = (S, T);
@@ -116,7 +117,7 @@ impl<S: DynamicWidget, T: DynamicWidget> Deref
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DerefMut
+impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
     for AlternativeWidget<S, T>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -149,19 +150,19 @@ impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
         })
     }
 
-    pub fn left(&self) -> &S {
+    pub const fn left(&self) -> &S {
         &self.0
     }
 
-    pub fn left_mut(&mut self) -> &mut S {
+    pub const fn left_mut(&mut self) -> &mut S {
         &mut self.0
     }
 
-    pub fn right(&self) -> &T {
+    pub const fn right(&self) -> &T {
         &self.1
     }
 
-    pub fn right_mut(&mut self) -> &mut T {
+    pub const fn right_mut(&mut self) -> &mut T {
         &mut self.1
     }
 }
@@ -177,7 +178,7 @@ impl<S: StaticWidget, T: StaticWidget> HorizontalTilingWidget<S, T> {
     }
 }
 
-impl<S: StaticWidget, T: StaticWidget> StaticWidget
+impl<S: StaticWidget, T: StaticWidget> const StaticWidget
     for HorizontalTilingWidget<S, T>
 {
     const WIDTH_CHARACTERS: usize =
@@ -211,7 +212,8 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
         }
     }
 }
-impl<S: DynamicWidget, T: DynamicWidget> Deref
+
+impl<S: DynamicWidget, T: DynamicWidget> const Deref
     for HorizontalTilingWidget<S, T>
 {
     type Target = (S, T);
@@ -221,7 +223,7 @@ impl<S: DynamicWidget, T: DynamicWidget> Deref
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DerefMut
+impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
     for HorizontalTilingWidget<S, T>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -254,19 +256,19 @@ impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
         })
     }
 
-    pub fn top(&self) -> &S {
+    pub const fn top(&self) -> &S {
         &self.0
     }
 
-    pub fn top_mut(&mut self) -> &mut S {
+    pub const fn top_mut(&mut self) -> &mut S {
         &mut self.0
     }
 
-    pub fn bottom(&self) -> &T {
+    pub const fn bottom(&self) -> &T {
         &self.1
     }
 
-    pub fn bottom_mut(&mut self) -> &mut T {
+    pub const fn bottom_mut(&mut self) -> &mut T {
         &mut self.1
     }
 }
@@ -282,7 +284,7 @@ impl<S: StaticWidget, T: StaticWidget> VerticalTilingWidget<S, T> {
     }
 }
 
-impl<S: StaticWidget, T: StaticWidget> StaticWidget
+impl<S: StaticWidget, T: StaticWidget> const StaticWidget
     for VerticalTilingWidget<S, T>
 {
     const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;
@@ -311,7 +313,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Deref
+impl<S: DynamicWidget, T: DynamicWidget> const Deref
     for VerticalTilingWidget<S, T>
 {
     type Target = (S, T);
@@ -321,7 +323,7 @@ impl<S: DynamicWidget, T: DynamicWidget> Deref
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DerefMut
+impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
     for VerticalTilingWidget<S, T>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -345,19 +347,19 @@ impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
         }
     }
 
-    pub fn overlay(&self) -> &S {
+    pub const fn overlay(&self) -> &S {
         &self.0
     }
 
-    pub fn overlay_mut(&mut self) -> &mut S {
+    pub const fn overlay_mut(&mut self) -> &mut S {
         &mut self.0
     }
 
-    pub fn base(&self) -> &T {
+    pub const fn base(&self) -> &T {
         &self.1
     }
 
-    pub fn base_mut(&mut self) -> &mut T {
+    pub const fn base_mut(&mut self) -> &mut T {
         &mut self.1
     }
 }
@@ -454,7 +456,9 @@ impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> const Deref
+    for OverlayWidget<S, T>
+{
     type Target = (S, T);
 
     fn deref(&self) -> &Self::Target {
@@ -462,7 +466,9 @@ impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
+    for OverlayWidget<S, T>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.children
     }

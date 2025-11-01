@@ -14,6 +14,7 @@ use crate::color::{
 pub mod single_widget;
 pub mod two_widget;
 
+#[const_trait]
 pub trait StaticWidget: DynamicWidget {
     /// Width of the display in characters.
     const WIDTH_CHARACTERS: usize;
@@ -21,6 +22,7 @@ pub trait StaticWidget: DynamicWidget {
     const HEIGHT_CHARACTERS: usize;
 }
 
+#[const_trait]
 pub trait DynamicWidget {
     /// Returns the width of the display in characters.
     #[must_use]
@@ -53,7 +55,7 @@ impl Display for StringData {
     }
 }
 
-impl Deref for StringData {
+impl const Deref for StringData {
     type Target = Vec<Vec<DataCell>>;
 
     fn deref(&self) -> &Self::Target {
@@ -61,7 +63,7 @@ impl Deref for StringData {
     }
 }
 
-impl DerefMut for StringData {
+impl const DerefMut for StringData {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.data
     }

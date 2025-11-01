@@ -41,6 +41,7 @@ use crate::{
 
 use super::StaticWidget;
 
+#[const_trait]
 pub trait SingleWidget<T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
@@ -336,8 +337,8 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> SingleWidget<T>
-    for UvWidget<T, S>
+impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> const
+    SingleWidget<T> for UvWidget<T, S>
 {
     type Borrowed<'a>
         = &'a T
@@ -360,7 +361,9 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> SingleWidget<T>
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const Deref
+    for UvWidget<T, S>
+{
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -368,7 +371,9 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> Deref for UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> DerefMut for UvWidget<T, S> {
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const DerefMut
+    for UvWidget<T, S>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }
@@ -425,7 +430,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicWidget
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const SingleWidget<T>
     for DoubleBufferWidget<T, S>
 {
     type Borrowed<'a>
@@ -543,20 +548,21 @@ impl<T: DynamicWidget> DynamicWidget for PaddingWidget<T> {
     }
 }
 
-impl<T: DynamicWidget> Deref for PaddingWidget<T> {
+impl<T: DynamicWidget> const Deref for PaddingWidget<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.child()
+        &self.child
     }
 }
 
-impl<T: DynamicWidget> DerefMut for PaddingWidget<T> {
+impl<T: DynamicWidget> const DerefMut for PaddingWidget<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.child_mut()
+        &mut self.child
     }
 }
 
+#[const_trait]
 pub trait Border {
     fn border_at(
         &self,
@@ -928,7 +934,7 @@ impl<T: DynamicWidget, S: Border> DynamicWidget for BorderWidget<T, S> {
     }
 }
 
-impl<T: DynamicWidget, S: Border> Deref for BorderWidget<T, S> {
+impl<T: DynamicWidget, S: Border> const Deref for BorderWidget<T, S> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -936,7 +942,7 @@ impl<T: DynamicWidget, S: Border> Deref for BorderWidget<T, S> {
     }
 }
 
-impl<T: DynamicWidget, S: Border> DerefMut for BorderWidget<T, S> {
+impl<T: DynamicWidget, S: Border> const DerefMut for BorderWidget<T, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }
@@ -993,7 +999,7 @@ impl<T: DynamicWidget> DynamicWidget for InsetWidget<T> {
     }
 }
 
-impl<T: DynamicWidget> Deref for InsetWidget<T> {
+impl<T: DynamicWidget> const Deref for InsetWidget<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -1001,7 +1007,7 @@ impl<T: DynamicWidget> Deref for InsetWidget<T> {
     }
 }
 
-impl<T: DynamicWidget> DerefMut for InsetWidget<T> {
+impl<T: DynamicWidget> const DerefMut for InsetWidget<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }
