@@ -10,6 +10,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
+  RUSTDOCFLAGS: "-Dwarnings"
   AUTO_FORMAT: "$AUTO_FORMAT"
 
 jobs:
@@ -37,12 +38,13 @@ jobs:
 
     - name: Install Rust nightly
       run: |
-        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ]; then
+        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ] && [ -f "$HOME/.cargo/bin/cargo-llvm-cov" ]; then
             echo "Rust is already installed. Skipping installation."
             rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt
         else
             echo "Rust is not installed. Installing via rustup..."
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+            cargo install cargo-llvm-cov
         fi
 
     - name: Show rust version
@@ -59,21 +61,24 @@ jobs:
           echo "Formatting failed — please run 'cargo +nightly fmt --all' locally before pushing.";
           exit 1;
         }
-
-    - name: Build
-      run: cargo +nightly build --all-targets --all-features
     
     # Allow dirty flag added for convinience. Be careful when auto-formatting is enabled.
     - name: Clippy apply suggestions
       if: env.AUTO_FORMAT == 'true'
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
+      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo -A clippy::cast-precision-loss
 
     # Still need to run clippy as well, because cargo clippy fix makes errors into warnings. See: https://github.com/rust-lang/rust-clippy/discussions/9979
     - name: Clippy
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo
+      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery -W clippy::cargo -A clippy::cast-precision-loss
 
-    # Still need to run cargo +nightly test --doc as this is not included in the regular test command. See: https://github.com/rust-lang/cargo/issues/6669
-    - name: Run tests
+    # Replaces cargo test and checks test coverage.
+    - name: Test coverage
       run: |
-        cargo +nightly test --all-targets --all-features; 
-        cargo +nightly test --doc;
+        cargo +nightly llvm-cov clean --workspace;
+        cargo +nightly llvm-cov --no-report --workspace --all-features --all-targets;
+        cargo +nightly llvm-cov --no-report --workspace --all-features --doctests;
+        cargo +nightly llvm-cov report --fail-under-regions 40;
+        
+    # Needed to catch dangling references in documentation.
+    - name: Build documentation
+      run: cargo +nightly doc;

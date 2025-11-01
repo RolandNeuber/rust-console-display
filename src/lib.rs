@@ -2,7 +2,9 @@
 #![feature(generic_const_exprs)]
 #![doc = include_str!("../README.md")]
 
+pub mod color;
 mod display;
+pub mod drawing;
 mod macros;
 pub mod pixel;
 pub mod widget;

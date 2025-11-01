@@ -2,21 +2,22 @@
 #![feature(generic_const_exprs)]
 
 use console_display::{
-    character_display::CharacterDisplay,
+    character_display::StaticCharacterDisplay,
+    color::TerminalColor,
+    console_display::DynamicConsoleDisplay,
     display_driver::DisplayDriver,
-    pixel::{
-        character_pixel::CharacterPixel,
-        color_pixel::Color,
-    },
+    drawing::DynamicCanvas,
+    pixel::character_pixel::CharacterPixel,
 };
 
 fn main() {
-    let mut char_disp: CharacterDisplay<CharacterPixel, 40, 20> =
-        CharacterDisplay::build(
-            CharacterPixel::build('あ', Color::Default, Color::Default)
-                .unwrap(),
-        )
-        .unwrap();
+    let mut char_disp =
+        StaticCharacterDisplay::<CharacterPixel, 40, 20>::new(
+            CharacterPixel::new::<'あ'>(
+                TerminalColor::Default,
+                TerminalColor::Default,
+            ),
+        );
 
     let mut x = 0;
     let mut y = 0;
@@ -32,16 +33,19 @@ fn main() {
             x = 0;
             continue;
         }
-        let pixel =
-            CharacterPixel::build(i, Color::Default, Color::Default)
-                .unwrap();
-        let _ = char_disp.set_pixel(x, y, &pixel);
-        if x + pixel.get_width() > char_disp.get_width() {
+        let pixel = CharacterPixel::build(
+            i,
+            TerminalColor::Default,
+            TerminalColor::Default,
+        )
+        .unwrap();
+        char_disp.set_pixel(x, y, pixel.into()).unwrap();
+        if x + pixel.width() > char_disp.width() {
             y += 1;
             x = 0;
         }
         else {
-            x += pixel.get_width();
+            x += pixel.width();
         }
     }
 

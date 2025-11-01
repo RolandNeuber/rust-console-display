@@ -1,30 +1,35 @@
 use core::array;
-use std::fmt::Display;
+
+use num_traits::NumCast;
 
 use crate::{
-    console_display::ConsoleDisplay,
-    constraint,
-    pixel::monochrome_pixel::MultiPixel,
+    console_display::{
+        DynamicConsoleDisplay,
+        StaticConsoleDisplay,
+    },
+    drawing::DynamicCanvas,
+    pixel::Pixel,
     widget::{
         DynamicWidget,
         StaticWidget,
+        StringData,
     },
 };
 
-pub struct DynamicPixelDisplay<T: MultiPixel> {
+pub struct DynamicPixelDisplay<T: Pixel> {
     data: Box<[T]>,
     width: usize,
     height: usize,
 }
 
-impl<T: MultiPixel> DynamicPixelDisplay<T> {
+impl<T: Pixel> DynamicPixelDisplay<T> {
     /// Convenience method to build a blank display struct with specified dimensions.
     ///
     /// # Panics
     ///
     /// This function panics if the data generated from the fill does not match the dimensions of the display.
     /// This should not happen and is subject to change in the future.
-    pub fn build(width: usize, height: usize, fill: T::U) -> Self
+    pub fn new(width: usize, height: usize, fill: T::U) -> Self
     where
         Self: Sized,
         [(); T::WIDTH * T::HEIGHT]:,
@@ -49,12 +54,14 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
         Self: Sized,
         [(); T::WIDTH * T::HEIGHT]:,
     {
-        if width % T::WIDTH != 0 || height % T::HEIGHT != 0 {
+        if !width.is_multiple_of(T::WIDTH) ||
+            !height.is_multiple_of(T::HEIGHT)
+        {
             return Err(format!(
                 "Width and height must be multiples of multipixel dimensions. Got width = {width}, height = {height}."
             ));
         }
-        if data.len() / width / height != 1 {
+        if data.len() != width * height {
             return Err(format!(
                 "Data does not match specified dimensions. Expected length of {}, got {}.",
                 width * height,
@@ -96,63 +103,129 @@ impl<T: MultiPixel> DynamicPixelDisplay<T> {
     }
 }
 
-impl<T: MultiPixel> ConsoleDisplay<T> for DynamicPixelDisplay<T> {
-    fn get_width(&self) -> usize {
+impl<T: Pixel> DynamicConsoleDisplay<T> for DynamicPixelDisplay<T> {
+    fn width(&self) -> usize {
         self.width
     }
 
-    fn get_height(&self) -> usize {
+    fn height(&self) -> usize {
         self.height
     }
 
-    fn get_data(&self) -> &[T] {
+    fn data(&self) -> &[T] {
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut Box<[T]> {
+    fn data_mut(&mut self) -> &mut Box<[T]> {
         &mut self.data
     }
 }
 
-impl<T: MultiPixel> DynamicWidget for DynamicPixelDisplay<T> {
-    fn get_width_characters(&self) -> usize {
+impl<T: Pixel> DynamicWidget for DynamicPixelDisplay<T> {
+    fn width_characters(&self) -> usize {
         self.width / T::WIDTH
     }
 
-    fn get_height_characters(&self) -> usize {
+    fn height_characters(&self) -> usize {
         self.height / T::HEIGHT
+    }
+
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(self.width_characters())
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
     }
 }
 
-impl<T: MultiPixel> Display for DynamicPixelDisplay<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut string_repr = String::new();
-        for y in 0..self.get_height_characters() {
-            for x in 0..self.get_width_characters() {
-                string_repr.push_str(
-                    self.get_data()[x + y * self.get_width_characters()]
-                        .to_string()
-                        .as_str(),
-                );
-            }
-            string_repr.push_str("\r\n");
-        }
-        string_repr.pop();
+impl<S: Pixel> DynamicCanvas<S> for DynamicPixelDisplay<S> {
+    type A = usize;
 
-        write!(f, "{string_repr}")
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let pixel =
+                &self.data()[block_x + block_y * self.width_characters()];
+
+            Ok(pixel
+                .subpixel(offset_x, offset_y)
+                .expect("Offset should be 0 or 1."))
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let width_characters = self.width_characters();
+            let pixel =
+                &mut self.data_mut()[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(offset_x, offset_y, value)
+                .expect("Offset should be 0 or 1.");
+
+            Ok(())
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
     }
 }
 
 /// Represents a console display with a width and height in pixels.
 pub struct StaticPixelDisplay<
-    T: MultiPixel,
+    T: Pixel,
     const WIDTH: usize,
     const HEIGHT: usize,
 > {
     data: Box<[T]>,
 }
 
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
     /// Convenience method to create a blank display struct with specified dimensions known at compile time.
@@ -198,170 +271,37 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
             data: multi_pixels.into_boxed_slice(),
         }
     }
-
-    // TODO: Add proper double buffering.
-    /// Returns a vector containing all the pixels in the display.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if the index of a pixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    #[must_use]
-    pub fn get_pixels(&self) -> [T::U; WIDTH * HEIGHT]
-    where
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        array::from_fn(|i| {
-            let x = i % self.get_width();
-            let y = i / self.get_width();
-            self.get_pixel(x, y)
-                .expect("Invariant violated, pixel index out of range.")
-        })
-    }
-
-    /// Sets the pixels of the display to the provided data.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if the index of a pixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    pub fn set_pixels(&mut self, data: &[T::U; WIDTH * HEIGHT])
-    where
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        for x in 0..self.get_width() {
-            for y in 0..self.get_height() {
-                self.set_pixel(x, y, data[x + y * self.get_width()])
-                    .expect(
-                        "Invariant violated, pixel index out of range.",
-                    );
-            }
-        }
-    }
-
-    // TODO: Update docs
-    /// Returns a bool representing the state of the pixel at the specified coordinate.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #![allow(incomplete_features)]
-    /// #![feature(generic_const_exprs)]
-    ///
-    /// use console_display::{
-    ///     console_display::ConsoleDisplay,
-    ///     display_driver::DisplayDriver,
-    ///     pixel::monochrome_pixel::SinglePixel,
-    ///     pixel_display::StaticPixelDisplay
-    /// };
-    ///
-    /// let disp: DisplayDriver<StaticPixelDisplay<SinglePixel, 6, 6>> = DisplayDriver::new(
-    ///     StaticPixelDisplay::<SinglePixel, 6, 6>::new_from_data(
-    ///         &[
-    ///             true, true, true, true,  true, true, // 0
-    ///             true, true, true, true,  true, true, // 1
-    ///             true, true, true, false, true, true, //-2-
-    ///             true, true, true, true,  true, true, // 3
-    ///             true, true, true, true,  true, true, // 4
-    ///             true, true, true, true,  true, true, // 5
-    ///         ] //  0     1     2   --3--    4     5
-    ///     )
-    /// );
-    /// // Replace with actual error handling
-    ///
-    /// let pixel = disp.get_pixel(3, 2);
-    ///
-    /// assert_eq!(pixel, Ok(false));
-    ///
-    /// let pixel = disp.get_pixel(5, 6);
-    ///
-    /// assert!(matches!(pixel, Err(_)));
-    /// ```
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the pixel coordinates are out of bounds.
-    ///
-    /// # Panics
-    ///
-    /// If the index of a subpixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    #[must_use]
-    pub fn get_pixel_static<const X: usize, const Y: usize>(&self) -> T::U
-    where
-        constraint!(X <= WIDTH):,
-        constraint!(Y <= HEIGHT):,
-        constraint!(X % T::WIDTH < T::WIDTH):,
-        constraint!(Y % T::HEIGHT < T::HEIGHT):,
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        let pixel = &self.get_data()
-            [X / T::WIDTH + Y / T::HEIGHT * Self::WIDTH_CHARACTERS];
-        pixel.get_subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>()
-    }
-
-    // TODO: Update docs
-    /// Set a pixel at the specified coordinate with a given value.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the pixel coordinates are out of bounds.
-    ///
-    /// # Panics
-    ///
-    /// If the index of a subpixel is out of bounds.
-    /// This should not happen and is subject to change in the future.
-    pub fn set_pixel_static<const X: usize, const Y: usize>(
-        &mut self,
-        value: T::U,
-    ) where
-        constraint!(X <= WIDTH):,
-        constraint!(Y <= HEIGHT):,
-        constraint!(X % T::WIDTH < T::WIDTH):,
-        constraint!(Y % T::HEIGHT < T::HEIGHT):,
-        [(); T::WIDTH * T::HEIGHT]:,
-    {
-        let pixel = &mut self.get_data_mut()
-            [X / T::WIDTH + Y / T::HEIGHT * Self::WIDTH_CHARACTERS];
-        pixel.set_subpixel_static::<{ X % T::WIDTH }, { Y % T::HEIGHT }>(
-            value,
-        );
-    }
 }
 
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize>
-    ConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    StaticConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
-    fn get_width(&self) -> usize {
+    const WIDTH: usize = WIDTH;
+
+    const HEIGHT: usize = HEIGHT;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    DynamicConsoleDisplay<T> for StaticPixelDisplay<T, WIDTH, HEIGHT>
+{
+    fn width(&self) -> usize {
         WIDTH
     }
 
-    fn get_height(&self) -> usize {
+    fn height(&self) -> usize {
         HEIGHT
     }
 
-    fn get_data(&self) -> &[T] {
+    fn data(&self) -> &[T] {
         &self.data
     }
 
-    fn get_data_mut(&mut self) -> &mut Box<[T]> {
+    fn data_mut(&mut self) -> &mut Box<[T]> {
         &mut self.data
     }
 }
 
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
-    for StaticPixelDisplay<T, WIDTH, HEIGHT>
-{
-    fn get_width_characters(&self) -> usize {
-        Self::WIDTH_CHARACTERS
-    }
-
-    fn get_height_characters(&self) -> usize {
-        Self::HEIGHT_CHARACTERS
-    }
-}
-
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
     for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
     const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
@@ -369,23 +309,181 @@ impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> StaticWidget
     const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
 }
 
-impl<T: MultiPixel, const WIDTH: usize, const HEIGHT: usize> Display
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     for StaticPixelDisplay<T, WIDTH, HEIGHT>
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut string_repr = String::new();
-        for y in 0..Self::HEIGHT_CHARACTERS {
-            for x in 0..Self::WIDTH_CHARACTERS {
-                string_repr.push_str(
-                    self.get_data()[x + y * Self::WIDTH_CHARACTERS]
-                        .to_string()
-                        .as_str(),
-                );
-            }
-            string_repr.push_str("\r\n");
-        }
-        string_repr.pop();
+    fn width_characters(&self) -> usize {
+        Self::WIDTH_CHARACTERS
+    }
 
-        write!(f, "{string_repr}")
+    fn height_characters(&self) -> usize {
+        Self::HEIGHT_CHARACTERS
+    }
+
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(Self::WIDTH_CHARACTERS)
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
+    }
+}
+
+impl<S: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<S>
+    for StaticPixelDisplay<S, WIDTH, HEIGHT>
+{
+    type A = usize;
+
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let pixel =
+                &self.data()[block_x + block_y * self.width_characters()];
+
+            Ok(pixel
+                .subpixel(offset_x, offset_y)
+                .expect("Offset should be 0 or 1."))
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let width_characters = self.width_characters();
+            let pixel =
+                &mut self.data_mut()[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(offset_x, offset_y, value)
+                .expect("Offset should be 0 or 1.");
+
+            Ok(())
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::pixel::monochrome_pixel::SinglePixel;
+
+    use super::*;
+
+    mod dynamic_pixel_display {
+        use crate::drawing::DynamicCanvas;
+
+        use super::*;
+
+        #[test]
+        fn build_from_data_success() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::build_from_data(
+                    1,
+                    1,
+                    &[false],
+                );
+            assert!(dynamic_pixel_display.is_ok());
+        }
+
+        #[test]
+        fn build_from_data_failure_less() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::build_from_data(
+                    23,
+                    1,
+                    &[false; 22],
+                );
+            assert!(dynamic_pixel_display.is_err());
+        }
+
+        #[test]
+        fn build_from_data_failure_more() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::build_from_data(
+                    23,
+                    1,
+                    &[false; 24],
+                );
+            assert!(dynamic_pixel_display.is_err());
+        }
+
+        #[test]
+        fn pixel_success() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let pixel = dynamic_pixel_display.pixel(1, 0);
+            assert!(pixel.is_ok());
+        }
+
+        #[test]
+        fn pixel_failure() {
+            let dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let pixel = dynamic_pixel_display.pixel(0, 1);
+            assert!(pixel.is_err());
+        }
+
+        #[test]
+        fn set_pixel_success() {
+            let mut dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let res = dynamic_pixel_display.set_pixel(1, 0, true);
+            let pixel = dynamic_pixel_display.pixel(1, 0);
+            assert!(res.is_ok());
+            assert_eq!(pixel, Ok(true));
+        }
+
+        #[test]
+        fn set_pixel_failure() {
+            let mut dynamic_pixel_display =
+                DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+            let res = dynamic_pixel_display.set_pixel(0, 1, true);
+            assert!(res.is_err());
+        }
     }
 }

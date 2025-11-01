@@ -3,9 +3,17 @@ use std::fmt::{
     Display,
 };
 
-use crate::pixel::Pixel;
+use crate::{
+    constraint,
+    or,
+    pixel::Pixel,
+    widget::DataCell,
+};
 
-use super::color_pixel::Color;
+use crate::color::{
+    Color,
+    TerminalColor,
+};
 use unicode_width::UnicodeWidthChar;
 
 #[derive(Clone, Copy, Default)]
@@ -13,13 +21,19 @@ pub struct CharacterPixel {
     data: [CharacterPixelData; 1],
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct CharacterPixelData {
     character: char,
-    foreground: Color,
-    background: Color,
+    foreground: TerminalColor,
+    background: TerminalColor,
     copy: bool,
     width: usize,
+}
+
+impl From<CharacterPixel> for CharacterPixelData {
+    fn from(value: CharacterPixel) -> Self {
+        value.data[0]
+    }
 }
 
 impl Pixel for CharacterPixel {
@@ -29,18 +43,61 @@ impl Pixel for CharacterPixel {
 
     const HEIGHT: usize = 1;
 
-    fn get_pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
+    fn pixels(&self) -> &[Self::U; Self::WIDTH * Self::HEIGHT] {
         &self.data
     }
 
-    fn get_pixels_mut(
+    fn pixels_mut(
         &mut self,
     ) -> &mut [Self::U; Self::WIDTH * Self::HEIGHT] {
         &mut self.data
     }
+
+    fn new(pixels: [Self::U; Self::WIDTH * Self::HEIGHT]) -> Self {
+        Self { data: pixels }
+    }
+}
+
+impl From<CharacterPixel> for DataCell {
+    fn from(val: CharacterPixel) -> Self {
+        Self {
+            character: val.character(),
+            foreground: val.foreground(),
+            background: val.background(),
+        }
+    }
 }
 
 impl CharacterPixel {
+    /// Constructs a character pixel from a char, a foreground and a background color.
+    ///
+    /// # Panics
+    ///
+    /// This function checks for control characters at compile time.
+    /// Panics when the compile time checks miss a control character.
+    /// This should not happen and is a implementation detail that is subject to change.
+    #[must_use]
+    pub fn new<const CHARACTER: char>(
+        foreground: TerminalColor,
+        background: TerminalColor,
+    ) -> Self
+    where
+        constraint!(CHARACTER >= '\u{20}'):, // Exclude C0 control chars
+        constraint!(or!(CHARACTER < '\u{7F}', CHARACTER >= '\u{A0}')):, // Exclude C1 control chars
+    {
+        Self {
+            data: [CharacterPixelData {
+                character: CHARACTER,
+                foreground,
+                background,
+                copy: false,
+                width: UnicodeWidthChar::width(CHARACTER).expect(
+                    "Invariant violated, found control character.",
+                ),
+            }],
+        }
+    }
+
     /// Constructs a character pixel from a char, a foreground and a background color.
     ///
     /// # Errors
@@ -48,8 +105,8 @@ impl CharacterPixel {
     /// Returns an error if the character is a control character.
     pub fn build(
         character: char,
-        foreground: Color,
-        background: Color,
+        foreground: TerminalColor,
+        background: TerminalColor,
     ) -> Result<Self, String> {
         Ok(Self {
             data: [CharacterPixelData {
@@ -76,17 +133,17 @@ impl CharacterPixel {
     }
 
     #[must_use]
-    pub const fn get_character(&self) -> char {
+    pub const fn character(&self) -> char {
         self.data[0].character
     }
 
     #[must_use]
-    pub const fn get_foreground(&self) -> Color {
+    pub const fn foreground(&self) -> TerminalColor {
         self.data[0].foreground
     }
 
     #[must_use]
-    pub const fn get_background(&self) -> Color {
+    pub const fn background(&self) -> TerminalColor {
         self.data[0].background
     }
 
@@ -100,7 +157,7 @@ impl CharacterPixel {
     }
 
     #[must_use]
-    pub const fn get_width(&self) -> usize {
+    pub const fn width(&self) -> usize {
         self.data[0].width
     }
 }
@@ -110,10 +167,10 @@ impl Display for CharacterPixel {
         write!(
             f,
             "{}",
-            Color::color(
-                self.get_character().to_string().as_str(),
-                &self.get_foreground(),
-                &self.get_background()
+            TerminalColor::color(
+                self.character().to_string().as_str(),
+                &self.foreground(),
+                &self.background()
             )
         )
     }
@@ -121,6 +178,26 @@ impl Display for CharacterPixel {
 
 impl Debug for CharacterPixel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self.get_character())
+        write!(f, "{}", &self.character())
+    }
+}
+
+impl TryFrom<char> for CharacterPixel {
+    type Error = String;
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        Self::build(value, TerminalColor::Default, TerminalColor::Default)
+    }
+}
+
+impl Default for CharacterPixelData {
+    fn default() -> Self {
+        Self {
+            character: ' ',
+            foreground: TerminalColor::default(),
+            background: TerminalColor::default(),
+            copy: false,
+            width: 1,
+        }
     }
 }

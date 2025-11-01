@@ -4,11 +4,12 @@
 use std::array;
 
 use console_display::{
-    console_display::ConsoleDisplay,
+    console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
     },
+    drawing::DynamicCanvas,
     pixel::monochrome_pixel::OctPixel,
     pixel_display::StaticPixelDisplay,
     widget::single_widget::DoubleBufferWidget,
@@ -44,25 +45,29 @@ fn main() {
 
     display.set_target_frame_rate(30.);
     display.set_on_update(move |disp, _| {
-        let width = disp.get_width() as i32;
-        let height = disp.get_height() as i32;
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_possible_wrap)]
+        let width = disp.width() as i32;
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_possible_wrap)]
+        let height = disp.height() as i32;
         for x in 0..width {
             for y in 0..height {
                 let mut neighbors = 0;
                 for i in offsets {
                     let x_i = (x + i.0).rem_euclid(width) as usize;
                     let y_i = (y + i.1).rem_euclid(height) as usize;
-                    if disp
-                        .get_pixel(x_i, y_i)
-                        .expect("Could not get pixel.")
+                    if disp.pixel(x_i, y_i).expect("Could not get pixel.")
                     {
                         neighbors += 1;
                     }
                 }
+                #[allow(clippy::cast_sign_loss)]
                 let pixel = disp
-                    .get_pixel(x as usize, y as usize)
+                    .pixel(x as usize, y as usize)
                     .expect("Could not get pixel.");
 
+                #[allow(clippy::cast_sign_loss)]
                 let _ = disp.set_pixel(
                     x as usize,
                     y as usize,

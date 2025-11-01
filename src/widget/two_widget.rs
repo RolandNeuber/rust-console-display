@@ -1,14 +1,25 @@
-use std::{
-    fmt::Display,
-    ops::{
-        Deref,
-        DerefMut,
-    },
+use std::ops::{
+    Deref,
+    DerefMut,
+};
+
+use console_display_macros::{
+    StaticWidget,
+    TwoWidget,
 };
 
 use crate::{
+    color::{
+        Color,
+        TerminalColor,
+    },
     constraint,
-    widget::DynamicWidget,
+    impl_getters,
+    impl_setters,
+    widget::{
+        DynamicWidget,
+        StringData,
+    },
 };
 
 use super::StaticWidget;
@@ -16,16 +27,17 @@ use super::StaticWidget;
 pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
-    fn get_children(&self) -> (&S, &T);
-    fn get_children_mut(&mut self) -> (&mut S, &mut T);
+    fn children(&self) -> (&S, &T);
+    fn children_mut(&mut self) -> (&mut S, &mut T);
 }
 
-pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
+#[derive(StaticWidget, TwoWidget)]
+pub struct AlternativeWidget<S: DynamicWidget, T: DynamicWidget> {
     child1_on_top: bool,
     children: (S, T),
 }
 
-impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
+impl<S: StaticWidget, T: StaticWidget> AlternativeWidget<S, T> {
     pub const fn new(child1: S, child2: T, child1_on_top: bool) -> Self
     where
         constraint!(S::WIDTH_CHARACTERS == T::WIDTH_CHARACTERS):,
@@ -38,10 +50,10 @@ impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
-    /// Builds an overlay widget with two children.
+impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
+    /// Builds an alternative widget with two children.
     /// The `child1_on_top` parameter determines whether the first child should be
-    /// on top or below the second child.
+    /// displayed instead of the second child and vice versa.
     ///
     /// # Errors
     ///
@@ -51,16 +63,15 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
         child2: T,
         child1_on_top: bool,
     ) -> Result<Self, String> {
-        if child1.get_width_characters() != child2.get_width_characters() ||
-            child1.get_height_characters() !=
-                child2.get_height_characters()
+        if child1.width_characters() != child2.width_characters() ||
+            child1.height_characters() != child2.height_characters()
         {
             return Err(format!(
                 "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
-                child1.get_height_characters(),
-                child2.get_height_characters(),
-                child1.get_width_characters(),
-                child2.get_width_characters(),
+                child1.height_characters(),
+                child2.height_characters(),
+                child1.width_characters(),
+                child2.width_characters(),
             ));
         }
         Ok(Self {
@@ -69,59 +80,35 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
         })
     }
 
-    pub const fn get_child1_on_top(&self) -> bool {
-        self.child1_on_top
-    }
+    impl_getters!(pub const child1_on_top: bool);
 
-    pub const fn set_child1_on_top(&mut self, child1_on_top: bool) {
-        self.child1_on_top = child1_on_top;
-    }
-}
-
-impl<S: StaticWidget, T: StaticWidget> StaticWidget
-    for OverlayWidget<S, T>
-{
-    const WIDTH_CHARACTERS: usize = S::WIDTH_CHARACTERS;
-
-    const HEIGHT_CHARACTERS: usize = S::HEIGHT_CHARACTERS;
+    impl_setters!(pub const child1_on_top: bool);
 }
 
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
-    for OverlayWidget<S, T>
+    for AlternativeWidget<S, T>
 {
-    fn get_width_characters(&self) -> usize {
-        self.children.0.get_width_characters()
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.children.1.get_height_characters()
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
-    for OverlayWidget<S, T>
-{
-    fn get_children(&self) -> (&S, &T) {
-        (&self.children.0, &self.children.1)
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters()
     }
 
-    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.children.0, &mut self.children.1)
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> Display for OverlayWidget<S, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn string_data(&self) -> StringData {
         if self.child1_on_top {
-            write!(f, "{}", self.children.0)
+            self.children.0.string_data()
         }
         else {
-            write!(f, "{}", self.children.1)
+            self.children.1.string_data()
         }
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> Deref
+    for AlternativeWidget<S, T>
+{
     type Target = (S, T);
 
     fn deref(&self) -> &Self::Target {
@@ -129,12 +116,15 @@ impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
     }
 }
 
-impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut
+    for AlternativeWidget<S, T>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.children
     }
 }
 
+#[derive(TwoWidget)]
 pub struct HorizontalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }
@@ -147,17 +137,32 @@ impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
     ///
     /// Returns an error if the height of both children does not match.
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
-        if child1.get_height_characters() != child2.get_height_characters()
-        {
+        if child1.height_characters() != child2.height_characters() {
             return Err(format!(
                 "Height in characters of arguments does not match. {} and {}.",
-                child1.get_height_characters(),
-                child2.get_height_characters()
+                child1.height_characters(),
+                child2.height_characters()
             ));
         }
         Ok(Self {
             children: (child1, child2),
         })
+    }
+
+    pub fn left(&self) -> &S {
+        &self.0
+    }
+
+    pub fn left_mut(&mut self) -> &mut S {
+        &mut self.0
+    }
+
+    pub fn right(&self) -> &T {
+        &self.1
+    }
+
+    pub fn right_mut(&mut self) -> &mut T {
+        &mut self.1
     }
 }
 
@@ -184,44 +189,28 @@ impl<S: StaticWidget, T: StaticWidget> StaticWidget
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for HorizontalTilingWidget<S, T>
 {
-    fn get_width_characters(&self) -> usize {
-        self.children.0.get_width_characters() +
-            self.children.1.get_width_characters()
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters() +
+            self.children.1.width_characters()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.children.0.get_height_characters()
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
-    for HorizontalTilingWidget<S, T>
-{
-    fn get_children(&self) -> (&S, &T) {
-        (&self.children.0, &self.children.1)
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters()
     }
 
-    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.children.0, &mut self.children.1)
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> Display
-    for HorizontalTilingWidget<S, T>
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str_repr1 = self.children.0.to_string();
-        let str_repr2 = self.children.1.to_string();
-        let lines = Iterator::zip(str_repr1.lines(), str_repr2.lines());
-        let mut str_repr = String::new();
-        for line_pair in lines {
-            str_repr.push_str(line_pair.0);
-            str_repr.push_str(line_pair.1);
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: self
+                .0
+                .string_data()
+                .data
+                .into_iter()
+                .zip(self.children.1.string_data().data)
+                .map(|lines| [lines.0, lines.1].concat())
+                .collect(),
         }
-        write!(f, "{str_repr}")
     }
 }
-
 impl<S: DynamicWidget, T: DynamicWidget> Deref
     for HorizontalTilingWidget<S, T>
 {
@@ -240,6 +229,7 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut
     }
 }
 
+#[derive(TwoWidget)]
 pub struct VerticalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }
@@ -252,16 +242,32 @@ impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
     ///
     /// Returns an error if the width of both children does not match.
     pub fn build(child1: S, child2: T) -> Result<Self, String> {
-        if child1.get_width_characters() != child2.get_width_characters() {
+        if child1.width_characters() != child2.width_characters() {
             return Err(format!(
                 "Width in characters of arguments does not match. {} and {}.",
-                child1.get_width_characters(),
-                child2.get_width_characters()
+                child1.width_characters(),
+                child2.width_characters()
             ));
         }
         Ok(Self {
             children: (child1, child2),
         })
+    }
+
+    pub fn top(&self) -> &S {
+        &self.0
+    }
+
+    pub fn top_mut(&mut self) -> &mut S {
+        &mut self.0
+    }
+
+    pub fn bottom(&self) -> &T {
+        &self.1
+    }
+
+    pub fn bottom_mut(&mut self) -> &mut T {
+        &mut self.1
     }
 }
 
@@ -288,33 +294,20 @@ impl<S: StaticWidget, T: StaticWidget> StaticWidget
 impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
     for VerticalTilingWidget<S, T>
 {
-    fn get_width_characters(&self) -> usize {
-        self.children.0.get_width_characters()
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters()
     }
 
-    fn get_height_characters(&self) -> usize {
-        self.children.0.get_height_characters() +
-            self.children.1.get_height_characters()
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> TwoWidget<S, T>
-    for VerticalTilingWidget<S, T>
-{
-    fn get_children(&self) -> (&S, &T) {
-        (&self.children.0, &self.children.1)
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters() +
+            self.children.1.height_characters()
     }
 
-    fn get_children_mut(&mut self) -> (&mut S, &mut T) {
-        (&mut self.children.0, &mut self.children.1)
-    }
-}
-
-impl<S: DynamicWidget, T: DynamicWidget> Display
-    for VerticalTilingWidget<S, T>
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\r\n{}", self.children.0, self.children.1)
+    fn string_data(&self) -> StringData {
+        StringData {
+            data: [self.0.string_data().data, self.1.string_data().data]
+                .concat(),
+        }
     }
 }
 
@@ -333,5 +326,312 @@ impl<S: DynamicWidget, T: DynamicWidget> DerefMut
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.children
+    }
+}
+
+#[derive(StaticWidget)]
+pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
+    children: (S, T),
+}
+
+impl<S: StaticWidget, T: StaticWidget> OverlayWidget<S, T> {
+    pub const fn new(overlay: S, base: T) -> Self
+    where
+        constraint!(S::WIDTH_CHARACTERS == T::WIDTH_CHARACTERS):,
+        constraint!(S::HEIGHT_CHARACTERS == T::HEIGHT_CHARACTERS):,
+    {
+        Self {
+            children: (overlay, base),
+        }
+    }
+
+    pub fn overlay(&self) -> &S {
+        &self.0
+    }
+
+    pub fn overlay_mut(&mut self) -> &mut S {
+        &mut self.0
+    }
+
+    pub fn base(&self) -> &T {
+        &self.1
+    }
+
+    pub fn base_mut(&mut self) -> &mut T {
+        &mut self.1
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
+    /// Builds an overlay widget with two children.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dimensions of both children don't match.
+    pub fn build(overlay: S, base: T) -> Result<Self, String> {
+        if overlay.width_characters() != base.width_characters() ||
+            overlay.height_characters() != base.height_characters()
+        {
+            return Err(format!(
+                "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
+                overlay.height_characters(),
+                base.height_characters(),
+                overlay.width_characters(),
+                base.width_characters(),
+            ));
+        }
+        Ok(Self {
+            children: (overlay, base),
+        })
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DynamicWidget
+    for OverlayWidget<S, T>
+{
+    fn width_characters(&self) -> usize {
+        self.children.0.width_characters()
+    }
+
+    fn height_characters(&self) -> usize {
+        self.children.0.height_characters()
+    }
+
+    fn string_data(&self) -> StringData {
+        let overlay = self.0.string_data().data;
+        let display = self.1.string_data().data;
+        StringData {
+            data: overlay
+                .into_iter()
+                .zip(display)
+                .map(|(overlay_row, display_row)| {
+                    overlay_row
+                        .into_iter()
+                        .zip(display_row)
+                        .map(|(cell_top, cell_bottom)| {
+                            let mut cell = cell_top;
+                            if let TerminalColor::ARGBColor(foreground) =
+                                cell.foreground &&
+                                let TerminalColor::ARGBColor(background) =
+                                    cell.background &&
+                                background.opacity < u8::MAX / 2 &&
+                                foreground.opacity < u8::MAX / 2
+                            {
+                                cell.character = cell_bottom.character;
+                            }
+
+                            cell.background = TerminalColor::blend(
+                                &cell.background,
+                                &cell_bottom.background,
+                            );
+                            cell.foreground = TerminalColor::blend(
+                                &cell.foreground,
+                                &cell_bottom.foreground,
+                            );
+                            cell
+                        })
+                        .collect()
+                })
+                .collect(),
+        }
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> Deref for OverlayWidget<S, T> {
+    type Target = (S, T);
+
+    fn deref(&self) -> &Self::Target {
+        &self.children
+    }
+}
+
+impl<S: DynamicWidget, T: DynamicWidget> DerefMut for OverlayWidget<S, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.children
+    }
+}
+
+// TODO: Add more tests for functionality rather than initialization
+#[cfg(test)]
+mod tests {
+    use crate::{
+        pixel::{
+            color_pixel::ColorSinglePixel,
+            monochrome_pixel::SinglePixel,
+        },
+        pixel_display::StaticPixelDisplay,
+    };
+
+    use super::*;
+
+    mod alternative_widget {
+        use super::*;
+
+        #[test]
+        fn build_success() {
+            let alternative = AlternativeWidget::build(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+                true,
+            );
+            assert!(alternative.is_ok());
+        }
+
+        #[test]
+        fn build_failure() {
+            let alternative = AlternativeWidget::build(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+                StaticPixelDisplay::<SinglePixel, 1, 2>::new(true),
+                true,
+            );
+            assert!(alternative.is_err());
+        }
+
+        #[test]
+        fn dimensions() {
+            let alternative = AlternativeWidget::new(
+                StaticPixelDisplay::<SinglePixel, 37, 63>::new(false),
+                StaticPixelDisplay::<SinglePixel, 37, 63>::new(true),
+                true,
+            );
+            assert_eq!(alternative.width_characters(), 37);
+            assert_eq!(alternative.height_characters(), 63);
+        }
+    }
+
+    mod horizontal_tiling {
+        use super::*;
+
+        #[test]
+        fn build_success() {
+            let overlay = HorizontalTilingWidget::build(
+                StaticPixelDisplay::<SinglePixel, 3, 10>::new(false),
+                StaticPixelDisplay::<SinglePixel, 2, 10>::new(true),
+            );
+            assert!(overlay.is_ok());
+        }
+
+        #[test]
+        fn build_failure() {
+            let overlay = HorizontalTilingWidget::build(
+                StaticPixelDisplay::<SinglePixel, 10, 3>::new(false),
+                StaticPixelDisplay::<SinglePixel, 10, 2>::new(true),
+            );
+            assert!(overlay.is_err());
+        }
+
+        #[test]
+        fn dimensions() {
+            let overlay = HorizontalTilingWidget::new(
+                StaticPixelDisplay::<SinglePixel, 37, 20>::new(false),
+                StaticPixelDisplay::<SinglePixel, 63, 20>::new(true),
+            );
+            assert_eq!(overlay.width_characters(), 100);
+            assert_eq!(overlay.height_characters(), 20);
+        }
+    }
+
+    mod vertical_tiling {
+        use super::*;
+
+        #[test]
+        fn build_success() {
+            let overlay = VerticalTilingWidget::build(
+                StaticPixelDisplay::<SinglePixel, 20, 5>::new(false),
+                StaticPixelDisplay::<SinglePixel, 20, 4>::new(true),
+            );
+            assert!(overlay.is_ok());
+        }
+
+        #[test]
+        fn build_failure() {
+            let overlay = VerticalTilingWidget::build(
+                StaticPixelDisplay::<SinglePixel, 5, 20>::new(false),
+                StaticPixelDisplay::<SinglePixel, 4, 20>::new(true),
+            );
+            assert!(overlay.is_err());
+        }
+
+        #[test]
+        fn dimensions() {
+            let overlay = VerticalTilingWidget::new(
+                StaticPixelDisplay::<SinglePixel, 30, 45>::new(false),
+                StaticPixelDisplay::<SinglePixel, 30, 54>::new(true),
+            );
+            assert_eq!(overlay.width_characters(), 30);
+            assert_eq!(overlay.height_characters(), 99);
+        }
+    }
+
+    mod overlay_widget {
+        use crate::{
+            color::{
+                ARGBColor,
+                RGBColor,
+            },
+            drawing::DynamicCanvas,
+            pixel_display::DynamicPixelDisplay,
+        };
+
+        use super::*;
+
+        #[test]
+        fn build_success() {
+            let overlay = OverlayWidget::build(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+            );
+            assert!(overlay.is_ok());
+        }
+
+        #[test]
+        fn build_failure() {
+            let overlay = OverlayWidget::build(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+                StaticPixelDisplay::<SinglePixel, 1, 2>::new(true),
+            );
+            assert!(overlay.is_err());
+        }
+
+        #[test]
+        fn dimensions() {
+            let overlay = OverlayWidget::new(
+                StaticPixelDisplay::<SinglePixel, 37, 63>::new(false),
+                StaticPixelDisplay::<SinglePixel, 37, 63>::new(true),
+            );
+            assert_eq!(overlay.width_characters(), 37);
+            assert_eq!(overlay.height_characters(), 63);
+        }
+
+        #[test]
+        fn transparency() {
+            let top = DynamicPixelDisplay::<ColorSinglePixel>::new(
+                37,
+                63,
+                TerminalColor::ARGBColor(ARGBColor {
+                    opacity: 0,
+                    color: RGBColor::BLACK,
+                }),
+            );
+
+            let bottom =
+                StaticPixelDisplay::<ColorSinglePixel, 37, 63>::new(
+                    RGBColor::WHITE.into(),
+                );
+
+            let mut overlay = OverlayWidget::build(top, bottom).unwrap();
+
+            assert_eq!(
+                overlay.string_data().to_string(),
+                overlay.1.string_data().to_string()
+            );
+
+            overlay.0.set_pixel(10, 10, RGBColor::BLACK.into()).unwrap();
+
+            assert_ne!(
+                overlay.string_data().to_string(),
+                overlay.1.string_data().to_string()
+            );
+        }
     }
 }

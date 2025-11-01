@@ -7,13 +7,11 @@ use std::io::{
 };
 
 use console_display::{
+    color::RGBColor,
     display_driver::DisplayDriver,
     pixel::{
         Pixel,
-        color_pixel::{
-            ColorOctPixel,
-            RGBColor,
-        },
+        color_pixel::ColorOctPixel,
     },
     pixel_display::DynamicPixelDisplay,
 };
@@ -25,7 +23,9 @@ use image::{
 
 fn main() {
     type PixelType = ColorOctPixel;
+    #[allow(clippy::cast_possible_truncation)]
     const WIDTH: u32 = PixelType::WIDTH as u32;
+    #[allow(clippy::cast_possible_truncation)]
     const HEIGHT: u32 = PixelType::HEIGHT as u32;
 
     let max_dimensions: (u32, u32) = (200, 160);
@@ -60,24 +60,27 @@ fn main() {
         Vec::with_capacity((dimensions.0 * dimensions.1) as usize);
     let mut pixel_index = 0;
     for pixel in rgb.pixels() {
-        data.push(RGBColor {
-            r: pixel[0],
-            g: pixel[1],
-            b: pixel[2],
-        });
+        data.push(
+            RGBColor {
+                r: pixel[0],
+                g: pixel[1],
+                b: pixel[2],
+            }
+            .into(),
+        );
         pixel_index += 1;
         if pixel_index == dimensions.0 &&
             padded_dimensions.0 > dimensions.0
         {
             for _ in 0..padded_dimensions.0 - dimensions.0 {
-                data.push(RGBColor { r: 0, g: 0, b: 0 });
+                data.push(RGBColor::BLACK.into());
             }
             pixel_index = 0;
         }
     }
     for _ in 0..padded_dimensions.1 - dimensions.1 {
         for _ in 0..padded_dimensions.0 {
-            data.push(RGBColor { r: 0, g: 0, b: 0 });
+            data.push(RGBColor::BLACK.into());
         }
     }
 

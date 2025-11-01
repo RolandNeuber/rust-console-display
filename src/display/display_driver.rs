@@ -26,7 +26,10 @@ use crossterm::{
     terminal,
 };
 
-use crate::widget::DynamicWidget;
+use crate::widget::{
+    DynamicWidget,
+    single_widget::PaddingWidget,
+};
 
 pub enum UpdateStatus {
     Break,
@@ -40,7 +43,7 @@ type UpdateFunction<T> =
 pub struct DisplayDriver<T: DynamicWidget> {
     original_width: u16,
     original_height: u16,
-    display: T,
+    display: PaddingWidget<T>,
     on_update: Option<Box<UpdateFunction<T>>>,
     target_frame_time: Duration,
 }
@@ -57,7 +60,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         Self {
             original_width,
             original_height,
-            display: widget,
+            display: PaddingWidget::new(widget, 0, 0, 0, 0),
             target_frame_time: Duration::ZERO,
             on_update: None,
         }
@@ -72,7 +75,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         let mut stdout = io::stdout();
 
         write!(stdout, "\x1B[H")?;
-        write!(stdout, "{}", self.get_widget())?;
+        write!(stdout, "{}", self.display.string_data())?;
 
         Ok(())
     }
@@ -83,11 +86,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     /// It enters alternate screen mode,
     /// hides the cursor and disables line wrapping.
     ///
-    /// # Error
+    /// # Errors
     ///
     /// Returns an error when any on the actions above fail.
     /// Note that resizing the terminal does not fail, if the terminal does not support it.
-    pub fn initialize(&self) -> Result<(), io::Error> {
+    pub fn initialize(&mut self) -> Result<(), io::Error> {
         let mut stdout = io::stdout();
 
         // enables terminal raw mode
@@ -97,8 +100,14 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             stdout,
             terminal::EnterAlternateScreen, // use alternate screen
             terminal::SetSize(
-                self.get_widget().get_width_characters() as u16,
-                self.get_widget().get_height_characters() as u16
+                self.child()
+                    .width_characters()
+                    .try_into()
+                    .unwrap_or(u16::MAX),
+                self.child()
+                    .height_characters()
+                    .try_into()
+                    .unwrap_or(u16::MAX)
             ), // set dimensions of screen
             terminal::DisableLineWrap,      // disable line wrapping
             terminal::Clear(terminal::ClearType::All), // clear screen
@@ -108,19 +117,19 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         Ok(())
     }
 
-    const fn get_original_width(&self) -> &u16 {
+    const fn original_width(&self) -> &u16 {
         &self.original_width
     }
 
-    const fn get_orignal_height(&self) -> &u16 {
+    const fn orignal_height(&self) -> &u16 {
         &self.original_height
     }
 
-    const fn get_widget(&self) -> &T {
+    fn child(&self) -> &T {
         &self.display
     }
 
-    const fn get_widget_mut(&mut self) -> &mut T {
+    fn child_mut(&mut self) -> &mut T {
         &mut self.display
     }
 
@@ -153,6 +162,22 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     pub fn update(&mut self) {
         loop {
             let start = Instant::now();
+
+            let (width, height) = match crossterm::terminal::size() {
+                Ok((w, h)) => (w, h),
+                Err(_) => (0, 0),
+            };
+
+            let padding_vertical =
+                (height as usize).saturating_sub(self.height_characters());
+            let padding_horizontal =
+                (width as usize).saturating_sub(self.width_characters());
+
+            self.display.set_padding_left(padding_horizontal / 2);
+            self.display.set_padding_top(padding_vertical / 2);
+            self.display.set_padding_right(padding_horizontal / 2);
+            self.display.set_padding_bottom(padding_vertical / 2);
+
             self.print_display().expect("Could not print display.");
 
             let mut latest_event = None;
@@ -190,13 +215,13 @@ impl<T: DynamicWidget> Deref for DisplayDriver<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.get_widget()
+        self.child()
     }
 }
 
 impl<T: DynamicWidget> DerefMut for DisplayDriver<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.get_widget_mut()
+        self.child_mut()
     }
 }
 
@@ -212,14 +237,12 @@ impl<T: DynamicWidget> Drop for DisplayDriver<T> {
         );
 
         // reset dimensions of screen
-        if *self.get_original_width() != 0 &&
-            *self.get_orignal_height() != 0
-        {
+        if *self.original_width() != 0 && *self.orignal_height() != 0 {
             let _ = crossterm::execute!(
                 stdout,
                 terminal::SetSize(
-                    *self.get_original_width(),
-                    *self.get_orignal_height()
+                    *self.original_width(),
+                    *self.orignal_height()
                 )
             );
         }
