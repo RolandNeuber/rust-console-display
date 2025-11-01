@@ -95,8 +95,17 @@ I'd also recommend to install the [`act`](https://github.com/nektos/act) command
 Alternatively, you can also run the pipeline steps manually. \
 Make sure you have run formatting, building, linting and testing.
 
+By contributing to this repository, you agree that your contributions will be licensed under the Mozilla Public License 2.0.
+
 
 # License
 
-All source code in this repository is dual-licensed under either the MIT or Apache 2.0 licenses. You may choose either license.
-By contributing to this repository, you agree to license your contributions under the same terms.
+This library is licensed under the Mozilla Public License 2.0 (MPL-2.0).
+
+You may use this library in open source or proprietary software. 
+
+If you modify the library’s source code, you must distribute your modifications under the same license. This will most likely only apply, if you intent to make improvements to the library itself.
+
+For more in depth questions refer to the [FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/).
+
+For the full text of the license, see [LICENSE](./LICENSE).
