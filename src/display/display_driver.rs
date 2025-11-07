@@ -36,7 +36,7 @@ pub enum UpdateStatus {
     Continue,
 }
 
-type UpdateFunction<T> =
+type UpdateFunction<T: DynamicWidget> =
     dyn FnMut(&mut DisplayDriver<T>, Option<KeyEvent>) -> UpdateStatus;
 
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
