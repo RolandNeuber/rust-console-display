@@ -6,21 +6,38 @@ use crate::{
     console_display::{
         DynamicConsoleDisplay,
         StaticConsoleDisplay,
-    }, drawing::DynamicCanvas, optional_const_generics::{CompileTime, Dimension, RunTime}, pixel::{
+    },
+    drawing::DynamicCanvas,
+    optional_const_generics::{
+        CompileTime,
+        Dimension,
+        RunTime,
+    },
+    pixel::{
         Pixel,
         character_pixel::{
             CharacterPixel,
             CharacterPixelData,
         },
-    }, widget::{
+    },
+    widget::{
         DynamicWidget,
         StaticWidget,
         StringData,
-    }
+    },
 };
 
-pub type DynamicCharacterDisplay<CharacterPixel> = CharacterDisplay<RunTime, RunTime, CharacterPixel>;
-pub type StaticCharacterDisplay<CharacterPixel, const WIDTH: usize, const HEIGHT: usize> = CharacterDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, CharacterPixel>;
+pub type DynamicCharacterDisplay<CharacterPixel> =
+    CharacterDisplay<RunTime, RunTime, CharacterPixel>;
+pub type StaticCharacterDisplay<
+    CharacterPixel,
+    const WIDTH: usize,
+    const HEIGHT: usize,
+> = CharacterDisplay<
+    CompileTime<WIDTH>,
+    CompileTime<HEIGHT>,
+    CharacterPixel,
+>;
 
 pub struct CharacterDisplay<W: Dimension, H: Dimension, CharacterPixel> {
     _w: PhantomData<W>,
@@ -107,9 +124,12 @@ impl CharacterDisplay<RunTime, RunTime, CharacterPixel> {
     }
 }
 
-
 impl<const WIDTH: usize, const HEIGHT: usize>
-    CharacterDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, CharacterPixel>
+    CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     /// Convenience method to build a blank display struct with specified dimensions
     ///
@@ -210,7 +230,11 @@ impl<W: Dimension, H: Dimension> DynamicConsoleDisplay<CharacterPixel>
 
 impl<const WIDTH: usize, const HEIGHT: usize>
     DynamicConsoleDisplay<CharacterPixel>
-    for CharacterDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, CharacterPixel>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     fn width(&self) -> usize {
         WIDTH
@@ -229,7 +253,9 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<W: Dimension, H: Dimension> DynamicWidget for CharacterDisplay<W, H, CharacterPixel> {
+impl<W: Dimension, H: Dimension> DynamicWidget
+    for CharacterDisplay<W, H, CharacterPixel>
+{
     default fn width_characters(&self) -> usize {
         self.width / CharacterPixel::WIDTH
     }
@@ -274,7 +300,11 @@ impl<W: Dimension, H: Dimension> DynamicWidget for CharacterDisplay<W, H, Charac
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
-    for CharacterDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, CharacterPixel>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     fn width_characters(&self) -> usize {
         WIDTH
@@ -319,8 +349,8 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     }
 }
 
-impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>> DynamicCanvas<S>
-    for CharacterDisplay<W, H, CharacterPixel>
+impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
+    DynamicCanvas<S> for CharacterDisplay<W, H, CharacterPixel>
 {
     default type A = usize;
 
@@ -401,7 +431,11 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>> DynamicCanvas
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
-    for CharacterDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, CharacterPixel>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     type A = usize;
 
@@ -477,7 +511,11 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
 
 impl<const WIDTH: usize, const HEIGHT: usize>
     StaticConsoleDisplay<CharacterPixel>
-    for CharacterDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, CharacterPixel>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     const WIDTH: usize = WIDTH;
 
@@ -485,7 +523,11 @@ impl<const WIDTH: usize, const HEIGHT: usize>
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> const StaticWidget
-    for CharacterDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, CharacterPixel>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     const WIDTH_CHARACTERS: usize = WIDTH;
 

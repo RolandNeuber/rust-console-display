@@ -12,8 +12,8 @@ pub mod color;
 mod display;
 pub mod drawing;
 mod macros;
+pub mod optional_const_generics;
 pub mod pixel;
 pub mod widget;
-pub mod optional_const_generics;
 
 pub use display::*;

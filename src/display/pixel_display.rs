@@ -7,15 +7,27 @@ use crate::{
     console_display::{
         DynamicConsoleDisplay,
         StaticConsoleDisplay,
-    }, drawing::DynamicCanvas, optional_const_generics::{CompileTime, Dimension, RunTime}, pixel::Pixel, widget::{
+    },
+    drawing::DynamicCanvas,
+    optional_const_generics::{
+        CompileTime,
+        Dimension,
+        RunTime,
+    },
+    pixel::Pixel,
+    widget::{
         DynamicWidget,
         StaticWidget,
         StringData,
-    }
+    },
 };
 
 pub type DynamicPixelDisplay<T: Pixel> = PixelDisplay<RunTime, RunTime, T>;
-pub type StaticPixelDisplay<T: Pixel, const WIDTH: usize, const HEIGHT: usize> = PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>;
+pub type StaticPixelDisplay<
+    T: Pixel,
+    const WIDTH: usize,
+    const HEIGHT: usize,
+> = PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>;
 
 pub struct PixelDisplay<W: Dimension, H: Dimension, T: Pixel> {
     _w: PhantomData<W>,
@@ -108,7 +120,9 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
     }
 }
 
-impl<const WIDTH: usize, const HEIGHT: usize, T: Pixel> PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T> {
+impl<const WIDTH: usize, const HEIGHT: usize, T: Pixel>
+    PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
     /// Convenience method to create a blank display struct with specified dimensions known at compile time.
     pub fn new(fill: T::U) -> Self
     where
@@ -158,7 +172,9 @@ impl<const WIDTH: usize, const HEIGHT: usize, T: Pixel> PixelDisplay<CompileTime
     }
 }
 
-impl<W: Dimension, H: Dimension, T: Pixel> DynamicConsoleDisplay<T> for PixelDisplay<W, H, T> {
+impl<W: Dimension, H: Dimension, T: Pixel> DynamicConsoleDisplay<T>
+    for PixelDisplay<W, H, T>
+{
     default fn width(&self) -> usize {
         self.width
     }
@@ -177,7 +193,8 @@ impl<W: Dimension, H: Dimension, T: Pixel> DynamicConsoleDisplay<T> for PixelDis
 }
 
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
-    DynamicConsoleDisplay<T> for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+    DynamicConsoleDisplay<T>
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
 {
     fn width(&self) -> usize {
         WIDTH
@@ -196,7 +213,9 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
-impl<W: Dimension, H: Dimension, T: Pixel> DynamicWidget for PixelDisplay<W, H, T> {
+impl<W: Dimension, H: Dimension, T: Pixel> DynamicWidget
+    for PixelDisplay<W, H, T>
+{
     default fn width_characters(&self) -> usize {
         self.width / T::WIDTH
     }
@@ -238,7 +257,9 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     }
 }
 
-impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S> for PixelDisplay<W, H, S> {
+impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
+    for PixelDisplay<W, H, S>
+{
     type A = usize;
 
     fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
@@ -314,13 +335,13 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S> for PixelDisplay<W, 
 }
 
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
-    StaticConsoleDisplay<T> for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+    StaticConsoleDisplay<T>
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
 {
     const WIDTH: usize = WIDTH;
 
     const HEIGHT: usize = HEIGHT;
 }
-
 
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> const StaticWidget
     for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
