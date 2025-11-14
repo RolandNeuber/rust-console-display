@@ -9,8 +9,7 @@ use crate::{
 };
 
 /// Defines a fill for a drawable.
-#[const_trait]
-pub trait FillType {}
+pub const trait FillType {}
 
 /// Defines no fill on a drawable, e.g. only outline.
 #[derive(PartialEq, Eq, Debug)]
@@ -23,8 +22,7 @@ pub struct Filled;
 impl const FillType for Filled {}
 
 /// Defines an object that you can draw on and query pixels from.
-#[const_trait]
-pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
+pub const trait DynamicCanvas<S: Pixel>: DynamicWidget {
     type A: NumCast;
     /// Returns a bool representing the state of the pixel at the specified coordinate.
     ///
@@ -113,8 +111,7 @@ pub trait DynamicCanvas<S: Pixel>: DynamicWidget {
 }
 
 /// Defines an object that can be drawn onto a canvas.
-#[const_trait]
-pub trait DynamicDrawable<const N: usize> {
+pub const trait DynamicDrawable<const N: usize> {
     /// Draws the drawable onto a canvas with the specified pixel type/brush.
     fn draw<T: DynamicCanvas<S>, S: Pixel>(
         &self,
