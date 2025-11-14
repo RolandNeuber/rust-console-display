@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use num_traits::NumCast;
 
 use crate::{
@@ -6,6 +8,11 @@ use crate::{
         StaticConsoleDisplay,
     },
     drawing::DynamicCanvas,
+    optional_const_generics::{
+        CompileTime,
+        Dimension,
+        RunTime,
+    },
     pixel::{
         Pixel,
         character_pixel::{
@@ -20,13 +27,27 @@ use crate::{
     },
 };
 
-pub struct DynamicCharacterDisplay<CharacterPixel> {
+pub type DynamicCharacterDisplay<CharacterPixel> =
+    CharacterDisplay<RunTime, RunTime, CharacterPixel>;
+pub type StaticCharacterDisplay<
+    CharacterPixel,
+    const WIDTH: usize,
+    const HEIGHT: usize,
+> = CharacterDisplay<
+    CompileTime<WIDTH>,
+    CompileTime<HEIGHT>,
+    CharacterPixel,
+>;
+
+pub struct CharacterDisplay<W: Dimension, H: Dimension, CharacterPixel> {
+    _w: PhantomData<W>,
+    _h: PhantomData<H>,
     width: usize,
     height: usize,
     data: Box<[CharacterPixel]>,
 }
 
-impl DynamicCharacterDisplay<CharacterPixel> {
+impl CharacterDisplay<RunTime, RunTime, CharacterPixel> {
     /// Convenience method to build a blank display struct with specified dimensions
     ///
     /// # Panics
@@ -94,6 +115,8 @@ impl DynamicCharacterDisplay<CharacterPixel> {
         }
 
         Ok(Self {
+            _w: PhantomData,
+            _h: PhantomData,
             width,
             height,
             data: new_data.into_boxed_slice(),
@@ -101,162 +124,12 @@ impl DynamicCharacterDisplay<CharacterPixel> {
     }
 }
 
-impl DynamicConsoleDisplay<CharacterPixel>
-    for DynamicCharacterDisplay<CharacterPixel>
-{
-    fn width(&self) -> usize {
-        self.width
-    }
-
-    fn height(&self) -> usize {
-        self.height
-    }
-
-    fn data(&self) -> &[CharacterPixel] {
-        &self.data
-    }
-
-    fn data_mut(&mut self) -> &mut Box<[CharacterPixel]> {
-        &mut self.data
-    }
-}
-
-impl DynamicWidget for DynamicCharacterDisplay<CharacterPixel> {
-    fn width_characters(&self) -> usize {
-        self.width / CharacterPixel::WIDTH
-    }
-
-    fn height_characters(&self) -> usize {
-        self.height / CharacterPixel::HEIGHT
-    }
-
-    fn string_data(&self) -> StringData {
-        let mut result = Vec::new();
-        let mut row = Vec::new();
-        let mut width = 0;
-
-        let mut iter = self.data.iter();
-        while let Some(cell) = iter.next() {
-            if width >= self.width_characters() {
-                result.push(row);
-                row = Vec::new();
-                width = 0;
-            }
-
-            if cell.is_copy() {
-                row.push(CharacterPixel::default().into());
-                width += 1;
-                continue;
-            }
-
-            row.push((*cell).into());
-            width += cell.width();
-
-            for _ in 1..cell.width() {
-                iter.next();
-            }
-        }
-
-        if !row.is_empty() {
-            result.push(row);
-        }
-
-        StringData { data: result }
-    }
-}
-
-impl<S: Pixel<U = CharacterPixelData>> DynamicCanvas<S>
-    for DynamicCharacterDisplay<CharacterPixel>
-{
-    type A = usize;
-
-    fn pixel(
-        &self,
-        x: Self::A,
-        y: Self::A,
-    ) -> Result<CharacterPixelData, String>
-    where
-        [(); S::WIDTH * S::HEIGHT]:,
-    {
-        let x: Option<usize> = NumCast::from(x);
-        let y: Option<usize> = NumCast::from(y);
-        if let Some(x) = x &&
-            let Some(y) = y
-        {
-            if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
-            }
-
-            let block_x: usize = x / S::WIDTH;
-            let block_y: usize = y / S::HEIGHT;
-            let offset_x: usize = x % S::WIDTH;
-            let offset_y: usize = y % S::HEIGHT;
-
-            let pixel =
-                &self.data()[block_x + block_y * self.width_characters()];
-
-            Ok(pixel
-                .subpixel(offset_x, offset_y)
-                .expect("Offset should be 0 or 1."))
-        }
-        else {
-            Err("Coordinates could not be converted to usize.".to_string())
-        }
-    }
-
-    fn set_pixel(
-        &mut self,
-        x: Self::A,
-        y: Self::A,
-        value: S::U,
-    ) -> Result<(), String>
-    where
-        [(); S::WIDTH * S::HEIGHT]:,
-    {
-        let x: Option<usize> = NumCast::from(x);
-        let y: Option<usize> = NumCast::from(y);
-        if let Some(x) = x &&
-            let Some(y) = y
-        {
-            if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
-            }
-
-            let block_x: usize = x / S::WIDTH;
-            let block_y: usize = y / S::HEIGHT;
-            let offset_x: usize = x % S::WIDTH;
-            let offset_y: usize = y % S::HEIGHT;
-
-            let width_characters = self.width_characters();
-            let pixel =
-                &mut self.data_mut()[block_x + block_y * width_characters];
-            pixel
-                .set_subpixel(offset_x, offset_y, value)
-                .expect("Offset should be 0 or 1.");
-
-            Ok(())
-        }
-        else {
-            Err("Coordinates could not be converted to usize.".to_string())
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct StaticCharacterDisplay<
-    CharacterPixel,
-    const WIDTH: usize,
-    const HEIGHT: usize,
-> {
-    data: Box<[CharacterPixel]>,
-}
-
 impl<const WIDTH: usize, const HEIGHT: usize>
-    StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     /// Convenience method to build a blank display struct with specified dimensions
     ///
@@ -326,23 +199,42 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         }
 
         Ok(Self {
+            _w: PhantomData,
+            _h: PhantomData,
+            width: WIDTH,
+            height: HEIGHT,
             data: new_data.into_boxed_slice(),
         })
     }
 }
 
-impl<const WIDTH: usize, const HEIGHT: usize>
-    StaticConsoleDisplay<CharacterPixel>
-    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+impl<W: Dimension, H: Dimension> DynamicConsoleDisplay<CharacterPixel>
+    for CharacterDisplay<W, H, CharacterPixel>
 {
-    const WIDTH: usize = WIDTH;
+    default fn width(&self) -> usize {
+        self.width
+    }
 
-    const HEIGHT: usize = HEIGHT;
+    default fn height(&self) -> usize {
+        self.height
+    }
+
+    default fn data(&self) -> &[CharacterPixel] {
+        &self.data
+    }
+
+    default fn data_mut(&mut self) -> &mut Box<[CharacterPixel]> {
+        &mut self.data
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize>
     DynamicConsoleDisplay<CharacterPixel>
-    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     fn width(&self) -> usize {
         WIDTH
@@ -361,8 +253,58 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
+impl<W: Dimension, H: Dimension> DynamicWidget
+    for CharacterDisplay<W, H, CharacterPixel>
+{
+    default fn width_characters(&self) -> usize {
+        self.width / CharacterPixel::WIDTH
+    }
+
+    default fn height_characters(&self) -> usize {
+        self.height / CharacterPixel::HEIGHT
+    }
+
+    default fn string_data(&self) -> StringData {
+        let mut result = Vec::new();
+        let mut row = Vec::new();
+        let mut width = 0;
+
+        let mut iter = self.data.iter();
+        while let Some(cell) = iter.next() {
+            if width >= self.width_characters() {
+                result.push(row);
+                row = Vec::new();
+                width = 0;
+            }
+
+            if cell.is_copy() {
+                row.push(CharacterPixel::default().into());
+                width += 1;
+                continue;
+            }
+
+            row.push((*cell).into());
+            width += cell.width();
+
+            for _ in 1..cell.width() {
+                iter.next();
+            }
+        }
+
+        if !row.is_empty() {
+            result.push(row);
+        }
+
+        StringData { data: result }
+    }
+}
+
 impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
-    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     fn width_characters(&self) -> usize {
         WIDTH
@@ -407,16 +349,93 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     }
 }
 
-impl<const WIDTH: usize, const HEIGHT: usize> const StaticWidget
-    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
+    DynamicCanvas<S> for CharacterDisplay<W, H, CharacterPixel>
 {
-    const WIDTH_CHARACTERS: usize = WIDTH;
+    default type A = usize;
 
-    const HEIGHT_CHARACTERS: usize = HEIGHT;
+    default fn pixel(
+        &self,
+        x: Self::A,
+        y: Self::A,
+    ) -> Result<CharacterPixelData, String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let pixel =
+                &self.data()[block_x + block_y * self.width_characters()];
+
+            Ok(pixel
+                .subpixel(offset_x, offset_y)
+                .expect("Offset should be 0 or 1."))
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
+
+    default fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), String>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= self.width() || y >= self.height() {
+                return Err(format!(
+                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
+                ));
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let width_characters = self.width_characters();
+            let pixel =
+                &mut self.data_mut()[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(offset_x, offset_y, value)
+                .expect("Offset should be 0 or 1.");
+
+            Ok(())
+        }
+        else {
+            Err("Coordinates could not be converted to usize.".to_string())
+        }
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
-    for StaticCharacterDisplay<CharacterPixel, WIDTH, HEIGHT>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
 {
     type A = usize;
 
@@ -488,6 +507,31 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             Err("Coordinates could not be converted to usize.".to_string())
         }
     }
+}
+
+impl<const WIDTH: usize, const HEIGHT: usize>
+    StaticConsoleDisplay<CharacterPixel>
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
+{
+    const WIDTH: usize = WIDTH;
+
+    const HEIGHT: usize = HEIGHT;
+}
+
+impl<const WIDTH: usize, const HEIGHT: usize> const StaticWidget
+    for CharacterDisplay<
+        CompileTime<WIDTH>,
+        CompileTime<HEIGHT>,
+        CharacterPixel,
+    >
+{
+    const WIDTH_CHARACTERS: usize = WIDTH;
+
+    const HEIGHT_CHARACTERS: usize = HEIGHT;
 }
 
 #[cfg(test)]

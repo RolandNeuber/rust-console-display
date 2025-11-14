@@ -41,8 +41,7 @@ use crate::{
 
 use super::StaticWidget;
 
-#[const_trait]
-pub trait SingleWidget<T: DynamicWidget>:
+pub const trait SingleWidget<T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
     type Borrowed<'a>: Deref<Target = T>
@@ -562,8 +561,7 @@ impl<T: DynamicWidget> const DerefMut for PaddingWidget<T> {
     }
 }
 
-#[const_trait]
-pub trait Border {
+pub const trait Border {
     fn border_at(
         &self,
         width: usize,

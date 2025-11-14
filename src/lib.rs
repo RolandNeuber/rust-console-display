@@ -3,12 +3,16 @@
 #![feature(const_trait_impl)]
 #![feature(const_convert)]
 #![feature(const_ref_cell)]
+#![feature(adt_const_params)]
+#![feature(lazy_type_alias)]
+#![feature(specialization)]
 #![doc = include_str!("../README.md")]
 
 pub mod color;
 mod display;
 pub mod drawing;
 mod macros;
+pub mod optional_const_generics;
 pub mod pixel;
 pub mod widget;
 

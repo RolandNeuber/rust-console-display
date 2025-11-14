@@ -14,16 +14,14 @@ use crate::color::{
 pub mod single_widget;
 pub mod two_widget;
 
-#[const_trait]
-pub trait StaticWidget: DynamicWidget {
+pub const trait StaticWidget: DynamicWidget {
     /// Width of the display in characters.
     const WIDTH_CHARACTERS: usize;
     /// Height of the display in characters.
     const HEIGHT_CHARACTERS: usize;
 }
 
-#[const_trait]
-pub trait DynamicWidget {
+pub const trait DynamicWidget {
     /// Returns the width of the display in characters.
     #[must_use]
     fn width_characters(&self) -> usize;

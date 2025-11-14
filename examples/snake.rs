@@ -191,24 +191,20 @@ fn construct_display() -> Display {
     DisplayDriver::new(BorderWidget::new(
         VerticalTilingWidget::new(
             StaticCharacterDisplay::<_, 100, 1>::new(
-                CharacterPixel::build(
-                    ' ',
+                CharacterPixel::new::<' '>(
                     RGBColor::BLACK.into(),
                     RGBColor::WHITE.into(),
-                )
-                .unwrap(),
+                ),
             ),
             AlternativeWidget::new(
                 StaticPixelDisplay::<ColorDualPixel, 100, 42>::new(
                     RGBColor::BLACK.into(),
                 ),
                 StaticCharacterDisplay::<CharacterPixel, 100, 21>::new(
-                    CharacterPixel::build(
-                        ' ',
+                    CharacterPixel::new::<' '>(
                         TerminalColor::Default,
                         TerminalColor::Default,
-                    )
-                    .unwrap(),
+                    ),
                 ),
                 true,
             ),

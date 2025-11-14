@@ -24,8 +24,7 @@ use crate::{
 
 use super::StaticWidget;
 
-#[const_trait]
-pub trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
+pub const trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
     fn children(&self) -> (&S, &T);
