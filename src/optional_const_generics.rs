@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use crate::optional_const_generics::sealed::Sealed;
 
 mod sealed {
