@@ -3,6 +3,7 @@ use std::fmt::{
     Display,
 };
 
+use crate::error::FOUND_CONTROL_CHAR;
 use crate::{
     constraint,
     error::PixelError,
@@ -93,7 +94,7 @@ impl CharacterPixel {
                 background,
                 copy: false,
                 width: UnicodeWidthChar::width(CHARACTER).expect(
-                    "Invariant violated, found control character.",
+                    FOUND_CONTROL_CHAR,
                 ),
             }],
         }

@@ -3,7 +3,7 @@ use num_traits::NumCast;
 use crate::{
     constraint,
     drawing::DynamicCanvas,
-    error::DisplayError,
+    error::{COULD_NOT_CAST_X_COORD, COULD_NOT_CAST_Y_COORD, DisplayError, PIXEL_INDEX_OUT_OF_RANGE},
     pixel::Pixel,
     widget::StaticWidget,
 };
@@ -31,11 +31,11 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
             for x in 0..self.width() {
                 pixels.push(
                     self.pixel(
-                        NumCast::from(x).unwrap(),
-                        NumCast::from(y).unwrap(),
+                        NumCast::from(x).expect(COULD_NOT_CAST_X_COORD),
+                        NumCast::from(y).expect(COULD_NOT_CAST_Y_COORD),
                     )
                     .expect(
-                        "Invariant violated, pixel index out of range.",
+                        PIXEL_INDEX_OUT_OF_RANGE,
                     ),
                 );
             }
@@ -66,11 +66,11 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
         for y in 0..self.height() {
             for x in 0..self.width() {
                 self.set_pixel(
-                    NumCast::from(x).unwrap(),
-                    NumCast::from(y).unwrap(),
+                        NumCast::from(x).expect(COULD_NOT_CAST_X_COORD),
+                        NumCast::from(y).expect(COULD_NOT_CAST_Y_COORD),
                     data[x + y * self.width()],
                 )
-                .expect("Invariant violated, pixel index out of range.");
+                .expect(PIXEL_INDEX_OUT_OF_RANGE);
             }
         }
         Ok(())

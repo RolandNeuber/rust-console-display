@@ -1,5 +1,16 @@
 use thiserror::Error;
 
+pub(crate) const INVARIANT_VIOLATED: &str = "Invariant violated.";
+pub(crate) const FOUND_CONTROL_CHAR: &str = konst::string::str_concat!(&[INVARIANT_VIOLATED, " Found control character."]);
+pub(crate) const DATA_DOES_NOT_MATCH_DIMENSIONS: &str = konst::string::str_concat!(&[INVARIANT_VIOLATED, " Data does not match specified dimensions."]);
+pub(crate) const PIXEL_INDEX_OUT_OF_RANGE: &str = konst::string::str_concat!(&[INVARIANT_VIOLATED, " Pixel index out of range."]);
+
+pub(crate) const COLORS_CONTAINS_TOO_MANY_ELEMENTS: &str = "Colors contains too many elements.";
+pub(crate) const OFFSET_SHOULD_BE_0_OR_1: &str = "Offset should be 0 or 1.";
+pub(crate) const OFFSET_SHOULD_BE_0: &str = "Offset should be 0.";
+pub(crate) const COULD_NOT_CAST_X_COORD: &str = "Could not cast x coordinate.";
+pub(crate) const COULD_NOT_CAST_Y_COORD: &str = "Could not cast y coordinate.";
+
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum PixelError {
     #[error("Control characters are not allowed. Found {0}")]

@@ -1,5 +1,7 @@
 //! Provides abstractions over colors that are used in terminal context.
 
+use crate::error::COLORS_CONTAINS_TOO_MANY_ELEMENTS;
+
 // TODO: Check if this can be const
 /// Defines a color used to color text.
 pub trait Color
@@ -338,7 +340,7 @@ impl Color for RGBColor {
             sum.2 += u32::from(color.b);
         }
         let colors_len = u32::try_from(colors.len())
-            .expect("colors contains too many elements");
+            .expect(COLORS_CONTAINS_TOO_MANY_ELEMENTS);
 
         Self {
             r: (sum.0 / colors_len).clamp(0, 255) as u8,
@@ -464,7 +466,7 @@ impl Color for ARGBColor {
             sum_opacity += u32::from(color.opacity);
         }
         let colors_len = u32::try_from(colors.len())
-            .expect("colors contains too many elements");
+            .expect(COLORS_CONTAINS_TOO_MANY_ELEMENTS);
 
         Self {
             opacity: (sum_opacity / colors_len).clamp(0, 255) as u8,

@@ -9,8 +9,7 @@ use crate::{
     },
     drawing::DynamicCanvas,
     error::{
-        DisplayError,
-        DrawingError,
+        DATA_DOES_NOT_MATCH_DIMENSIONS, DisplayError, DrawingError, FOUND_CONTROL_CHAR, OFFSET_SHOULD_BE_0, OFFSET_SHOULD_BE_0_OR_1
     },
     optional_const_generics::{
         CompileTime,
@@ -72,12 +71,12 @@ impl CharacterDisplay<RunTime, RunTime, CharacterPixel> {
             for y in 0..height {
                 let x = full_columns + i;
                 data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
-                    .expect("Invariant violated. Should not be a control character.");
+                    .expect(FOUND_CONTROL_CHAR);
             }
         }
 
         Self::build_from_data(width, height, &data).expect(
-            "Invariant violated, data does not mach specified dimensions.",
+            DATA_DOES_NOT_MATCH_DIMENSIONS,
         )
     }
 
@@ -156,12 +155,12 @@ impl<const WIDTH: usize, const HEIGHT: usize>
             for y in 0..HEIGHT {
                 let x = full_columns + i;
                 data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
-                    .expect("Invariant violated. Should not be a control character.");
+                    .expect(FOUND_CONTROL_CHAR);
             }
         }
 
         Self::build_from_data(&data).expect(
-            "Invariant violated, data does not mach specified dimensions.",
+            DATA_DOES_NOT_MATCH_DIMENSIONS,
         )
     }
 
@@ -386,7 +385,7 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
 
             Ok(pixel
                 .subpixel(offset_x, offset_y)
-                .expect("Offset should be 0 or 1."))
+                .expect(OFFSET_SHOULD_BE_0_OR_1))
         }
         else {
             Err(DisplayError::CoordinatesToUsizeConversionFailed)?
@@ -426,7 +425,7 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
                 &mut self.data_mut()[block_x + block_y * width_characters];
             pixel
                 .set_subpixel(offset_x, offset_y, value)
-                .expect("Offset should be 0 or 1.");
+                .expect(OFFSET_SHOULD_BE_0_OR_1);
 
             Ok(())
         }
@@ -473,7 +472,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             let pixel =
                 &self.data()[block_x + block_y * self.width_characters()];
 
-            Ok(pixel.subpixel(0, 0).expect("Offset should be 0."))
+            Ok(pixel.subpixel(0, 0).expect(OFFSET_SHOULD_BE_0))
         }
         else {
             Err(DisplayError::CoordinatesToUsizeConversionFailed)?
@@ -511,7 +510,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
                 &mut self.data_mut()[block_x + block_y * width_characters];
             pixel
                 .set_subpixel(0, 0, value)
-                .expect("Offset should be 0.");
+                .expect(OFFSET_SHOULD_BE_0);
 
             Ok(())
         }

@@ -10,8 +10,7 @@ use crate::{
     },
     drawing::DynamicCanvas,
     error::{
-        DisplayError,
-        DrawingError,
+        DATA_DOES_NOT_MATCH_DIMENSIONS, DisplayError, DrawingError, OFFSET_SHOULD_BE_0_OR_1
     },
     optional_const_generics::{
         CompileTime,
@@ -55,7 +54,7 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
     {
         let data: Vec<T::U> = vec![fill; width * height];
         Self::build_from_data(width, height, &data).expect(
-            "Invariant violated, data does not mach specified dimensions.",
+            DATA_DOES_NOT_MATCH_DIMENSIONS,
         )
     }
 
@@ -288,7 +287,7 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
 
             Ok(pixel
                 .subpixel(offset_x, offset_y)
-                .expect("Offset should be 0 or 1."))
+                .expect(OFFSET_SHOULD_BE_0_OR_1))
         }
         else {
             Err(DisplayError::CoordinatesToUsizeConversionFailed)?
@@ -328,7 +327,7 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
                 &mut self.data_mut()[block_x + block_y * width_characters];
             pixel
                 .set_subpixel(offset_x, offset_y, value)
-                .expect("Offset should be 0 or 1.");
+                .expect(OFFSET_SHOULD_BE_0_OR_1);
 
             Ok(())
         }

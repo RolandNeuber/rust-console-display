@@ -26,8 +26,7 @@ use crate::{
     constraint,
     drawing::DynamicCanvas,
     error::{
-        DrawingError,
-        WidgetError,
+        COULD_NOT_CAST_X_COORD, COULD_NOT_CAST_Y_COORD, DrawingError, WidgetError
     },
     impl_getters,
     impl_new,
@@ -107,8 +106,8 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
             ),
         );
         display.pixel(
-            NumCast::from(uv.0).unwrap(),
-            NumCast::from(uv.1).unwrap(),
+            NumCast::from(uv.0).expect(COULD_NOT_CAST_X_COORD),
+            NumCast::from(uv.1).expect(COULD_NOT_CAST_Y_COORD),
         )
     }
 
@@ -154,8 +153,8 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
             ),
         );
         self.child_mut().set_pixel(
-            NumCast::from(uv.0).unwrap(),
-            NumCast::from(uv.1).unwrap(),
+            NumCast::from(uv.0).expect(COULD_NOT_CAST_X_COORD),
+            NumCast::from(uv.1).expect(COULD_NOT_CAST_Y_COORD),
             value,
         )
     }
