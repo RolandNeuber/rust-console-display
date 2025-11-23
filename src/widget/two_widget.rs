@@ -14,6 +14,7 @@ use crate::{
         TerminalColor,
     },
     constraint,
+    error::WidgetError,
     impl_getters,
     impl_setters,
     widget::{
@@ -62,16 +63,15 @@ impl<S: DynamicWidget, T: DynamicWidget> AlternativeWidget<S, T> {
         child1: S,
         child2: T,
         child1_on_top: bool,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, WidgetError> {
         if child1.width_characters() != child2.width_characters() ||
             child1.height_characters() != child2.height_characters()
         {
-            return Err(format!(
-                "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
-                child1.height_characters(),
-                child2.height_characters(),
+            return Err(WidgetError::WidthAndOrHeightMismatch(
                 child1.width_characters(),
                 child2.width_characters(),
+                child1.height_characters(),
+                child2.height_characters(),
             ));
         }
         Ok(Self {
@@ -136,12 +136,11 @@ impl<S: DynamicWidget, T: DynamicWidget> HorizontalTilingWidget<S, T> {
     /// # Errors
     ///
     /// Returns an error if the height of both children does not match.
-    pub fn build(child1: S, child2: T) -> Result<Self, String> {
+    pub fn build(child1: S, child2: T) -> Result<Self, WidgetError> {
         if child1.height_characters() != child2.height_characters() {
-            return Err(format!(
-                "Height in characters of arguments does not match. {} and {}.",
+            return Err(WidgetError::HeightMismatch(
                 child1.height_characters(),
-                child2.height_characters()
+                child2.height_characters(),
             ));
         }
         Ok(Self {
@@ -242,12 +241,11 @@ impl<S: DynamicWidget, T: DynamicWidget> VerticalTilingWidget<S, T> {
     /// # Errors
     ///
     /// Returns an error if the width of both children does not match.
-    pub fn build(child1: S, child2: T) -> Result<Self, String> {
+    pub fn build(child1: S, child2: T) -> Result<Self, WidgetError> {
         if child1.width_characters() != child2.width_characters() {
-            return Err(format!(
-                "Width in characters of arguments does not match. {} and {}.",
+            return Err(WidgetError::WidthMismatch(
                 child1.width_characters(),
-                child2.width_characters()
+                child2.width_characters(),
             ));
         }
         Ok(Self {
@@ -369,16 +367,15 @@ impl<S: DynamicWidget, T: DynamicWidget> OverlayWidget<S, T> {
     /// # Errors
     ///
     /// Returns an error if the dimensions of both children don't match.
-    pub fn build(overlay: S, base: T) -> Result<Self, String> {
+    pub fn build(overlay: S, base: T) -> Result<Self, WidgetError> {
         if overlay.width_characters() != base.width_characters() ||
             overlay.height_characters() != base.height_characters()
         {
-            return Err(format!(
-                "Height and/or width in characters of arguments does not match. Height {} and {}. Width: {} and {}",
-                overlay.height_characters(),
-                base.height_characters(),
+            return Err(WidgetError::WidthAndOrHeightMismatch(
                 overlay.width_characters(),
                 base.width_characters(),
+                overlay.height_characters(),
+                base.height_characters(),
             ));
         }
         Ok(Self {

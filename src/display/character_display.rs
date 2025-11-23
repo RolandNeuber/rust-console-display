@@ -8,6 +8,10 @@ use crate::{
         StaticConsoleDisplay,
     },
     drawing::DynamicCanvas,
+    error::{
+        DisplayError,
+        DrawingError,
+    },
     optional_const_generics::{
         CompileTime,
         Dimension,
@@ -86,7 +90,7 @@ impl CharacterDisplay<RunTime, RunTime, CharacterPixel> {
         width: usize,
         height: usize,
         data: &[CharacterPixel],
-    ) -> Result<Self, String> {
+    ) -> Result<Self, DisplayError> {
         let mut new_data = Vec::with_capacity(data.len());
         let mut row_length = 0;
         for i in data {
@@ -96,10 +100,9 @@ impl CharacterDisplay<RunTime, RunTime, CharacterPixel> {
             }
             row_length += i.width();
             if row_length > width && row_length - i.width() < width {
-                return Err(
-                    "Data is malformed, character spans multiple rows."
-                        .to_string(),
-                );
+                return Err(DisplayError::MalformedCharacterData(
+                    i.character(),
+                ));
             }
             if row_length >= width {
                 row_length = 0;
@@ -107,10 +110,9 @@ impl CharacterDisplay<RunTime, RunTime, CharacterPixel> {
         }
 
         if new_data.len() != width * height {
-            return Err(format!(
-                "Data does not match specified dimensions. Expected length of {}, got {}.",
+            return Err(DisplayError::MismatchedDimensions(
                 width * height,
-                new_data.len()
+                new_data.len(),
             ));
         }
 
@@ -170,7 +172,7 @@ impl<const WIDTH: usize, const HEIGHT: usize>
     /// This also applies if double-width characters, like あ, are used and exceed the dimensions of the display.
     pub fn build_from_data(
         data: &[CharacterPixel],
-    ) -> Result<Self, String> {
+    ) -> Result<Self, DisplayError> {
         let mut new_data = Vec::with_capacity(data.len());
         let mut row_length = 0;
         for i in data {
@@ -180,10 +182,9 @@ impl<const WIDTH: usize, const HEIGHT: usize>
             }
             row_length += i.width();
             if row_length > WIDTH && row_length - i.width() < WIDTH {
-                return Err(
-                    "Data is malformed, character spans multiple rows."
-                        .to_string(),
-                );
+                return Err(DisplayError::MalformedCharacterData(
+                    i.character(),
+                ));
             }
             if row_length >= WIDTH {
                 row_length = 0;
@@ -191,10 +192,9 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         }
 
         if new_data.len() != WIDTH * HEIGHT {
-            return Err(format!(
-                "Data does not match specified dimensions. Expected length of {}, got {}.",
+            return Err(DisplayError::MismatchedDimensions(
                 WIDTH * HEIGHT,
-                new_data.len()
+                new_data.len(),
             ));
         }
 
@@ -358,7 +358,7 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
         &self,
         x: Self::A,
         y: Self::A,
-    ) -> Result<CharacterPixelData, String>
+    ) -> Result<CharacterPixelData, DrawingError>
     where
         [(); S::WIDTH * S::HEIGHT]:,
     {
@@ -368,9 +368,12 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
             let Some(y) = y
         {
             if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
+                Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    self.width(),
+                    y,
+                    self.height(),
+                ))?;
             }
 
             let block_x: usize = x / S::WIDTH;
@@ -386,7 +389,7 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
                 .expect("Offset should be 0 or 1."))
         }
         else {
-            Err("Coordinates could not be converted to usize.".to_string())
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
         }
     }
 
@@ -395,7 +398,7 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
         x: Self::A,
         y: Self::A,
         value: S::U,
-    ) -> Result<(), String>
+    ) -> Result<(), DrawingError>
     where
         [(); S::WIDTH * S::HEIGHT]:,
     {
@@ -405,9 +408,12 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
             let Some(y) = y
         {
             if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
+                Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    self.width(),
+                    y,
+                    self.height(),
+                ))?;
             }
 
             let block_x: usize = x / S::WIDTH;
@@ -425,7 +431,7 @@ impl<W: Dimension, H: Dimension, S: Pixel<U = CharacterPixelData>>
             Ok(())
         }
         else {
-            Err("Coordinates could not be converted to usize.".to_string())
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
         }
     }
 }
@@ -443,7 +449,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
         &self,
         x: Self::A,
         y: Self::A,
-    ) -> Result<CharacterPixelData, String>
+    ) -> Result<CharacterPixelData, DrawingError>
     where
         [(); CharacterPixel::WIDTH * CharacterPixel::HEIGHT]:,
     {
@@ -453,9 +459,12 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             let Some(y) = y
         {
             if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
+                return Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    Self::WIDTH,
+                    y,
+                    Self::HEIGHT,
+                ))?;
             }
 
             let block_x: usize = x / CharacterPixel::WIDTH;
@@ -467,7 +476,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             Ok(pixel.subpixel(0, 0).expect("Offset should be 0."))
         }
         else {
-            Err("Coordinates could not be converted to usize.".to_string())
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
         }
     }
 
@@ -476,7 +485,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
         x: Self::A,
         y: Self::A,
         value: CharacterPixelData,
-    ) -> Result<(), String>
+    ) -> Result<(), DrawingError>
     where
         [(); CharacterPixel::WIDTH * CharacterPixel::HEIGHT]:,
     {
@@ -486,9 +495,12 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             let Some(y) = y
         {
             if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
+                return Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    Self::WIDTH,
+                    y,
+                    Self::HEIGHT,
+                ))?;
             }
 
             let block_x: usize = x / CharacterPixel::WIDTH;
@@ -504,7 +516,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             Ok(())
         }
         else {
-            Err("Coordinates could not be converted to usize.".to_string())
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
         }
     }
 }

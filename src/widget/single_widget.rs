@@ -25,6 +25,10 @@ use crate::{
     console_display::DynamicConsoleDisplay,
     constraint,
     drawing::DynamicCanvas,
+    error::{
+        DrawingError,
+        WidgetError,
+    },
     impl_getters,
     impl_new,
     impl_setters,
@@ -83,7 +87,7 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
         &self,
         x: Self::A,
         y: Self::A,
-    ) -> Result<<S as Pixel>::U, String>
+    ) -> Result<<S as Pixel>::U, DrawingError>
     where
         [(); <S as Pixel>::WIDTH * <S as Pixel>::HEIGHT]:,
     {
@@ -118,7 +122,7 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
         x: Self::A,
         y: Self::A,
         value: <S as Pixel>::U,
-    ) -> Result<(), String>
+    ) -> Result<(), DrawingError>
     where
         [(); <S as Pixel>::WIDTH * <S as Pixel>::HEIGHT]:,
     {
@@ -128,12 +132,12 @@ impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
         if x < self.uv_x_min.min(self.uv_x_max) ||
             x > self.uv_x_max.max(self.uv_x_min)
         {
-            return Err("x is outside the uv bounds.".to_owned());
+            return Err(WidgetError::UvCoordinateOutOfBounds('x'))?;
         }
         if y < self.uv_y_min.min(self.uv_y_max) ||
             y > self.uv_y_max.max(self.uv_y_min)
         {
-            return Err("y is outside the uv bounds.".to_owned());
+            return Err(WidgetError::UvCoordinateOutOfBounds('y'))?;
         }
         let uv = (
             Self::uv_to_texture(
@@ -618,7 +622,7 @@ impl BorderDefault {
         corner: char,
         foreground: TerminalColor,
         background: TerminalColor,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, WidgetError> {
         let horizontal =
             CharacterPixel::build(horizontal, foreground, background)?;
         let vertical =
@@ -694,7 +698,7 @@ impl BorderDefault {
         top_right: char,
         foreground: TerminalColor,
         background: TerminalColor,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, WidgetError> {
         let top = CharacterPixel::build(top, foreground, background)?;
         let top_left =
             CharacterPixel::build(top_left, foreground, background)?;

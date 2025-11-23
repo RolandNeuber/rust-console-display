@@ -11,6 +11,7 @@
 pub mod color;
 mod display;
 pub mod drawing;
+pub mod error;
 mod macros;
 pub mod optional_const_generics;
 pub mod pixel;

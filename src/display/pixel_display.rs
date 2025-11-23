@@ -9,6 +9,10 @@ use crate::{
         StaticConsoleDisplay,
     },
     drawing::DynamicCanvas,
+    error::{
+        DisplayError,
+        DrawingError,
+    },
     optional_const_generics::{
         CompileTime,
         Dimension,
@@ -64,7 +68,7 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
         width: usize,
         height: usize,
         data: &[T::U],
-    ) -> Result<Self, String>
+    ) -> Result<Self, DisplayError>
     where
         Self: Sized,
         [(); T::WIDTH * T::HEIGHT]:,
@@ -72,16 +76,10 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
         if !width.is_multiple_of(T::WIDTH) ||
             !height.is_multiple_of(T::HEIGHT)
         {
-            return Err(format!(
-                "Width and height must be multiples of multipixel dimensions. Got width = {width}, height = {height}."
-            ));
+            return Err(DisplayError::DisplayDimensionsNotMultipleOfPixelDimensions(width, T::WIDTH, height, T::HEIGHT));
         }
         if data.len() != width * height {
-            return Err(format!(
-                "Data does not match specified dimensions. Expected length of {}, got {}.",
-                width * height,
-                data.len()
-            ));
+            return Err(DisplayError::MismatchedDimensions(width, height));
         }
 
         let block_count_x = width / T::WIDTH;
@@ -262,7 +260,7 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
 {
     type A = usize;
 
-    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, DrawingError>
     where
         [(); S::WIDTH * S::HEIGHT]:,
     {
@@ -272,9 +270,12 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
             let Some(y) = y
         {
             if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
+                return Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    self.width(),
+                    y,
+                    self.height(),
+                ))?;
             }
 
             let block_x: usize = x / S::WIDTH;
@@ -290,7 +291,7 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
                 .expect("Offset should be 0 or 1."))
         }
         else {
-            Err("Coordinates could not be converted to usize.".to_string())
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
         }
     }
 
@@ -299,7 +300,7 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
         x: Self::A,
         y: Self::A,
         value: S::U,
-    ) -> Result<(), String>
+    ) -> Result<(), DrawingError>
     where
         [(); S::WIDTH * S::HEIGHT]:,
     {
@@ -309,9 +310,12 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
             let Some(y) = y
         {
             if x >= self.width() || y >= self.height() {
-                return Err(format!(
-                    "Pixel coordinates out of bounds. Got x = {x}, y = {y}."
-                ));
+                return Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    self.width(),
+                    y,
+                    self.height(),
+                ))?;
             }
 
             let block_x: usize = x / S::WIDTH;
@@ -329,7 +333,7 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
             Ok(())
         }
         else {
-            Err("Coordinates could not be converted to usize.".to_string())
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
         }
     }
 }
