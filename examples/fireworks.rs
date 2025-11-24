@@ -1,5 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![allow(clippy::unwrap_used)]
 
 use core::f32;
 use std::{
@@ -210,5 +211,5 @@ fn main() {
         UpdateStatus::Continue
     });
 
-    display.update();
+    display.update().expect("Could not update display.");
 }

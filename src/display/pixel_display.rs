@@ -10,7 +10,10 @@ use crate::{
     },
     drawing::DynamicCanvas,
     error::{
-        DATA_DOES_NOT_MATCH_DIMENSIONS, DisplayError, DrawingError, OFFSET_SHOULD_BE_0_OR_1
+        DATA_DOES_NOT_MATCH_DIMENSIONS,
+        DisplayError,
+        DrawingError,
+        OFFSET_SHOULD_BE_0_OR_1,
     },
     optional_const_generics::{
         CompileTime,
@@ -53,9 +56,8 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
         [(); T::WIDTH * T::HEIGHT]:,
     {
         let data: Vec<T::U> = vec![fill; width * height];
-        Self::build_from_data(width, height, &data).expect(
-            DATA_DOES_NOT_MATCH_DIMENSIONS,
-        )
+        Self::build_from_data(width, height, &data)
+            .expect(DATA_DOES_NOT_MATCH_DIMENSIONS)
     }
 
     /// Builds a display struct from the given data with the specified dimensions.

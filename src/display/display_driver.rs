@@ -155,7 +155,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     /// Queries user input and exits on Ctrl-C.
     /// Forwards keystrokes to the provided callback and invokes it.
     /// Sleeps so the target frame rate is not exceeded.
-    /// 
+    ///
     /// # Errors
     ///
     /// Returns an error when the display could not be printed or event polling or reading failed.

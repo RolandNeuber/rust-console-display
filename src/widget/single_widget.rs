@@ -26,7 +26,10 @@ use crate::{
     constraint,
     drawing::DynamicCanvas,
     error::{
-        COULD_NOT_CAST_X_COORD, COULD_NOT_CAST_Y_COORD, DrawingError, WidgetError
+        COULD_NOT_CAST_X_COORD,
+        COULD_NOT_CAST_Y_COORD,
+        DrawingError,
+        WidgetError,
     },
     impl_getters,
     impl_new,

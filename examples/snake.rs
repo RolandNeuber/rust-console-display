@@ -1,5 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![allow(clippy::unwrap_used)]
 
 use console_display::{
     character_display::StaticCharacterDisplay,
@@ -171,7 +172,7 @@ fn main() {
     });
 
     disp.initialize().expect("Could not initialize display.");
-    disp.update();
+    disp.update().expect("Could not update display.");
 }
 
 type Display = DisplayDriver<

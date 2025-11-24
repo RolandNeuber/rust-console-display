@@ -79,8 +79,8 @@ display.set_on_update(
         UpdateStatus::Break
     },
 );
-// Run the default update loop.
-display.update();
+// Run the update loop.
+display.update().expect("Could not update display.");
 ```
 
 More in depth examples can be found in the [examples](examples/) folder.

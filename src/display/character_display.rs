@@ -9,7 +9,10 @@ use crate::{
     },
     drawing::DynamicCanvas,
     error::{
-        DATA_DOES_NOT_MATCH_DIMENSIONS, DisplayError, DrawingError, FOUND_CONTROL_CHAR, OFFSET_SHOULD_BE_0, OFFSET_SHOULD_BE_0_OR_1
+        DATA_DOES_NOT_MATCH_DIMENSIONS,
+        DisplayError,
+        DrawingError,
+        OFFSET_SHOULD_BE_0_OR_1,
     },
     optional_const_generics::{
         CompileTime,
@@ -70,14 +73,15 @@ impl CharacterDisplay<RunTime, RunTime, CharacterPixel> {
         for i in 0..padding {
             for y in 0..height {
                 let x = full_columns + i;
-                data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
-                    .expect(FOUND_CONTROL_CHAR);
+                data[x + y * total_columns] = CharacterPixel::new::<' '>(
+                    fill.foreground(),
+                    fill.background(),
+                );
             }
         }
 
-        Self::build_from_data(width, height, &data).expect(
-            DATA_DOES_NOT_MATCH_DIMENSIONS,
-        )
+        Self::build_from_data(width, height, &data)
+            .expect(DATA_DOES_NOT_MATCH_DIMENSIONS)
     }
 
     /// Builds a display struct from the given data with the specified dimensions.
@@ -154,14 +158,14 @@ impl<const WIDTH: usize, const HEIGHT: usize>
         for i in 0..padding {
             for y in 0..HEIGHT {
                 let x = full_columns + i;
-                data[x + y * total_columns] = CharacterPixel::build(' ', fill.foreground(), fill.background())
-                    .expect(FOUND_CONTROL_CHAR);
+                data[x + y * total_columns] = CharacterPixel::new::<' '>(
+                    fill.foreground(),
+                    fill.background(),
+                );
             }
         }
 
-        Self::build_from_data(&data).expect(
-            DATA_DOES_NOT_MATCH_DIMENSIONS,
-        )
+        Self::build_from_data(&data).expect(DATA_DOES_NOT_MATCH_DIMENSIONS)
     }
 
     /// Builds a display struct with the specified dimensions from the given data.
@@ -472,7 +476,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             let pixel =
                 &self.data()[block_x + block_y * self.width_characters()];
 
-            Ok(pixel.subpixel(0, 0).expect(OFFSET_SHOULD_BE_0))
+            Ok(pixel.subpixel_static::<0, 0>())
         }
         else {
             Err(DisplayError::CoordinatesToUsizeConversionFailed)?
@@ -508,9 +512,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> DynamicCanvas<CharacterPixel>
             let width_characters = self.width_characters();
             let pixel =
                 &mut self.data_mut()[block_x + block_y * width_characters];
-            pixel
-                .set_subpixel(0, 0, value)
-                .expect(OFFSET_SHOULD_BE_0);
+            pixel.set_subpixel_static::<0, 0>(value);
 
             Ok(())
         }
