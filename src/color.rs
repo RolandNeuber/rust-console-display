@@ -333,13 +333,13 @@ impl Color for RGBColor {
     fn mix(colors: &[Self]) -> Self {
         let mut sum = (0, 0, 0);
         for color in colors {
-            sum.0 += u32::from(color.r);
-            sum.1 += u32::from(color.g);
-            sum.2 += u32::from(color.b);
+            sum.0 += usize::from(color.r);
+            sum.1 += usize::from(color.g);
+            sum.2 += usize::from(color.b);
         }
-        let colors_len = u32::try_from(colors.len())
-            .expect("colors contains too many elements");
+        let colors_len = colors.len();
 
+        #[allow(clippy::cast_possible_truncation)]
         Self {
             r: (sum.0 / colors_len).clamp(0, 255) as u8,
             g: (sum.1 / colors_len).clamp(0, 255) as u8,
@@ -461,11 +461,12 @@ impl Color for ARGBColor {
     fn mix(colors: &[Self]) -> Self {
         let mut sum_opacity = 0;
         for color in colors {
-            sum_opacity += u32::from(color.opacity);
+            sum_opacity += usize::from(color.opacity);
         }
-        let colors_len = u32::try_from(colors.len())
-            .expect("colors contains too many elements");
 
+        let colors_len = colors.len();
+
+        #[allow(clippy::cast_possible_truncation)]
         Self {
             opacity: (sum_opacity / colors_len).clamp(0, 255) as u8,
             color: RGBColor::mix(

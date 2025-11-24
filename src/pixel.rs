@@ -1,5 +1,6 @@
 use crate::{
     constraint,
+    error::PixelError,
     widget::DataCell,
 };
 
@@ -29,14 +30,21 @@ where
     /// # Errors
     ///
     /// Returns an error, if the coordinates are out of bounds.
-    fn subpixel(&self, x: usize, y: usize) -> Result<Self::U, String>
+    fn subpixel(&self, x: usize, y: usize) -> Result<Self::U, PixelError>
     where
         [(); Self::WIDTH * Self::HEIGHT]:,
     {
-        self.pixels().get(x + y * Self::WIDTH).map_or_else(
-            || Err("Coordinates out of range.".to_string()),
-            |subpixel| Ok(*subpixel),
-        )
+        if x < Self::WIDTH || y < Self::HEIGHT {
+            Ok(self.pixels()[x + y * Self::WIDTH])
+        }
+        else {
+            Err(PixelError::CoordinatesOutOfBounds(
+                x,
+                Self::WIDTH,
+                y,
+                Self::HEIGHT,
+            ))
+        }
     }
 
     /// Returns the value of the block at the specified coordinates.
@@ -49,17 +57,21 @@ where
         x: usize,
         y: usize,
         value: Self::U,
-    ) -> Result<(), String>
+    ) -> Result<(), PixelError>
     where
         [(); Self::WIDTH * Self::HEIGHT]:,
     {
-        let index = x + y * Self::WIDTH;
-        if index < self.pixels().len() {
-            self.pixels_mut()[index] = value;
+        if x < Self::WIDTH || y < Self::HEIGHT {
+            self.pixels_mut()[x + y * Self::WIDTH] = value;
             Ok(())
         }
         else {
-            Err("Coordinates out of range.".to_string())
+            Err(PixelError::CoordinatesOutOfBounds(
+                x,
+                Self::WIDTH,
+                y,
+                Self::HEIGHT,
+            ))
         }
     }
 
@@ -70,17 +82,16 @@ where
     /// # Errors
     ///
     /// Returns an error, if the number of pixels does not match the dimensions of the block.
-    fn build(args: &[Self::U]) -> Result<Self, String>
+    fn build(args: &[Self::U]) -> Result<Self, PixelError>
     where
         [(); Self::WIDTH * Self::HEIGHT]:,
     {
         <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args)
             .map_or_else(
                 |_| {
-                    Err(format!(
-                        "Invalid number of arguments. Expected {}, got {}",
+                    Err(PixelError::InvalidNumberOfArguments(
                         Self::WIDTH * Self::HEIGHT,
-                        args.len()
+                        args.len(),
                     ))
                 },
                 |pixels| Ok(Self::new(pixels)),

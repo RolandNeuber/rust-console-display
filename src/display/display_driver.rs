@@ -156,10 +156,10 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     /// Forwards keystrokes to the provided callback and invokes it.
     /// Sleeps so the target frame rate is not exceeded.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// This function panics when the display could not be printed.
-    pub fn update(&mut self) {
+    /// Returns an error when the display could not be printed or event polling or reading failed.
+    pub fn update(&mut self) -> Result<(), io::Error> {
         loop {
             let start = Instant::now();
 
@@ -178,11 +178,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             self.display.set_padding_right(padding_horizontal / 2);
             self.display.set_padding_bottom(padding_vertical / 2);
 
-            self.print_display().expect("Could not print display.");
+            self.print_display()?;
 
             let mut latest_event = None;
-            while event::poll(Duration::from_millis(0)).unwrap() {
-                if let Event::Key(key_event) = event::read().unwrap() {
+            while event::poll(Duration::from_millis(0))? {
+                if let Event::Key(key_event) = event::read()? {
                     latest_event = Some(key_event);
                 }
             }
@@ -208,6 +208,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
                 self.target_frame_time.saturating_sub(start.elapsed()),
             );
         }
+        Ok(())
     }
 }
 

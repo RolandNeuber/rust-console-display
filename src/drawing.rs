@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use num_traits::NumCast;
 
 use crate::{
+    error::DrawingError,
     pixel::Pixel,
     widget::DynamicWidget,
 };
@@ -73,7 +74,7 @@ pub const trait DynamicCanvas<S: Pixel>: DynamicWidget {
     ///
     /// If the index of a subpixel is out of bounds.
     /// This should not happen and is subject to change in the future.
-    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, String>
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, DrawingError>
     where
         [(); S::WIDTH * S::HEIGHT]:;
 
@@ -92,7 +93,7 @@ pub const trait DynamicCanvas<S: Pixel>: DynamicWidget {
         x: Self::A,
         y: Self::A,
         value: S::U,
-    ) -> Result<(), String>
+    ) -> Result<(), DrawingError>
     where
         [(); S::WIDTH * S::HEIGHT]:;
 

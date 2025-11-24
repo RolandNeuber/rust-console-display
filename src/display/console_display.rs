@@ -3,6 +3,12 @@ use num_traits::NumCast;
 use crate::{
     constraint,
     drawing::DynamicCanvas,
+    error::{
+        COULD_NOT_CAST_X_COORD,
+        COULD_NOT_CAST_Y_COORD,
+        DisplayError,
+        PIXEL_INDEX_OUT_OF_RANGE,
+    },
     pixel::Pixel,
     widget::StaticWidget,
 };
@@ -30,12 +36,10 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
             for x in 0..self.width() {
                 pixels.push(
                     self.pixel(
-                        NumCast::from(x).unwrap(),
-                        NumCast::from(y).unwrap(),
+                        NumCast::from(x).expect(COULD_NOT_CAST_X_COORD),
+                        NumCast::from(y).expect(COULD_NOT_CAST_Y_COORD),
                     )
-                    .expect(
-                        "Invariant violated, pixel index out of range.",
-                    ),
+                    .expect(PIXEL_INDEX_OUT_OF_RANGE),
                 );
             }
         }
@@ -52,25 +56,24 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
     ///
     /// This function panics if the index of a pixel is out of bounds.
     /// This should not happen and is subject to change in the future.
-    fn set_pixels(&mut self, data: &[T::U]) -> Result<(), String>
+    fn set_pixels(&mut self, data: &[T::U]) -> Result<(), DisplayError>
     where
         [(); T::WIDTH * T::HEIGHT]:,
     {
         if data.len() != self.width() * self.height() {
-            return Err(format!(
-                "Data does not match specified dimensions. Expected length of {}, got {}.",
-                self.width() * self.height(),
-                data.len()
+            return Err(DisplayError::MismatchedDimensions(
+                self.width(),
+                self.height(),
             ));
         }
         for y in 0..self.height() {
             for x in 0..self.width() {
                 self.set_pixel(
-                    NumCast::from(x).unwrap(),
-                    NumCast::from(y).unwrap(),
+                    NumCast::from(x).expect(COULD_NOT_CAST_X_COORD),
+                    NumCast::from(y).expect(COULD_NOT_CAST_Y_COORD),
                     data[x + y * self.width()],
                 )
-                .expect("Invariant violated, pixel index out of range.");
+                .expect(PIXEL_INDEX_OUT_OF_RANGE);
             }
         }
         Ok(())

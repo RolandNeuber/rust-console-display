@@ -1,5 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![allow(clippy::unwrap_used)]
 
 use std::array;
 
@@ -81,5 +82,5 @@ fn main() {
     });
 
     display.initialize().expect("Could not initialize display.");
-    display.update();
+    display.update().expect("Could not update display.");
 }

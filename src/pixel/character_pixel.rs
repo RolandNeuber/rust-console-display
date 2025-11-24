@@ -5,6 +5,10 @@ use std::fmt::{
 
 use crate::{
     constraint,
+    error::{
+        FOUND_CONTROL_CHAR,
+        PixelError,
+    },
     or,
     pixel::Pixel,
     widget::DataCell,
@@ -91,9 +95,8 @@ impl CharacterPixel {
                 foreground,
                 background,
                 copy: false,
-                width: UnicodeWidthChar::width(CHARACTER).expect(
-                    "Invariant violated, found control character.",
-                ),
+                width: UnicodeWidthChar::width(CHARACTER)
+                    .expect(FOUND_CONTROL_CHAR),
             }],
         }
     }
@@ -107,7 +110,7 @@ impl CharacterPixel {
         character: char,
         foreground: TerminalColor,
         background: TerminalColor,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, PixelError> {
         Ok(Self {
             data: [CharacterPixelData {
                 character,
@@ -117,8 +120,9 @@ impl CharacterPixel {
                 width: match UnicodeWidthChar::width(character) {
                     Some(val) => val,
                     None => {
-                        return Err("Control characters are not allowed."
-                            .to_string());
+                        return Err(PixelError::ControlCharacter(
+                            character,
+                        ));
                     }
                 },
             }],
@@ -183,7 +187,7 @@ impl Debug for CharacterPixel {
 }
 
 impl TryFrom<char> for CharacterPixel {
-    type Error = String;
+    type Error = PixelError;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
         Self::build(value, TerminalColor::Default, TerminalColor::Default)

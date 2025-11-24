@@ -1,5 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![allow(clippy::unwrap_used)]
 
 use console_display::{
     character_display::StaticCharacterDisplay,
@@ -212,7 +213,7 @@ fn main() {
     });
 
     display.initialize().expect("Could not initialize display.");
-    display.update();
+    display.update().expect("Could not update display.");
 }
 
 #[allow(clippy::too_many_lines)]
