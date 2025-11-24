@@ -24,7 +24,7 @@ pub struct ColorSinglePixel {
     pixels: [TerminalColor; 1],
 }
 
-impl Pixel for ColorSinglePixel {
+impl const Pixel for ColorSinglePixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 1;
@@ -38,7 +38,7 @@ impl Pixel for ColorSinglePixel {
     impl_new!(Self, pixels: [Self::U; 1]);
 }
 
-impl From<ColorSinglePixel> for DataCell {
+impl const From<ColorSinglePixel> for DataCell {
     fn from(val: ColorSinglePixel) -> Self {
         Self {
             character: '█',
@@ -53,7 +53,7 @@ pub struct ColorDualPixel {
     pixels: [TerminalColor; 2],
 }
 
-impl Pixel for ColorDualPixel {
+impl const Pixel for ColorDualPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 1;
@@ -67,7 +67,7 @@ impl Pixel for ColorDualPixel {
     impl_new!(Self, pixels: [Self::U; 2]);
 }
 
-impl From<ColorDualPixel> for DataCell {
+impl const From<ColorDualPixel> for DataCell {
     fn from(val: ColorDualPixel) -> Self {
         Self {
             character: '▀',
@@ -82,7 +82,7 @@ pub struct ColorQuadPixel {
     pixels: [TerminalColor; 4],
 }
 
-impl Pixel for ColorQuadPixel {
+impl const Pixel for ColorQuadPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 2;
@@ -103,7 +103,7 @@ pub struct ColorHexPixel {
     pixels: [TerminalColor; 6],
 }
 
-impl Pixel for ColorHexPixel {
+impl const Pixel for ColorHexPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 2;
@@ -124,7 +124,7 @@ pub struct ColorOctPixel {
     pixels: [TerminalColor; 8],
 }
 
-impl Pixel for ColorOctPixel {
+impl const Pixel for ColorOctPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 2;

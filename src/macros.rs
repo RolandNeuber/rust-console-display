@@ -210,7 +210,7 @@ macro_rules! and {
 #[macro_export]
 macro_rules! impl_from_mono_chrome_pixel_for_datacell {
     ($type:ty) => {
-        impl From<$type> for DataCell {
+        impl const From<$type> for DataCell {
             fn from(val: $type) -> Self {
                 Self {
                     character: val.character(),

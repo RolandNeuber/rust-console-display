@@ -1,8 +1,7 @@
 //! Provides abstractions over colors that are used in terminal context.
 
-// TODO: Check if this can be const
 /// Defines a color used to color text.
-pub trait Color
+pub const trait Color
 where
     Self: Sized,
 {
@@ -160,8 +159,8 @@ where
         let mut max = 0f32;
         let mut col1 = 0;
         let mut col2 = 0;
-        for i in 0..N {
-            for j in (i + 1)..N {
+        konst::for_range! { i in 0..N =>
+            konst::for_range! { j in (i + 1)..N =>
                 let dist = Self::distance(&colors[i], &colors[j]);
                 if dist > max {
                     max = dist;
@@ -171,7 +170,7 @@ where
             }
         }
         let mut groups = [false; N];
-        for i in 0..N {
+        konst::for_range! { i in 0..N =>
             if Self::distance(&colors[col1], &colors[i]) >
                 Self::distance(&colors[col2], &colors[i])
             {
@@ -186,13 +185,15 @@ where
 ///
 /// `Default` - Uses the default color provided by the terminal for foreground or background respectively.\
 /// `ARGBColor` - Displays a color made of RGB components and an alpha/opacity channel.
-#[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive_const(Default)]
 pub enum TerminalColor {
     #[default]
     Default,
     ARGBColor(ARGBColor),
 }
 
+// TODO: Check if this impl can be const
 impl Color for TerminalColor {
     fn blend(color_top: &Self, color_bottom: &Self) -> Self {
         if let Self::ARGBColor(color_top) = color_top &&
@@ -276,13 +277,14 @@ impl Color for TerminalColor {
     }
 }
 
+// TODO: Check if this impl can be const
 impl From<RGBColor> for TerminalColor {
     fn from(value: RGBColor) -> Self {
         Self::ARGBColor(value.into())
     }
 }
 
-impl From<ARGBColor> for TerminalColor {
+impl const From<ARGBColor> for TerminalColor {
     fn from(value: ARGBColor) -> Self {
         Self::ARGBColor(value)
     }
@@ -297,6 +299,7 @@ pub struct RGBColor {
     pub b: u8,
 }
 
+// TODO: Check if this impl can be const
 impl Color for RGBColor {
     fn blend(color_top: &Self, _color_bottom: &Self) -> Self {
         *color_top
@@ -398,6 +401,7 @@ pub struct ARGBColor {
     pub color: RGBColor,
 }
 
+// TODO: Check if this impl can be const
 impl Color for ARGBColor {
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_sign_loss)]
@@ -483,7 +487,7 @@ impl ARGBColor {
     };
 }
 
-impl From<RGBColor> for ARGBColor {
+impl const From<RGBColor> for ARGBColor {
     fn from(value: RGBColor) -> Self {
         Self {
             opacity: u8::MAX,

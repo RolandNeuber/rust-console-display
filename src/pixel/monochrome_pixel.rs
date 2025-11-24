@@ -52,7 +52,7 @@ impl SinglePixel {
     }
 }
 
-impl Pixel for SinglePixel {
+impl const Pixel for SinglePixel {
     type U = bool;
 
     const WIDTH: usize = 1;
@@ -126,7 +126,7 @@ impl DualPixel {
     }
 }
 
-impl Pixel for DualPixel {
+impl const Pixel for DualPixel {
     type U = bool;
 
     const WIDTH: usize = 1;
@@ -195,7 +195,7 @@ impl QuadPixel {
     }
 }
 
-impl Pixel for QuadPixel {
+impl const Pixel for QuadPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
@@ -267,7 +267,7 @@ impl HexPixel {
     }
 }
 
-impl Pixel for HexPixel {
+impl const Pixel for HexPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
@@ -354,7 +354,7 @@ impl OctPixel {
     }
 }
 
-impl Pixel for OctPixel {
+impl const Pixel for OctPixel {
     type U = bool;
 
     const WIDTH: usize = 2;
@@ -437,7 +437,7 @@ impl BrailleOctPixel {
     }
 }
 
-impl Pixel for BrailleOctPixel {
+impl const Pixel for BrailleOctPixel {
     type U = bool;
 
     const WIDTH: usize = 2;

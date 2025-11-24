@@ -6,6 +6,8 @@
 #![feature(adt_const_params)]
 #![feature(lazy_type_alias)]
 #![feature(specialization)]
+#![feature(const_default)]
+#![feature(derive_const)]
 #![doc = include_str!("../README.md")]
 
 pub mod color;
