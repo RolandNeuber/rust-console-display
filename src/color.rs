@@ -19,18 +19,18 @@ where
     /// };
     /// use rand::{
     ///     Rng,
-    ///     thread_rng,
+    ///     rng,
     /// };
     ///
     /// let top = RGBColor {
-    ///     r: thread_rng().gen_range(0..=255),
-    ///     g: thread_rng().gen_range(0..=255),
-    ///     b: thread_rng().gen_range(0..=255),
+    ///     r: rng().random_range(0..=255),
+    ///     g: rng().random_range(0..=255),
+    ///     b: rng().random_range(0..=255),
     /// };
     /// let bottom = RGBColor {
-    ///     r: thread_rng().gen_range(0..=255),
-    ///     g: thread_rng().gen_range(0..=255),
-    ///     b: thread_rng().gen_range(0..=255),
+    ///     r: rng().random_range(0..=255),
+    ///     g: rng().random_range(0..=255),
+    ///     b: rng().random_range(0..=255),
     /// };
     ///
     /// // Opaque top color is returned.
@@ -503,20 +503,21 @@ mod tests {
         use super::*;
         use rand::{
             Rng,
-            thread_rng,
+            rng,
         };
 
         #[test]
         fn blend() {
+            let mut rng = rng();
             let top = RGBColor {
-                r: thread_rng().gen_range(0..=255),
-                g: thread_rng().gen_range(0..=255),
-                b: thread_rng().gen_range(0..=255),
+                r: rng.random_range(0..=255),
+                g: rng.random_range(0..=255),
+                b: rng.random_range(0..=255),
             };
             let bottom = RGBColor {
-                r: thread_rng().gen_range(0..=255),
-                g: thread_rng().gen_range(0..=255),
-                b: thread_rng().gen_range(0..=255),
+                r: rng.random_range(0..=255),
+                g: rng.random_range(0..=255),
+                b: rng.random_range(0..=255),
             };
             assert_eq!(top, RGBColor::blend(&top, &bottom));
         }

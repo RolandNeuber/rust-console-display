@@ -17,15 +17,16 @@ use console_display::{
 };
 use rand::{
     Rng,
-    thread_rng,
+    rng,
 };
 
 fn main() {
+    let mut rng = rng();
     let disp =
         DoubleBufferWidget::new(
             StaticPixelDisplay::<OctPixel, 200, 100>::new_from_data(
-                &array::from_fn::<_, 20_000, _>(|_| {
-                    let rng = thread_rng().gen_range(0..=1);
+                &array::from_fn::<_, 20_000, _>(move |_| {
+                    let rng = rng.random_range(0..=1);
                     rng != 0
                 }),
             ),
