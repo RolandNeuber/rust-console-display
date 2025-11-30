@@ -184,8 +184,8 @@ macro_rules! impl_new {
 /// ```
 #[macro_export]
 macro_rules! constraint {
-    {$x:expr} => {
-        [(); 0 - !$x as usize]
+    {$( $x:expr ),*} => {
+        [(); 0 - $( !$x as usize )*]
     };
 }
 
@@ -193,24 +193,38 @@ macro_rules! constraint {
 /// See [constraint] for examples and usage.
 #[macro_export]
 macro_rules! or {
-    ($x:expr, $y:expr) => {
-        ($x as u8 | $y as u8) == 1
-    };
+    ($( $item:expr ),*) => {
+        ( 1 $( | $item as u8 )* ) == 1
+    }
 }
 
 /// Inserts a eagerly evaluated `and` into a `constraint`.
 /// See [constraint] for examples and usage.
 #[macro_export]
 macro_rules! and {
-    ($x:expr, $y:expr) => {
-        ($x as u8 & $y as u8) == 1
+    ($( $item:expr ),*) => {
+        ( 1 $( & $item as u8 )* ) == 1
+    }
+}
+
+#[macro_export]
+macro_rules! for_all {
+    ( for $v:ident in [ $( $vals:ident ),* ] => $expr:expr ) => {
+        and!($( console_display_macros::replace!($v => $vals; $expr ) ),*)
+    };
+}
+
+#[macro_export]
+macro_rules! for_any {
+    ( for $v:ident in [ $( $vals:ident ),* ] => $expr:expr ) => {
+        or!($( console_display_macros::replace!($v => $vals; $expr ) ),*)
     };
 }
 
 #[macro_export]
 macro_rules! impl_from_mono_chrome_pixel_for_datacell {
     ($type:ty) => {
-        impl From<$type> for DataCell {
+        impl const From<$type> for DataCell {
             fn from(val: $type) -> Self {
                 Self {
                     character: val.character(),

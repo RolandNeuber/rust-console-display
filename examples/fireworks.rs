@@ -31,8 +31,8 @@ use console_display::{
 };
 use rand::{
     Rng,
+    rng,
     rngs::ThreadRng,
-    thread_rng,
 };
 
 type Display = StaticPixelDisplay<ColorOctPixel, 200, 100>;
@@ -51,14 +51,14 @@ struct Firework {
 impl Firework {
     fn new_random(disp: &Display, rng: &mut ThreadRng) -> Self {
         let disp_width = disp.width();
-        let start = rng.gen_range(0..disp_width) as f32;
+        let start = rng.random_range(0..disp_width) as f32;
         let height = 0.;
-        let drift = rng.gen_range(0..=200) as f32 / 100. - 1.;
-        let speed = rng.gen_range(30..=100) as f32 / 100.;
+        let drift = rng.random_range(0..=200) as f32 / 100. - 1.;
+        let speed = rng.random_range(30..=100) as f32 / 100.;
         let color = RGBColor {
-            r: rng.gen_range(0..=255),
-            g: rng.gen_range(0..=255),
-            b: rng.gen_range(0..=255),
+            r: rng.random_range(0..=255),
+            g: rng.random_range(0..=255),
+            b: rng.random_range(0..=255),
         };
         Self {
             start,
@@ -67,13 +67,13 @@ impl Firework {
             speed,
             color,
             running: true,
-            explosion: match rng.gen_range(0..5) {
+            explosion: match rng.random_range(0..5) {
                 0 => Explosion::Star(
-                    rng.gen_range(300..=800) as f32 / 100.,
-                    rng.gen_range(5..=11),
+                    rng.random_range(300..=800) as f32 / 100.,
+                    rng.random_range(5..=11),
                 ),
                 1 => Explosion::Round(
-                    rng.gen_range(300..=800) as f32 / 100.,
+                    rng.random_range(300..=800) as f32 / 100.,
                 ),
                 x if x > 1 => Explosion::None,
                 _ => unreachable!(),
@@ -184,7 +184,7 @@ fn main() {
 
     display.set_target_frame_rate(60.);
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     let mut fireworks: [Firework; NUM_FIREWORKS] =
         array::from_fn(|_| Firework::new_random(display.base(), &mut rng));

@@ -34,10 +34,15 @@ use console_display::{
     },
 };
 use crossterm::event::KeyCode;
-use rand::Rng;
+use rand::{
+    Rng,
+    rng,
+    rngs::ThreadRng,
+};
 
 #[allow(clippy::too_many_lines)]
 fn main() {
+    let mut rng = rng();
     let background_color: TerminalColor = RGBColor::BLACK.into();
     let snake_color: TerminalColor = RGBColor::GREEN.into();
     let apple_color: TerminalColor = RGBColor::RED.into();
@@ -61,7 +66,7 @@ fn main() {
     let mut apple;
 
     (snake, apple) =
-        initialize_map(&mut disp.1.0, snake_color, apple_color);
+        initialize_map(&mut rng, &mut disp.1.0, snake_color, apple_color);
 
     let mut lost = false;
 
@@ -133,8 +138,8 @@ fn main() {
             // place new apple
             while snake.contains(&apple) {
                 apple = (
-                    rand::thread_rng().gen_range(0..map_display.width()),
-                    rand::thread_rng().gen_range(0..map_display.height()),
+                    rng.random_range(0..map_display.width()),
+                    rng.random_range(0..map_display.height()),
                 );
             }
             map_display
@@ -238,6 +243,7 @@ fn initialize_end_screen<const WIDTH: usize, const HEIGHT: usize>(
 }
 
 fn initialize_map<const WIDTH: usize, const HEIGHT: usize>(
+    rng: &mut ThreadRng,
     map_display: &mut StaticPixelDisplay<ColorDualPixel, WIDTH, HEIGHT>,
     snake_color: TerminalColor,
     apple_color: TerminalColor,
@@ -249,14 +255,14 @@ fn initialize_map<const WIDTH: usize, const HEIGHT: usize>(
         .expect("Could not set pixel.");
 
     let mut apple = (
-        rand::thread_rng().gen_range(0..map_display.width()),
-        rand::thread_rng().gen_range(0..map_display.height()),
+        rng.random_range(0..map_display.width()),
+        rng.random_range(0..map_display.height()),
     );
 
     while snake.contains(&apple) {
         apple = (
-            rand::thread_rng().gen_range(0..map_display.width()),
-            rand::thread_rng().gen_range(0..map_display.height()),
+            rng.random_range(0..map_display.width()),
+            rng.random_range(0..map_display.height()),
         );
     }
 

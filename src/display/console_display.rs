@@ -32,8 +32,8 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
         [(); T::WIDTH * T::HEIGHT]:,
     {
         let mut pixels = Vec::with_capacity(self.width() * self.height());
-        for y in 0..self.height() {
-            for x in 0..self.width() {
+        konst::for_range! { y in 0..self.height() =>
+            konst::for_range! { x in 0..self.width() =>
                 pixels.push(
                     self.pixel(
                         NumCast::from(x).expect(COULD_NOT_CAST_X_COORD),
@@ -66,8 +66,8 @@ pub trait DynamicConsoleDisplay<T: Pixel>: DynamicCanvas<T> {
                 self.height(),
             ));
         }
-        for y in 0..self.height() {
-            for x in 0..self.width() {
+        konst::for_range! { y in 0..self.height() =>
+            konst::for_range! { x in 0..self.width() =>
                 self.set_pixel(
                     NumCast::from(x).expect(COULD_NOT_CAST_X_COORD),
                     NumCast::from(y).expect(COULD_NOT_CAST_Y_COORD),

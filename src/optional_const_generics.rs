@@ -1,31 +1,31 @@
 use crate::optional_const_generics::sealed::Sealed;
 
 mod sealed {
-    pub trait Sealed {}
+    pub const trait Sealed {}
 }
 
-pub trait Dimension: Sealed {
+pub const trait Dimension: [const] Sealed {
     fn value(&self) -> usize;
 }
 
 #[derive(Clone, Copy)]
 pub struct CompileTime<const V: usize>;
 
-impl<const V: usize> Dimension for CompileTime<V> {
+impl<const V: usize> const Dimension for CompileTime<V> {
     fn value(&self) -> usize {
         V
     }
 }
 
-impl<const V: usize> Sealed for CompileTime<V> {}
+impl<const V: usize> const Sealed for CompileTime<V> {}
 
 #[derive(Clone, Copy)]
 pub struct RunTime(pub usize);
 
-impl Dimension for RunTime {
+impl const Dimension for RunTime {
     fn value(&self) -> usize {
         self.0
     }
 }
 
-impl Sealed for RunTime {}
+impl const Sealed for RunTime {}

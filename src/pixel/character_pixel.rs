@@ -20,7 +20,7 @@ use crate::color::{
 };
 use unicode_width::UnicodeWidthChar;
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct CharacterPixel {
     data: [CharacterPixelData; 1],
 }
@@ -34,7 +34,7 @@ pub struct CharacterPixelData {
     width: usize,
 }
 
-impl From<CharacterPixel> for CharacterPixelData {
+impl const From<CharacterPixel> for CharacterPixelData {
     fn from(value: CharacterPixel) -> Self {
         value.data[0]
     }
@@ -62,7 +62,7 @@ impl Pixel for CharacterPixel {
     }
 }
 
-impl From<CharacterPixel> for DataCell {
+impl const From<CharacterPixel> for DataCell {
     fn from(val: CharacterPixel) -> Self {
         Self {
             character: val.character(),
@@ -186,6 +186,7 @@ impl Debug for CharacterPixel {
     }
 }
 
+// TODO: Check if this impl can be const
 impl TryFrom<char> for CharacterPixel {
     type Error = PixelError;
 
@@ -194,7 +195,17 @@ impl TryFrom<char> for CharacterPixel {
     }
 }
 
-impl Default for CharacterPixelData {
+// Clippy produces a false positive here. The const Default implementation can not (yet) be derived.
+#[allow(clippy::derivable_impls)]
+impl const Default for CharacterPixel {
+    fn default() -> Self {
+        Self {
+            data: [CharacterPixelData::default()],
+        }
+    }
+}
+
+impl const Default for CharacterPixelData {
     fn default() -> Self {
         Self {
             character: ' ',

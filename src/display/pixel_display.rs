@@ -50,13 +50,16 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
     ///
     /// This function panics if the data generated from the fill does not match the dimensions of the display.
     /// This should not happen and is subject to change in the future.
+    // TODO: Check if this fn can be const
     pub fn new(width: usize, height: usize, fill: T::U) -> Self
     where
         Self: Sized,
         [(); T::WIDTH * T::HEIGHT]:,
+        // Vec<<T as Pixel>::U>: [const] Deref,
+        // T: [const] Pixel
     {
         let data: Vec<T::U> = vec![fill; width * height];
-        Self::build_from_data(width, height, &data)
+        Self::build_from_data(width, height, data.as_slice())
             .expect(DATA_DOES_NOT_MATCH_DIMENSIONS)
     }
 
@@ -65,6 +68,7 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
     /// # Errors
     ///
     /// Returns an error when the length of the data does not match the dimensions of the display.
+    // TODO: Check if this fn can be const
     pub fn build_from_data(
         width: usize,
         height: usize,
@@ -73,6 +77,8 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
     where
         Self: Sized,
         [(); T::WIDTH * T::HEIGHT]:,
+        // Vec<<T as Pixel>::U>: [const] Deref,
+        // T: [const] Pixel
     {
         if !width.is_multiple_of(T::WIDTH) ||
             !height.is_multiple_of(T::HEIGHT)
@@ -105,7 +111,7 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
                     }
                 }
 
-                multi_pixels.push(T::build(&args)?);
+                multi_pixels.push(T::build(args.as_slice())?);
             }
         }
 
@@ -123,30 +129,34 @@ impl<const WIDTH: usize, const HEIGHT: usize, T: Pixel>
     PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
 {
     /// Convenience method to create a blank display struct with specified dimensions known at compile time.
+    // TODO: Check if this fn can be const
     pub fn new(fill: T::U) -> Self
     where
         [(); T::WIDTH * T::HEIGHT]:,
         [(); WIDTH * HEIGHT]:,
         [(); 0 - WIDTH % T::WIDTH]:,
         [(); 0 - HEIGHT % T::HEIGHT]:,
+        // T: [const] Pixel,
     {
         let data: [T::U; WIDTH * HEIGHT] = [fill; WIDTH * HEIGHT];
         Self::new_from_data(&data)
     }
 
     /// Creates a display struct from the given data with the specified dimensions known at compile time.
+    // TODO: Check if this fn can be const
     pub fn new_from_data(data: &[T::U; WIDTH * HEIGHT]) -> Self
     where
         [(); T::WIDTH * T::HEIGHT]:,
         [(); 0 - WIDTH % T::WIDTH]:,
         [(); 0 - HEIGHT % T::HEIGHT]:,
+        // T: [const] Pixel,
     {
         let mut multi_pixels = Vec::with_capacity(
             Self::WIDTH_CHARACTERS * Self::HEIGHT_CHARACTERS,
         );
 
-        for row in 0..Self::HEIGHT_CHARACTERS {
-            for col in 0..Self::WIDTH_CHARACTERS {
+        konst::for_range! { row in 0..Self::HEIGHT_CHARACTERS =>
+            konst::for_range! { col in 0..Self::WIDTH_CHARACTERS =>
                 let block_x: usize = col * T::WIDTH;
                 let block_y: usize = row * T::HEIGHT;
 

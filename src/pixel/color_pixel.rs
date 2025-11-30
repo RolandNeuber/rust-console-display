@@ -38,7 +38,7 @@ impl Pixel for ColorSinglePixel {
     impl_new!(Self, pixels: [Self::U; 1]);
 }
 
-impl From<ColorSinglePixel> for DataCell {
+impl const From<ColorSinglePixel> for DataCell {
     fn from(val: ColorSinglePixel) -> Self {
         Self {
             character: '█',
@@ -67,7 +67,7 @@ impl Pixel for ColorDualPixel {
     impl_new!(Self, pixels: [Self::U; 2]);
 }
 
-impl From<ColorDualPixel> for DataCell {
+impl const From<ColorDualPixel> for DataCell {
     fn from(val: ColorDualPixel) -> Self {
         Self {
             character: '▀',

@@ -8,7 +8,6 @@ pub mod character_pixel;
 pub mod color_pixel;
 pub mod monochrome_pixel;
 
-// TODO: Check if this can be const
 pub trait Pixel: Copy + Into<DataCell>
 where
     Self: Sized,
