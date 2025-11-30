@@ -2,10 +2,21 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     DeriveInput,
+    Expr,
     GenericParam,
     Generics,
+    Ident,
+    Token,
+    parse::{
+        Parse,
+        ParseStream,
+    },
     parse_macro_input,
     parse_quote,
+    visit_mut::{
+        VisitMut,
+        visit_expr_mut,
+    },
 };
 
 /// Derives `StaticWidget` for a struct.
@@ -119,4 +130,55 @@ fn add_static_widget_bound_to_t(mut generics: Generics) -> Generics {
         }
     }
     generics
+}
+
+struct ReplaceExpr {
+    old: Ident,
+    new: Expr,
+    expr: Expr,
+}
+
+impl Parse for ReplaceExpr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        // syntax: <ident> => <expr> ; <expr>
+        let old: Ident = input.parse()?;
+        input.parse::<Token![=>]>()?;
+        let new: Expr = input.parse()?;
+        let _: Token![;] = input.parse()?;
+        let expr: Expr = input.parse()?;
+        Ok(Self { old, new, expr })
+    }
+}
+
+#[proc_macro]
+pub fn replace(input: TokenStream) -> TokenStream {
+    let ReplaceExpr { old, new, expr, .. } =
+        parse_macro_input!(input as ReplaceExpr);
+    let expr = replace_in_expr(expr, &old, &new);
+    quote!(#expr).into()
+}
+
+fn replace_in_expr(mut expr: Expr, old: &Ident, new: &Expr) -> Expr {
+    struct Replacer<'a> {
+        old: &'a Ident,
+        new: &'a Expr,
+    }
+
+    impl<'a> VisitMut for Replacer<'a> {
+        fn visit_expr_mut(&mut self, node: &mut Expr) {
+            if let Expr::Path(path) = node &&
+                path.path.segments.len() == 1 &&
+                path.path.segments[0].ident == *self.old
+            {
+                *node = self.new.clone();
+                return;
+            }
+
+            visit_expr_mut(self, node);
+        }
+    }
+
+    let mut replacer = Replacer { old, new };
+    replacer.visit_expr_mut(&mut expr);
+    expr
 }

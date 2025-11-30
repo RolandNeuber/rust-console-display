@@ -8,7 +8,7 @@ pub mod character_pixel;
 pub mod color_pixel;
 pub mod monochrome_pixel;
 
-pub const trait Pixel: Copy + Into<DataCell>
+pub trait Pixel: Copy + Into<DataCell>
 where
     Self: Sized,
 {
@@ -85,13 +85,16 @@ where
     where
         [(); Self::WIDTH * Self::HEIGHT]:,
     {
-        match <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args) {
-            Ok(pixels) => Ok(Self::new(pixels)),
-            Err(_) => Err(PixelError::InvalidNumberOfArguments(
-                Self::WIDTH * Self::HEIGHT,
-                args.len(),
-            )),
-        }
+        <[Self::U; Self::WIDTH * Self::HEIGHT]>::try_from(args)
+            .map_or_else(
+                |_| {
+                    Err(PixelError::InvalidNumberOfArguments(
+                        Self::WIDTH * Self::HEIGHT,
+                        args.len(),
+                    ))
+                },
+                |pixels| Ok(Self::new(pixels)),
+            )
     }
 
     fn subpixel_static<const X: usize, const Y: usize>(&self) -> Self::U

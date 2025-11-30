@@ -59,7 +59,7 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
         // T: [const] Pixel
     {
         let data: Vec<T::U> = vec![fill; width * height];
-        Self::build_from_data(width, height, &data.as_slice())
+        Self::build_from_data(width, height, data.as_slice())
             .expect(DATA_DOES_NOT_MATCH_DIMENSIONS)
     }
 
@@ -111,7 +111,7 @@ impl<T: Pixel> PixelDisplay<RunTime, RunTime, T> {
                     }
                 }
 
-                multi_pixels.push(T::build(&args.as_slice())?);
+                multi_pixels.push(T::build(args.as_slice())?);
             }
         }
 

@@ -742,7 +742,8 @@ impl BorderDefault {
         background: TerminalColor,
     ) -> Self
     where
-        // TODO: Make this less ugly, with another macro maybe
+        // TODO: This can not be verified to be equivalent to the constraints below, so it fails
+        // constraint!(for_all!(for v in [TOP, TOP_LEFT, LEFT, BOTTOM_LEFT, BOTTOM, BOTTOM_RIGHT, RIGHT, TOP_RIGHT] => v >= '\u{20}')):,
         constraint!(TOP >= '\u{20}'):, // Exclude C0 control chars
         constraint!(or!(TOP < '\u{7F}', TOP >= '\u{A0}')):, // Exclude C1 control chars
         constraint!(TOP_LEFT >= '\u{20}'):, // Exclude C0 control chars

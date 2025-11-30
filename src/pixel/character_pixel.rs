@@ -40,7 +40,7 @@ impl const From<CharacterPixel> for CharacterPixelData {
     }
 }
 
-impl const Pixel for CharacterPixel {
+impl Pixel for CharacterPixel {
     type U = CharacterPixelData;
 
     const WIDTH: usize = 1;
@@ -195,6 +195,8 @@ impl TryFrom<char> for CharacterPixel {
     }
 }
 
+// Clippy produces a false positive here. The const Default implementation can not (yet) be derived.
+#[allow(clippy::derivable_impls)]
 impl const Default for CharacterPixel {
     fn default() -> Self {
         Self {

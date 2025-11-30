@@ -24,7 +24,7 @@ pub struct ColorSinglePixel {
     pixels: [TerminalColor; 1],
 }
 
-impl const Pixel for ColorSinglePixel {
+impl Pixel for ColorSinglePixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 1;
@@ -53,7 +53,7 @@ pub struct ColorDualPixel {
     pixels: [TerminalColor; 2],
 }
 
-impl const Pixel for ColorDualPixel {
+impl Pixel for ColorDualPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 1;
@@ -82,7 +82,7 @@ pub struct ColorQuadPixel {
     pixels: [TerminalColor; 4],
 }
 
-impl const Pixel for ColorQuadPixel {
+impl Pixel for ColorQuadPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 2;
@@ -103,7 +103,7 @@ pub struct ColorHexPixel {
     pixels: [TerminalColor; 6],
 }
 
-impl const Pixel for ColorHexPixel {
+impl Pixel for ColorHexPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 2;
@@ -124,7 +124,7 @@ pub struct ColorOctPixel {
     pixels: [TerminalColor; 8],
 }
 
-impl const Pixel for ColorOctPixel {
+impl Pixel for ColorOctPixel {
     type U = TerminalColor;
 
     const WIDTH: usize = 2;
