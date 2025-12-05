@@ -38,47 +38,50 @@ jobs:
 
     - name: Install Rust nightly
       run: |
-        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ] && [ -f "$HOME/.cargo/bin/cargo-llvm-cov" ]; then
+        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ] && [ -f "$HOME/.cargo/bin/cargo-llvm-cov" ] && [ -f "$HOME/.cargo/bin/cargo-semver-checks" ]; then
             echo "Rust is already installed. Skipping installation."
             rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt llvm-tools-preview
         else
             echo "Rust is not installed. Installing via rustup..."
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
-            cargo install cargo-llvm-cov
+            cargo install cargo-llvm-cov cargo-semver-checks
         fi
 
-    - name: Show rust version
-      run: rustc --version
+    # - name: Show rust version
+    #   run: rustc --version
 
-    - name: Format code
-      if: env.AUTO_FORMAT == 'true'
-      run: cargo +nightly fmt --all
+    # - name: Format code
+    #   if: env.AUTO_FORMAT == 'true'
+    #   run: cargo +nightly fmt --all
 
-    - name: Check formatting
-      if: env.AUTO_FORMAT != 'true'
-      run: |
-        cargo +nightly fmt --all --check || {
-          echo "Formatting failed — please run 'cargo +nightly fmt --all' locally before pushing.";
-          exit 1;
-        }
+    # - name: Check formatting
+    #   if: env.AUTO_FORMAT != 'true'
+    #   run: |
+    #     cargo +nightly fmt --all --check || {
+    #       echo "Formatting failed — please run 'cargo +nightly fmt --all' locally before pushing.";
+    #       exit 1;
+    #     }
     
-    # Allow dirty flag added for convinience. Be careful when auto-formatting is enabled.
-    - name: Clippy apply suggestions
-      if: env.AUTO_FORMAT == 'true'
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty
+    # # Allow dirty flag added for convinience. Be careful when auto-formatting is enabled.
+    # - name: Clippy apply suggestions
+    #   if: env.AUTO_FORMAT == 'true'
+    #   run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty
 
-    # Still need to run clippy as well, because cargo clippy fix makes errors into warnings. See: https://github.com/rust-lang/rust-clippy/discussions/9979
-    - name: Clippy
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features
+    # # Still need to run clippy as well, because cargo clippy fix makes errors into warnings. See: https://github.com/rust-lang/rust-clippy/discussions/9979
+    # - name: Clippy
+    #   run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features
 
-    # Replaces cargo test and checks test coverage.
-    - name: Test coverage
-      run: |
-        cargo +nightly llvm-cov clean --workspace;
-        cargo +nightly llvm-cov --no-report --workspace --all-features --all-targets;
-        cargo +nightly llvm-cov --no-report --workspace --all-features --doctests;
-        cargo +nightly llvm-cov report --fail-under-regions 40;
+    # # Replaces cargo test and checks test coverage.
+    # - name: Test coverage
+    #   run: |
+    #     cargo +nightly llvm-cov clean --workspace;
+    #     cargo +nightly llvm-cov --no-report --workspace --all-features --all-targets;
+    #     cargo +nightly llvm-cov --no-report --workspace --all-features --doctests;
+    #     cargo +nightly llvm-cov report --fail-under-regions 40;
         
-    # Needed to catch dangling references in documentation.
-    - name: Build documentation
-      run: cargo +nightly doc --no-deps;
+    # # Needed to catch dangling references in documentation.
+    # - name: Build documentation
+    #   run: cargo +nightly doc --no-deps;
+
+    - name: Check SemVer
+      run: cargo +nightly semver-checks

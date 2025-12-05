@@ -18,5 +18,6 @@ mod macros;
 pub mod optional_const_generics;
 pub mod pixel;
 pub mod widget;
+mod public_api;
 
 pub use display::*;
