@@ -20,16 +20,39 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # - name: Cache cargo registry
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: |
+    #       ~/.cargo
+    #       ~/.rustup
+    #       target
+    #     key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.lock') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-cargo-
+
+    - name: Cache cargo bin
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-bin
+
     - name: Cache cargo registry
       uses: actions/cache@v4
       with:
         path: |
-          ~/.cargo
-          ~/.rustup
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.lock') }}
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache target
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-cargo-
+          ${{ runner.os }}-target-
 
     - name: Add Rust to PATH
       run: |
@@ -38,13 +61,18 @@ jobs:
 
     - name: Install Rust nightly
       run: |
-        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ] && [ -f "$HOME/.cargo/bin/cargo-llvm-cov" ] && [ -f "$HOME/.cargo/bin/cargo-semver-checks" ]; then
-            echo "Rust is already installed. Skipping installation."
-            rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt llvm-tools-preview
-        else
-            echo "Rust is not installed. Installing via rustup..."
-            curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
-            cargo install cargo-llvm-cov cargo-semver-checks
+        echo "Installing rustup..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+        rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt llvm-tools-preview
+
+        if [ ! -f "$HOME/.cargo/bin/cargo-llvm-cov" ]; then
+            echo "cargo llvm-cov is not installed. Installing via cargo..."
+            cargo install cargo-llvm-cov
+        fi
+        if [ ! -f "$HOME/.cargo/bin/cargo-set-version" ]; then
+            echo "cargo set-version is not installed. Installing via cargo..."
+            cargo install cargo-edit
         fi
 
     # - name: Show rust version
@@ -83,5 +111,30 @@ jobs:
     # - name: Build documentation
     #   run: cargo +nightly doc --no-deps;
 
-    - name: Check SemVer
-      run: cargo +nightly semver-checks
+    # - name: Show API diff
+    #   run: |
+    #     cargo test public_api::tests::print_changes -- --nocapture --ignored
+
+    # - name: Check SemVer
+    #   if: env.VERSION_BUMP != 'None'
+    #   run: |
+    #     case ${VERSION_BUMP,,} in
+    #       patch)
+    #         cargo set-version --bump patch
+    #         ;;
+    #       minor)
+    #         cargo set-version --bump minor
+    #         ;;
+    #       major)
+    #         cargo set-version --bump major
+    #         ;;
+    #       *)
+    #         if cargo test public_api::tests::is_patch -- --ignored; then
+    #             cargo set-version --bump patch
+    #         elif cargo test public_api::tests::is_minor -- --ignored; then
+    #             echo "Consider bumping minor version."
+    #         else
+    #             echo "Consider bumping major version."
+    #         fi
+    #         ;;
+    #     esac
