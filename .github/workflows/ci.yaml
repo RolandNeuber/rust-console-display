@@ -126,21 +126,21 @@ jobs:
       run: |
         case ${VERSION_BUMP,,} in
           patch)
-            gh pr edit "$PR_NUMBER" --add-label "patch"
+            gh pr edit ${{ github.event.pull_request.number }} --add-label "patch"
             ;;
           minor)
-            gh pr edit "$PR_NUMBER" --add-label "minor"
+            gh pr edit ${{ github.event.pull_request.number }} --add-label "minor"
             ;;
           major)
-            gh pr edit "$PR_NUMBER" --add-label "major"
+            gh pr edit ${{ github.event.pull_request.number }} --add-label "major"
             ;;
           *)
             if cargo test public_api::tests::is_patch -- --ignored; then
-                gh pr edit "$PR_NUMBER" --add-label "patch"
+                gh pr edit ${{ github.event.pull_request.number }} --add-label "patch"
             elif cargo test public_api::tests::is_minor -- --ignored; then
-                gh pr edit "$PR_NUMBER" --add-label "minor"
+                gh pr edit ${{ github.event.pull_request.number }} --add-label "minor"
             else
-                gh pr edit "$PR_NUMBER" --add-label "major"
+                gh pr edit ${{ github.event.pull_request.number }} --add-label "major"
             fi
             ;;
         esac
