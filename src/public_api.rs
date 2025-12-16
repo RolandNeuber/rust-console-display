@@ -76,13 +76,10 @@ mod tests {
                 ChangeTag::Insert => (remove_color.into(), "+ "),
                 ChangeTag::Equal => continue,
             };
-            res.push_str(&format!(
-                "{}",
-                TerminalColor::color(
-                    &format!("{}{}", sign, change),
-                    &color,
-                    &TerminalColor::Default
-                )
+            res.push_str(&TerminalColor::color(
+                &format!("{sign}{change}"),
+                &color,
+                &TerminalColor::Default,
             ));
         }
         res
@@ -100,36 +97,33 @@ mod tests {
         for change in diff.iter_all_changes() {
             let color = match change.tag() {
                 ChangeTag::Equal => {
-                    res.push_str(&format!(
-                        "{}",
-                        change.to_string().trim_end_matches("\n")
-                    ));
+                    res.push_str(
+                        change.to_string().trim_end_matches('\n'),
+                    );
                     continue;
                 }
                 ChangeTag::Delete => remove_color,
                 ChangeTag::Insert => add_color,
             };
-            res.push_str(&format!(
-                "{}",
-                TerminalColor::color(
-                    change.to_string().trim_end_matches("\n"),
-                    &color.into(),
-                    &TerminalColor::Default
-                )
+            res.push_str(&TerminalColor::color(
+                change.to_string().trim_end_matches('\n'),
+                &color.into(),
+                &TerminalColor::Default,
             ));
         }
         res.push('\n');
         res
     }
 
-    fn vec_to_string<T: ToString>(vec: Vec<T>) -> String {
-        vec.iter()
-            .map(|x| x.to_string())
+    fn slice_to_string<T: ToString>(slice: &[T]) -> String {
+        slice
+            .iter()
+            .map(std::string::ToString::to_string)
             .collect::<Vec<_>>()
             .join("\n")
     }
 
-    #[ignore]
+    #[ignore = "Used by CI to display changes in public API."]
     #[test]
     fn print_changes() {
         let api_diff = public_api_diff();
@@ -140,44 +134,44 @@ mod tests {
 
         let added = diff(
             "",
-            &vec_to_string(api_diff.added),
+            &slice_to_string(&api_diff.added),
             RGBColor::GREEN,
             RGBColor::RED,
         );
         let changed = diff_unified_line(
-            &vec_to_string(old_changed),
-            &vec_to_string(new_changed),
+            &slice_to_string(&old_changed),
+            &slice_to_string(&new_changed),
             RGBColor::GREEN,
             RGBColor::RED,
         );
         let removed = diff(
-            &vec_to_string(api_diff.removed),
+            &slice_to_string(&api_diff.removed),
             "",
             RGBColor::GREEN,
             RGBColor::RED,
         );
 
         if !added.trim().is_empty() {
-            println!("{}{}", "Added:\n", added);
+            println!("Added:\n{added}");
         }
 
         if !changed.trim().is_empty() {
-            println!("{}{}", "Changed:\n", changed);
+            println!("Changed:\n{changed}");
         }
 
         if !removed.trim().is_empty() {
-            println!("{}{}", "Removed:\n", removed);
+            println!("Removed:\n{removed}");
         }
     }
 
-    #[ignore]
+    #[ignore = "Used by CI to detect patch changes to public API."]
     #[test]
     fn is_patch() {
         // Check if there are no changes to API
         let api_diff = public_api_diff();
         let added_items = diff(
             "",
-            &vec_to_string(api_diff.added),
+            &slice_to_string(&api_diff.added),
             RGBColor::GREEN,
             RGBColor::RED,
         );
@@ -185,7 +179,7 @@ mod tests {
         is_minor();
     }
 
-    #[ignore]
+    #[ignore = "Used by CI to detect minor changes to public API."]
     #[test]
     fn is_minor() {
         // Check if there are only new items
@@ -195,13 +189,13 @@ mod tests {
             Vec<PublicItem>,
         ) = api_diff.changed.into_iter().map(|x| (x.new, x.old)).unzip();
         let changed_items = diff_unified_line(
-            &vec_to_string(old_changed),
-            &vec_to_string(new_changed),
+            &slice_to_string(&old_changed),
+            &slice_to_string(&new_changed),
             RGBColor::GREEN,
             RGBColor::RED,
         );
         let removed_items = diff(
-            &vec_to_string(api_diff.removed),
+            &slice_to_string(&api_diff.removed),
             "",
             RGBColor::GREEN,
             RGBColor::RED,

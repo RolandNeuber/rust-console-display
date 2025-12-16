@@ -111,12 +111,15 @@ jobs:
     - name: Build documentation
       run: cargo +nightly doc --no-deps;
 
+    - name: Add master to worktree
+      run: git worktree add master master
+
     - name: Show API diff
       run: |
         cargo test public_api::tests::print_changes -- --nocapture --ignored
 
     - name: Check SemVer
-      if: env.VERSION_BUMP != 'None'
+      if: env.ACT != 'true' || env.VERSION_BUMP != 'None'
       run: |
         case ${VERSION_BUMP,,} in
           patch)
@@ -138,3 +141,6 @@ jobs:
             fi
             ;;
         esac
+
+    - name: Remove master from worktree
+      run: git worktree remove master
