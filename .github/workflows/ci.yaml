@@ -8,10 +8,12 @@ on:
   workflow_dispatch:
 
 env:
+  GH_TOKEN: ${{ github.token }}
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
   RUSTDOCFLAGS: "-Dwarnings"
   AUTO_FORMAT: ${{ vars.AUTO_FORMAT }}
+  PR_NUMBER: ${{ github.event.pull_request.number }}
 
 jobs:
   build:
@@ -20,16 +22,39 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # - name: Cache cargo registry
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: |
+    #       ~/.cargo
+    #       ~/.rustup
+    #       target
+    #     key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.lock') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-cargo-
+
+    - name: Cache cargo bin
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-bin
+
     - name: Cache cargo registry
       uses: actions/cache@v4
       with:
         path: |
-          ~/.cargo
-          ~/.rustup
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('./Cargo.lock') }}
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache target
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-cargo-
+          ${{ runner.os }}-target-
 
     - name: Add Rust to PATH
       run: |
@@ -38,13 +63,18 @@ jobs:
 
     - name: Install Rust nightly
       run: |
-        if [ -d "$HOME/.cargo/" ] && [ -d "$HOME/.rustup/" ] && [ -f "$HOME/.cargo/bin/cargo-llvm-cov" ]; then
-            echo "Rust is already installed. Skipping installation."
-            rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt llvm-tools-preview
-        else
-            echo "Rust is not installed. Installing via rustup..."
-            curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+        echo "Installing rustup..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+        rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy rustfmt llvm-tools-preview
+
+        if [ ! -f "$HOME/.cargo/bin/cargo-llvm-cov" ]; then
+            echo "cargo llvm-cov is not installed. Installing via cargo..."
             cargo install cargo-llvm-cov
+        fi
+        if [ ! -f "$HOME/.cargo/bin/cargo-set-version" ]; then
+            echo "cargo set-version is not installed. Installing via cargo..."
+            cargo install cargo-edit
         fi
 
     - name: Show rust version
@@ -82,3 +112,45 @@ jobs:
     # Needed to catch dangling references in documentation.
     - name: Build documentation
       run: cargo +nightly doc --no-deps;
+
+    - name: Add master to worktree
+      run: |
+        git fetch origin master
+        git worktree add master origin/master
+
+    - name: Show API diff
+      run: |
+        cargo test public_api::tests::print_changes -- --nocapture --ignored
+
+    - name: Check SemVer
+      if: env.ACT != 'true'
+      run: |
+        # Fetch current labels
+        labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
+
+        # Check for "auto semver"
+        has_auto_semver=$(echo "$labels" | grep -qx "auto semver" && echo "yes" || echo "no")
+
+        # Check if any version labels exist
+        has_version_label=$(echo "$labels" | grep -E -qx "(patch|minor|major)" && echo "yes" || echo "no")
+
+        # Decide whether to run automation
+        if [ "$has_version_label" = "yes" ] && [ "$has_auto_semver" = "no" ]; then
+            echo "Manual version label detected. Skipping automation."
+            exit 0
+        elif [ "$has_auto_semver" = "no" ]; then
+          gh pr edit "$PR_NUMBER" --add-label "auto semver"
+        fi
+
+        gh pr edit "$PR_NUMBER" --remove-label "patch" --remove-label "minor" --remove-label "major"
+
+        if cargo test public_api::tests::is_patch -- --ignored; then
+            gh pr edit "$PR_NUMBER" --add-label "patch"
+        elif cargo test public_api::tests::is_minor -- --ignored; then
+            gh pr edit "$PR_NUMBER" --add-label "minor"
+        else
+            gh pr edit "$PR_NUMBER" --add-label "major"
+        fi
+
+    - name: Remove master from worktree
+      run: git worktree remove master
