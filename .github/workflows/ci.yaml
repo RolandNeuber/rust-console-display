@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 env:
+  GH_TOKEN: ${{ github.token }}
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
   RUSTDOCFLAGS: "-Dwarnings"
@@ -114,7 +115,7 @@ jobs:
     - name: Add master to worktree
       run: |
         git fetch origin master
-        git worktree add master master
+        git worktree add master origin/master
 
     - name: Show API diff
       run: |
