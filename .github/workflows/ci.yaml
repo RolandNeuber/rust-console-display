@@ -112,7 +112,9 @@ jobs:
       run: cargo +nightly doc --no-deps;
 
     - name: Add master to worktree
-      run: git worktree add master master
+      run: |
+        git fetch origin master
+        git worktree add master master
 
     - name: Show API diff
       run: |
