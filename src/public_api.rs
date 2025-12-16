@@ -17,6 +17,7 @@ mod tests {
         RGBColor,
         TerminalColor,
     };
+    use std::fmt::Write;
 
     #[derive(Deserialize)]
     struct Root {
@@ -72,8 +73,8 @@ mod tests {
         let mut res = String::new();
         for change in diff.iter_all_changes() {
             let (color, sign) = match change.tag() {
-                ChangeTag::Delete => (add_color.into(), "- "),
-                ChangeTag::Insert => (remove_color.into(), "+ "),
+                ChangeTag::Delete => (remove_color.into(), "- "),
+                ChangeTag::Insert => (add_color.into(), "+ "),
                 ChangeTag::Equal => continue,
             };
             res.push_str(&TerminalColor::color(
@@ -123,9 +124,7 @@ mod tests {
             .join("\n")
     }
 
-    #[ignore = "Used by CI to display changes in public API."]
-    #[test]
-    fn print_changes() {
+    fn changes() -> String {
         let api_diff = public_api_diff();
         let (new_changed, old_changed): (
             Vec<PublicItem>,
@@ -151,17 +150,20 @@ mod tests {
             RGBColor::RED,
         );
 
+        let mut res = String::new();
         if !added.trim().is_empty() {
-            println!("Added:\n{added}");
+            write!(res, "Added:\n{added}").unwrap();
         }
 
         if !changed.trim().is_empty() {
-            println!("Changed:\n{changed}");
+            write!(res, "Changed:\n{changed}").unwrap();
         }
 
         if !removed.trim().is_empty() {
-            println!("Removed:\n{removed}");
+            write!(res, "Removed:\n{removed}").unwrap();
         }
+
+        res
     }
 
     #[ignore = "Used by CI to detect patch changes to public API."]
@@ -175,7 +177,7 @@ mod tests {
             RGBColor::GREEN,
             RGBColor::RED,
         );
-        assert!(added_items.trim().is_empty(), "");
+        assert!(added_items.trim().is_empty(), "{}", changes());
         is_minor();
     }
 
@@ -203,7 +205,8 @@ mod tests {
         assert!(
             changed_items.trim().is_empty() &&
                 removed_items.trim().is_empty(),
-            ""
+            "{}",
+            changes()
         );
     }
 }
