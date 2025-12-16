@@ -123,9 +123,7 @@ jobs:
         cargo test public_api::tests::print_changes -- --nocapture --ignored
 
     - name: Check SemVer
-      if: env.ACT != 'true' || env.VERSION_BUMP != 'None'
-      permissions:
-        pull-requests: write
+      if: env.ACT != 'true'
       run: |
         # Fetch current labels
         labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
