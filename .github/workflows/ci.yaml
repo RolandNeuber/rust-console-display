@@ -13,6 +13,7 @@ env:
   RUSTFLAGS: "-Dwarnings"
   RUSTDOCFLAGS: "-Dwarnings"
   AUTO_FORMAT: ${{ vars.AUTO_FORMAT }}
+  PR_NUMBER: ${{ github.event.pull_request.number }}
 
 jobs:
   build:
@@ -123,27 +124,35 @@ jobs:
 
     - name: Check SemVer
       if: env.ACT != 'true' || env.VERSION_BUMP != 'None'
+      permissions:
+        pull-requests: write
       run: |
-        case ${VERSION_BUMP,,} in
-          patch)
-            gh pr edit ${{ github.event.pull_request.number }} --add-label "patch"
-            ;;
-          minor)
-            gh pr edit ${{ github.event.pull_request.number }} --add-label "minor"
-            ;;
-          major)
-            gh pr edit ${{ github.event.pull_request.number }} --add-label "major"
-            ;;
-          *)
-            if cargo test public_api::tests::is_patch -- --ignored; then
-                gh pr edit ${{ github.event.pull_request.number }} --add-label "patch"
-            elif cargo test public_api::tests::is_minor -- --ignored; then
-                gh pr edit ${{ github.event.pull_request.number }} --add-label "minor"
-            else
-                gh pr edit ${{ github.event.pull_request.number }} --add-label "major"
-            fi
-            ;;
-        esac
+        # Fetch current labels
+        labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
+
+        # Check for "auto semver"auto semver" && echo "yes" || echo
+        has_auto_semver=$(echo "$labels" | grep -qx " "no")
+
+        # Check if any version labels exist
+        has_version_label=$(echo "$labels" | grep -E -qx "(patch|minor|major)" && echo "yes" || echo "no")
+
+        # Decide whether to run automation
+        if [ "$has_version_label" = "yes" ] && [ "$has_auto_semver" = "no" ]; then
+            echo "Manual version label detected. Skipping automation."
+            exit 0
+        elif [ "$has_auto_semver" = "no" ]; then
+          gh pr edit "$PR_NUMBER" --add-label "auto semver"
+        fi
+
+        gh pr edit "$PR_NUMBER" --remove-label "patch" --remove-label "minor" --remove-label "major"
+
+        if cargo test public_api::tests::is_patch -- --ignored; then
+            gh pr edit "$PR_NUMBER" --add-label "patch"
+        elif cargo test public_api::tests::is_minor -- --ignored; then
+            gh pr edit "$PR_NUMBER" --add-label "minor"
+        else
+            gh pr edit "$PR_NUMBER" --add-label "major"
+        fi
 
     - name: Remove master from worktree
       run: git worktree remove master
