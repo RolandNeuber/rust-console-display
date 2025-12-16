@@ -128,8 +128,8 @@ jobs:
         # Fetch current labels
         labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
 
-        # Check for "auto semver"auto semver" && echo "yes" || echo
-        has_auto_semver=$(echo "$labels" | grep -qx " "no")
+        # Check for "auto semver"
+        has_auto_semver=$(echo "$labels" | grep -qx "auto semver" && echo "yes" || echo "no")
 
         # Check if any version labels exist
         has_version_label=$(echo "$labels" | grep -E -qx "(patch|minor|major)" && echo "yes" || echo "no")
