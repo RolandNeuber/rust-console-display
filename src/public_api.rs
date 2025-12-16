@@ -156,7 +156,7 @@ mod tests {
             RGBColor::GREEN,
             RGBColor::RED,
         );
-        
+
         if !added.trim().is_empty() {
             println!("{}{}", "Added:\n", added);
         }
@@ -206,6 +206,10 @@ mod tests {
             RGBColor::GREEN,
             RGBColor::RED,
         );
-        assert!(changed_items.trim().is_empty() && removed_items.trim().is_empty(), "");
+        assert!(
+            changed_items.trim().is_empty() &&
+                removed_items.trim().is_empty(),
+            ""
+        );
     }
 }
