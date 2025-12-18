@@ -123,7 +123,7 @@ jobs:
         cargo test public_api::tests::print_changes -- --nocapture --ignored
 
     - name: Check SemVer
-      if: env.ACT != 'true'
+      if: env.ACT != 'true' && env.PR_NUMBER != ''
       run: |
         # Fetch current labels
         labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')

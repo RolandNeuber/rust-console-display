@@ -1,0 +1,75 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
+  RUSTDOCFLAGS: "-Dwarnings"
+  GITHUB_SHA: ${{ github.sha }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache cargo bin
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-bin
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache target
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-target-
+
+    - name: Add Rust to PATH
+      run: |
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "$HOME/.rustup/bin" >> $GITHUB_PATH
+
+    - name: Install Rust nightly
+      run: |
+        echo "Installing rustup..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+        if [ ! -f "$HOME/.cargo/bin/cargo-set-version" ]; then
+            echo "cargo set-version is not installed. Installing via cargo..."
+            cargo install cargo-edit
+        fi
+
+    - name:
+      run: |
+        # Fetch PR number associated with commit
+        PR_NUMBER=$(gh pr list --state merged --search "$GITHUB_SHA" --json number --jq '.[0].number')
+
+        # Fetch current labels
+        labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
+
+        # Bump version accordingly
+        if echo "$labels" | grep -qx "major"; then
+          cargo set-version --bump major --dry-run
+        elif echo "$labels" | grep -qx "minor"; then
+          cargo set-version --bump minor --dry-run
+        elif echo "$labels" | grep -qx "patch"; then
+          cargo set-version --bump patch --dry-run
+        fi
