@@ -132,7 +132,7 @@ jobs:
         has_auto_semver=$(echo "$labels" | grep -qx "auto semver" && echo "yes" || echo "no")
 
         # Check if any version labels exist
-        has_version_label=$(echo "$labels" | grep -E -qx "(patch|minor|major)" && echo "yes" || echo "no")
+        has_version_label=$(echo "$labels" | grep -E -qx "(no version|patch|minor|major)" && echo "yes" || echo "no")
 
         # Decide whether to run automation
         if [ "$has_version_label" = "yes" ] && [ "$has_auto_semver" = "no" ]; then

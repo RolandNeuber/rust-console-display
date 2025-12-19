@@ -2,7 +2,8 @@
 
 A tui library that focuses primarily on providing high resolution display functionality in the console.
 
-![Continuous Integration](https://github.com/RolandNeuber/rust-console-display/actions/workflows/ci.yaml/badge.svg)
+![Continuous Integration](https://github.com/RolandNeuber/rust-console-display/actions/workflows/ci.yaml/badge.svg) \
+![Continuous Deployment](https://github.com/RolandNeuber/rust-console-display/actions/workflows/cd.yaml/badge.svg)
 
 `console-display` provides a simple API for rendering pixels (among other primitives) inside the terminal. For that matter it uses various Unicode characters with differing levels of support by fonts as well as terminal emulators.
 
