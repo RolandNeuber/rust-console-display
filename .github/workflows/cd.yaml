@@ -83,7 +83,7 @@ jobs:
 
 
     - name: Commit and push version bump
-      if: steps.bump-version.outputs.no-version  != 'true'
+      if: steps.bump-version.outputs.no-version != 'true'
       run: |
         # Configure Git for CI
         git config user.name "github-actions[bot]"
@@ -99,14 +99,14 @@ jobs:
         git push
 
     - name: Commit and push version tag
-      if: steps.bump-version.outputs.no-version  != 'true'
+      if: steps.bump-version.outputs.no-version != 'true'
       run: |
         VERSION=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')
         git tag "v$VERSION"
         git push origin "v$VERSION"
 
     - name: Publish new version
-      if: steps.bump-version.outputs.no-version  != 'true'
+      if: steps.bump-version.outputs.no-version != 'true'
       run: |
         # Publish new version
         cargo publish --dry-run
