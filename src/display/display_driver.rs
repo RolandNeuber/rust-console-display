@@ -18,6 +18,8 @@ use crossterm::{
     cursor,
     event::{
         self,
+        DisableMouseCapture,
+        EnableMouseCapture,
         Event,
         KeyCode,
         KeyModifiers,
@@ -111,6 +113,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             terminal::DisableLineWrap,      // disable line wrapping
             terminal::Clear(terminal::ClearType::All), // clear screen
             cursor::Hide,                   // hide cursor blinking
+            EnableMouseCapture,             // capture muse movement
         )?;
 
         Ok(())
@@ -233,6 +236,7 @@ impl<T: DynamicWidget> Drop for DisplayDriver<T> {
             terminal::EnableLineWrap, // disable line wrapping
             terminal::LeaveAlternateScreen, // return to previous screen
             cursor::Show,             // show cursor blinking
+            DisableMouseCapture,      // end mouse capture
         );
 
         // reset dimensions of screen

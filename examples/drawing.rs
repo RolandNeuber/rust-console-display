@@ -2,10 +2,7 @@
 #![feature(generic_const_exprs)]
 #![allow(clippy::unwrap_used)]
 
-use std::{
-    array::from_fn,
-    io,
-};
+use std::array::from_fn;
 
 use console_display::{
     color::RGBColor,
@@ -28,7 +25,6 @@ use console_display::{
     widget::two_widget::HorizontalTilingWidget,
 };
 use crossterm::event::{
-    EnableMouseCapture,
     Event,
     MouseEventKind,
 };
@@ -37,17 +33,15 @@ type PixelType = ColorDualPixel;
 const WIDTH: usize = 80;
 const HEIGHT: usize = 80;
 fn main() {
-    let pixel_disp =
-        StaticPixelDisplay::<PixelType, WIDTH, HEIGHT>::new(
-            RGBColor::BLACK.into(),
-        );
+    let pixel_disp = StaticPixelDisplay::<PixelType, WIDTH, HEIGHT>::new(
+        RGBColor::BLACK.into(),
+    );
 
     let palette = StaticPixelDisplay::<
         ColorSinglePixel,
         3,
         { HEIGHT / PixelType::HEIGHT },
     >::new_from_data(&from_fn(|i| {
-        println!("{i}");
         match i * 4 * PixelType::HEIGHT / 3 / HEIGHT {
             0 => RGBColor::WHITE,
             1 => RGBColor::RED,
@@ -57,9 +51,6 @@ fn main() {
         }
         .into()
     }));
-    // exit(0);
-
-    crossterm::execute!(io::stdout(), EnableMouseCapture).unwrap();
 
     let mut display = DisplayDriver::new(HorizontalTilingWidget::new(
         palette, pixel_disp,
@@ -78,21 +69,22 @@ fn main() {
                     (HEIGHT + 1) /
                     (HEIGHT - PixelType::HEIGHT + 1),
             );
-            if let MouseEventKind::Down(_) = mouse_event.kind
-                && mouse_event.column < 3 {
-                    color = match mouse_event.row as usize *
-                        4 *
-                        PixelType::HEIGHT /
-                        HEIGHT
-                    {
-                        0 => RGBColor::WHITE,
-                        1 => RGBColor::RED,
-                        2 => RGBColor::GREEN,
-                        3 => RGBColor::BLUE,
-                        _ => unreachable!(),
-                    }
-                    .into();
+            if let MouseEventKind::Down(_) = mouse_event.kind &&
+                mouse_event.column < 3
+            {
+                color = match mouse_event.row as usize *
+                    4 *
+                    PixelType::HEIGHT /
+                    HEIGHT
+                {
+                    0 => RGBColor::WHITE,
+                    1 => RGBColor::RED,
+                    2 => RGBColor::GREEN,
+                    3 => RGBColor::BLUE,
+                    _ => unreachable!(),
                 }
+                .into();
+            }
             if let MouseEventKind::Drag(_) = mouse_event.kind {
                 let _ =
                     disp.1.set_pixel(current_pos.0, current_pos.1, color);
