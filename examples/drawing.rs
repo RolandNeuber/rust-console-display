@@ -29,6 +29,7 @@ use crossterm::event::{
     MouseEventKind,
 };
 
+// TODO: Fix mouse events, when terminal dimensions don't match application dimensions
 type PixelType = ColorDualPixel;
 const WIDTH: usize = 80;
 const HEIGHT: usize = 80;
