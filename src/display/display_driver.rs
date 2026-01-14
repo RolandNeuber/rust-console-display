@@ -113,7 +113,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             terminal::DisableLineWrap,      // disable line wrapping
             terminal::Clear(terminal::ClearType::All), // clear screen
             cursor::Hide,                   // hide cursor blinking
-            EnableMouseCapture,             // capture muse movement
+            EnableMouseCapture,             // capture mouse movement
         )?;
 
         Ok(())
