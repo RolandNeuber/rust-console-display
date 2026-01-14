@@ -77,7 +77,6 @@ fn main() {
         #[allow(clippy::cast_possible_wrap)]
         trng.random_range(0..WIDTH as i32)
     });
-    trng = rng();
     let disp = DoubleBufferWidget::new(StaticPixelDisplay::<
         ColorDualPixel,
         WIDTH,
