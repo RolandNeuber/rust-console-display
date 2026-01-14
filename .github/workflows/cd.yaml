@@ -1,0 +1,112 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
+  RUSTDOCFLAGS: "-Dwarnings"
+  GITHUB_SHA: ${{ github.sha }}
+  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache cargo bin
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-bin
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache target
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-target-
+
+    - name: Add Rust to PATH
+      run: |
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "$HOME/.rustup/bin" >> $GITHUB_PATH
+
+    - name: Install Rust nightly
+      run: |
+        echo "Installing rustup..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+        if [ ! -f "$HOME/.cargo/bin/cargo-set-version" ]; then
+            echo "cargo set-version is not installed. Installing via cargo..."
+            cargo install cargo-edit
+        fi
+
+    - name: Bump version
+      id: bump-version
+      run: |
+        # Fetch PR number associated with commit
+        PR_NUMBER=$(gh pr list --state merged --search "$GITHUB_SHA" --json number --jq '.[0].number')
+
+        # Fetch current labels
+        labels=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')
+
+        # Bump version accordingly
+        if echo "$labels" | grep -qx "major"; then
+          cargo set-version --bump major
+          echo "no-version=false" >> $GITHUB_OUTPUT
+        elif echo "$labels" | grep -qx "minor"; then
+          cargo set-version --bump minor
+          echo "no-version=false" >> $GITHUB_OUTPUT
+        elif echo "$labels" | grep -qx "patch"; then
+          cargo set-version --bump patch
+          echo "no-version=false" >> $GITHUB_OUTPUT
+        else
+          echo "no-version=true" >> $GITHUB_OUTPUT
+        fi
+
+
+    - name: Commit and push version bump
+      if: steps.bump-version.outputs.no-version  != 'true'
+      run: |
+        # Configure Git for CI
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        # Add modified Cargo.toml files
+        git add Cargo.toml */Cargo.toml 2>/dev/null || true
+
+        # Commit the bump
+        git commit -m "chore: bump version"
+
+        # Push the commit back to master
+        git push
+
+    - name: Commit and push version tag
+      if: steps.bump-version.outputs.no-version  != 'true'
+      run: |
+        VERSION=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')
+        git tag "v$VERSION"
+        git push origin "v$VERSION"
+
+    - name: Publish new version
+      if: steps.bump-version.outputs.no-version  != 'true'
+      run: |
+        # Publish new version
+        cargo publish --dry-run

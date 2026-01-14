@@ -1,0 +1,20 @@
+[build]
+rustflags = "-Zthreads=8"
+
+# ~1,7 % Improvement
+# [profile.dev]
+# debug = "line-tables-only"
+
+# [profile.dev.package."*"]
+# debug = false
+
+# [profile.debugging]
+# inherits = "dev"
+# debug = true
+
+# ~1,4 % Improvement
+[unstable]
+feature-unification = true
+
+[resolver]
+feature-unification = "workspace"
