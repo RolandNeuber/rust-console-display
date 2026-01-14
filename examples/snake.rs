@@ -73,7 +73,8 @@ fn main() {
     disp.set_target_frame_rate(fps);
     // TODO: Extract closure into separate function
     disp.set_on_update(move |disp, latest_event| {
-        if let Some(key_event) = latest_event {
+        if let Some(crossterm::event::Event::Key(key_event)) = latest_event
+        {
             let KeyCode::Char(key) = key_event.code
             else {
                 return UpdateStatus::Continue;

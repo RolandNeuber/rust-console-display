@@ -18,9 +18,10 @@ use crossterm::{
     cursor,
     event::{
         self,
+        DisableMouseCapture,
+        EnableMouseCapture,
         Event,
         KeyCode,
-        KeyEvent,
         KeyModifiers,
     },
     terminal,
@@ -37,7 +38,7 @@ pub enum UpdateStatus {
 }
 
 type UpdateFunction<T: DynamicWidget> =
-    dyn FnMut(&mut DisplayDriver<T>, Option<KeyEvent>) -> UpdateStatus;
+    dyn FnMut(&mut DisplayDriver<T>, Option<Event>) -> UpdateStatus;
 
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
 pub struct DisplayDriver<T: DynamicWidget> {
@@ -112,6 +113,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
             terminal::DisableLineWrap,      // disable line wrapping
             terminal::Clear(terminal::ClearType::All), // clear screen
             cursor::Hide,                   // hide cursor blinking
+            EnableMouseCapture,             // capture mouse movement
         )?;
 
         Ok(())
@@ -135,7 +137,7 @@ impl<T: DynamicWidget> DisplayDriver<T> {
 
     pub fn set_on_update<F>(&mut self, on_update: F)
     where
-        F: FnMut(&mut Self, Option<KeyEvent>) -> UpdateStatus + 'static,
+        F: FnMut(&mut Self, Option<Event>) -> UpdateStatus + 'static,
     {
         self.on_update = Some(Box::new(on_update));
     }
@@ -182,12 +184,11 @@ impl<T: DynamicWidget> DisplayDriver<T> {
 
             let mut latest_event = None;
             while event::poll(Duration::from_millis(0))? {
-                if let Event::Key(key_event) = event::read()? {
-                    latest_event = Some(key_event);
-                }
+                latest_event = Some(event::read()?);
             }
 
-            if let Some(key_event) = latest_event &&
+            if let Some(crossterm::event::Event::Key(key_event)) =
+                latest_event &&
                 key_event.code == KeyCode::Char('c') &&
                 key_event.modifiers.contains(KeyModifiers::CONTROL)
             {
@@ -235,6 +236,7 @@ impl<T: DynamicWidget> Drop for DisplayDriver<T> {
             terminal::EnableLineWrap, // disable line wrapping
             terminal::LeaveAlternateScreen, // return to previous screen
             cursor::Show,             // show cursor blinking
+            DisableMouseCapture,      // end mouse capture
         );
 
         // reset dimensions of screen

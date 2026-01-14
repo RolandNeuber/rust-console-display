@@ -117,7 +117,7 @@ fn main() {
             return UpdateStatus::Continue;
         }
 
-        let Some(key_event) = latest_event
+        let Some(crossterm::event::Event::Key(key_event)) = latest_event
         else {
             return UpdateStatus::Continue;
         };
