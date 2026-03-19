@@ -22,11 +22,7 @@ use console_display::{
         Line,
         Rectangle,
     },
-    pixel::
-        color_pixel::
-            ColorOctPixel
-        
-    ,
+    pixel::color_pixel::ColorOctPixel,
     pixel_display::StaticPixelDisplay,
 };
 
@@ -58,8 +54,8 @@ fn main() {
             &Rectangle {
                 x1: 0.,
                 y1: 0.,
-                x2: WIDTH as f32,
-                y2: HEIGHT as f32,
+                x2: WIDTH as f32 - 1.,
+                y2: HEIGHT as f32 - 1.,
                 fill: PhantomData::<Filled>,
             },
             RGBColor::GRAY.into(),
@@ -167,7 +163,7 @@ impl Segments {
                     color,
                 );
             }
-            
+
             // right
             if self.is_set(2 + 3 * i) {
                 display.draw(
