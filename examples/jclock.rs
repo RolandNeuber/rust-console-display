@@ -46,7 +46,7 @@ fn main() {
         #[allow(clippy::cast_possible_truncation)]
         let hour = now.hour() as u8;
         #[allow(clippy::cast_possible_truncation)]
-        let minute = now.second() as u8;
+        let minute = now.minute() as u8;
 
         let digits = [hour / 10, hour % 10, minute / 10, minute % 10];
 
