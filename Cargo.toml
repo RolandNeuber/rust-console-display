@@ -24,6 +24,7 @@ thiserror = { version = "2.0.17", default-features = false }
 unicode-width = { version = "0.2.2", default-features = false }
 
 [dev-dependencies]
+chrono = "0.4.44"
 image = { version = "0.25.9", default-features = false }
 public-api = "0.50.1"
 rustdoc-json = "0.9.7"
