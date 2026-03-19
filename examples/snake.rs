@@ -35,7 +35,7 @@ use console_display::{
 };
 use crossterm::event::KeyCode;
 use rand::{
-    Rng,
+    RngExt,
     rng,
     rngs::ThreadRng,
 };

@@ -502,7 +502,7 @@ mod tests {
     mod rgb_color {
         use super::*;
         use rand::{
-            Rng,
+            RngExt,
             rng,
         };
 
