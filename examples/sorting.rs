@@ -20,7 +20,7 @@ use console_display::{
     widget::single_widget::DoubleBufferWidget,
 };
 use rand::{
-    Rng,
+    RngExt,
     rng,
 };
 

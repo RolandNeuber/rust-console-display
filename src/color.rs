@@ -18,7 +18,7 @@ where
     ///     RGBColor,
     /// };
     /// use rand::{
-    ///     Rng,
+    ///     RngExt,
     ///     rng,
     /// };
     ///
@@ -502,7 +502,7 @@ mod tests {
     mod rgb_color {
         use super::*;
         use rand::{
-            Rng,
+            RngExt,
             rng,
         };
 

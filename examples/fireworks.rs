@@ -30,7 +30,7 @@ use console_display::{
     widget::two_widget::OverlayWidget,
 };
 use rand::{
-    Rng,
+    RngExt,
     rng,
     rngs::ThreadRng,
 };
