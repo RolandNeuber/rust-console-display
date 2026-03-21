@@ -146,8 +146,16 @@ impl<T: DynamicWidget> DisplayDriver<T> {
         self.target_frame_time = frame_time;
     }
 
+    pub const fn target_frame_time(&self) -> Duration {
+        self.target_frame_time
+    }
+
     pub fn set_target_frame_rate(&mut self, frame_rate: f32) {
         self.target_frame_time = Duration::from_secs_f32(1. / frame_rate);
+    }
+
+    pub fn target_frame_rate(&self) -> f32 {
+        1. / self.target_frame_time.as_secs_f32()
     }
 
     /// This function encapsulates the update loop of the display.
@@ -252,5 +260,41 @@ impl<T: DynamicWidget> Drop for DisplayDriver<T> {
 
         // disable terminal raw mode
         let _ = terminal::disable_raw_mode();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use crate::{display_driver::DisplayDriver, pixel::monochrome_pixel::SinglePixel, pixel_display::StaticPixelDisplay};
+
+    #[test]
+    fn child() {
+        assert_eq!(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true), *DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true)).child());
+    }
+
+    #[test]
+    fn target_frame_rate() {
+        let expected = 10.;
+        let error_tolerance = expected * 0.000_000_000_000_000_001;
+        let mut driver = DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true));
+        driver.set_target_frame_rate(10.);
+        let actual = driver.target_frame_rate();
+        assert!((expected - actual).abs() < error_tolerance);
+    }
+
+    #[test]
+    fn set_target_frame_time() {
+        let expected = Duration::new(12, 345);
+        let mut driver = DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true));
+        driver.set_target_frame_time(Duration::new(12, 345));
+        let actual = driver.target_frame_time();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn deref() {
+        assert_eq!(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true), *DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true)));
     }
 }

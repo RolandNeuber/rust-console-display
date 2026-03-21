@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// Represents a singular pixel implementing the [`Pixel`] trait.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct SinglePixel {
     pixels: [bool; 1],
 }
@@ -69,7 +69,7 @@ impl Pixel for SinglePixel {
 impl_from_mono_chrome_pixel_for_datacell!(SinglePixel);
 
 /// Specifies a block of pixels with dimensions 1 (width) by 2 (height).
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct DualPixel {
     pixels: [bool; 2],
 }
@@ -143,7 +143,7 @@ impl Pixel for DualPixel {
 impl_from_mono_chrome_pixel_for_datacell!(DualPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 2 (height).
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct QuadPixel {
     pixels: [bool; 4],
 }
@@ -212,7 +212,7 @@ impl Pixel for QuadPixel {
 impl_from_mono_chrome_pixel_for_datacell!(QuadPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 3 (height).
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct HexPixel {
     pixels: [bool; 6],
 }
@@ -284,7 +284,7 @@ impl Pixel for HexPixel {
 impl_from_mono_chrome_pixel_for_datacell!(HexPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height).
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct OctPixel {
     pixels: [bool; 8],
 }
@@ -371,7 +371,7 @@ impl Pixel for OctPixel {
 impl_from_mono_chrome_pixel_for_datacell!(OctPixel);
 
 /// Specifies a block of pixels with dimensions 2 (width) by 4 (height) with braille points.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct BrailleOctPixel {
     pixels: [bool; 8],
 }
@@ -452,3 +452,60 @@ impl Pixel for BrailleOctPixel {
 }
 
 impl_from_mono_chrome_pixel_for_datacell!(BrailleOctPixel);
+
+#[cfg(test)]
+mod tests {
+    mod single_pixel {
+        use crate::pixel::{Pixel, monochrome_pixel::SinglePixel};
+
+        #[test]
+        fn character() {
+            assert_eq!('█', SinglePixel::new([true]).character());
+        }
+    }
+
+    mod dual_pixel {
+        use crate::pixel::{Pixel, monochrome_pixel::DualPixel};
+
+        #[test]
+        fn character() {
+            assert_eq!('▀', DualPixel::new([true, false]).character());
+        }
+    }
+
+    mod quad_pixel {
+        use crate::pixel::{Pixel, monochrome_pixel::QuadPixel};
+
+        #[test]
+        fn character() {
+            assert_eq!('▌', QuadPixel::new([true, false, true, false]).character());
+        }
+    }
+
+    mod hex_pixel {
+        use crate::pixel::{Pixel, monochrome_pixel::HexPixel};
+
+        #[test]
+        fn character() {
+            assert_eq!('🬕', HexPixel::new([true, true, true, false, true, false]).character());
+        }
+    }
+
+    mod oct_pixel {
+        use crate::pixel::{Pixel, monochrome_pixel::OctPixel};
+
+        #[test]
+        fn character() {
+            assert_eq!('▚', OctPixel::new([true, false, true, false, false, true, false, true]).character());
+        }
+    }
+
+    mod braille_oct_pixel {
+        use crate::pixel::{Pixel, monochrome_pixel::BrailleOctPixel};
+
+        #[test]
+        fn character() {
+            assert_eq!('⢑', BrailleOctPixel::new([true, false, false, true, false, false, false, true]).character());
+        }
+    }
+}

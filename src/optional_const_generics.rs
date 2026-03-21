@@ -8,7 +8,7 @@ pub const trait Dimension: [const] Sealed {
     fn value(&self) -> usize;
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct CompileTime<const V: usize>;
 
 impl<const V: usize> const Dimension for CompileTime<V> {
@@ -19,7 +19,7 @@ impl<const V: usize> const Dimension for CompileTime<V> {
 
 impl<const V: usize> const Sealed for CompileTime<V> {}
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct RunTime(pub usize);
 
 impl const Dimension for RunTime {
@@ -29,3 +29,18 @@ impl const Dimension for RunTime {
 }
 
 impl const Sealed for RunTime {}
+
+#[cfg(test)]
+mod tests {
+    use crate::optional_const_generics::{CompileTime, Dimension, RunTime};
+
+    #[test]
+    const fn compile_time() {
+        assert!(42 == CompileTime::<42>.value());
+    }
+
+    #[test]
+    fn run_time() {
+        assert_eq!(36, RunTime(36).value());
+    }
+}
