@@ -18,7 +18,7 @@ where
     ///     RGBColor,
     /// };
     /// use rand::{
-    ///     Rng,
+    ///     RngExt,
     ///     rng,
     /// };
     ///
