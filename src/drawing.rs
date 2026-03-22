@@ -454,7 +454,11 @@ mod tests {
     mod ellipse {
         use std::marker::PhantomData;
 
-        use crate::drawing::{DynamicDrawable, Ellipse, NoFill};
+        use crate::drawing::{
+            DynamicDrawable,
+            Ellipse,
+            NoFill,
+        };
 
         #[test]
         fn transform() {
@@ -478,9 +482,7 @@ mod tests {
                 num_points: 10,
                 fill: PhantomData::<NoFill>,
             };
-            let transform = ellipse.transform(|(x, y)| {
-                (x + 2., y - 10.)
-            });
+            let transform = ellipse.transform(|(x, y)| (x + 2., y - 10.));
             assert_eq!(expected, transform);
         }
     }

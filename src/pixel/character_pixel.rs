@@ -20,12 +20,12 @@ use crate::color::{
 };
 use unicode_width::UnicodeWidthChar;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CharacterPixel {
     data: [CharacterPixelData; 1],
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CharacterPixelData {
     character: char,
     foreground: TerminalColor,
@@ -177,12 +177,6 @@ impl Display for CharacterPixel {
                 &self.background()
             )
         )
-    }
-}
-
-impl Debug for CharacterPixel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self.character())
     }
 }
 

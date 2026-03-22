@@ -32,7 +32,11 @@ impl const Sealed for RunTime {}
 
 #[cfg(test)]
 mod tests {
-    use crate::optional_const_generics::{CompileTime, Dimension, RunTime};
+    use crate::optional_const_generics::{
+        CompileTime,
+        Dimension,
+        RunTime,
+    };
 
     #[test]
     const fn compile_time() {

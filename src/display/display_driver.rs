@@ -267,18 +267,31 @@ impl<T: DynamicWidget> Drop for DisplayDriver<T> {
 mod tests {
     use std::time::Duration;
 
-    use crate::{display_driver::DisplayDriver, pixel::monochrome_pixel::SinglePixel, pixel_display::StaticPixelDisplay};
+    use crate::{
+        display_driver::DisplayDriver,
+        pixel::monochrome_pixel::SinglePixel,
+        pixel_display::StaticPixelDisplay,
+    };
 
     #[test]
     fn child() {
-        assert_eq!(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true), *DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true)).child());
+        assert_eq!(
+            StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+            *DisplayDriver::new(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(true)
+            )
+            .child()
+        );
     }
 
     #[test]
     fn target_frame_rate() {
         let expected = 10.;
         let error_tolerance = expected * 0.000_000_000_000_000_001;
-        let mut driver = DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true));
+        let mut driver =
+            DisplayDriver::new(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+            );
         driver.set_target_frame_rate(10.);
         let actual = driver.target_frame_rate();
         assert!((expected - actual).abs() < error_tolerance);
@@ -287,7 +300,10 @@ mod tests {
     #[test]
     fn set_target_frame_time() {
         let expected = Duration::new(12, 345);
-        let mut driver = DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true));
+        let mut driver =
+            DisplayDriver::new(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+            );
         driver.set_target_frame_time(Duration::new(12, 345));
         let actual = driver.target_frame_time();
         assert_eq!(expected, actual);
@@ -295,6 +311,11 @@ mod tests {
 
     #[test]
     fn deref() {
-        assert_eq!(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true), *DisplayDriver::new(StaticPixelDisplay::<SinglePixel, 1, 1>::new(true)));
+        assert_eq!(
+            StaticPixelDisplay::<SinglePixel, 1, 1>::new(true),
+            *DisplayDriver::new(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(true)
+            )
+        );
     }
 }

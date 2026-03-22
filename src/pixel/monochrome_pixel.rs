@@ -456,7 +456,10 @@ impl_from_mono_chrome_pixel_for_datacell!(BrailleOctPixel);
 #[cfg(test)]
 mod tests {
     mod single_pixel {
-        use crate::pixel::{Pixel, monochrome_pixel::SinglePixel};
+        use crate::pixel::{
+            Pixel,
+            monochrome_pixel::SinglePixel,
+        };
 
         #[test]
         fn character() {
@@ -465,7 +468,10 @@ mod tests {
     }
 
     mod dual_pixel {
-        use crate::pixel::{Pixel, monochrome_pixel::DualPixel};
+        use crate::pixel::{
+            Pixel,
+            monochrome_pixel::DualPixel,
+        };
 
         #[test]
         fn character() {
@@ -474,38 +480,69 @@ mod tests {
     }
 
     mod quad_pixel {
-        use crate::pixel::{Pixel, monochrome_pixel::QuadPixel};
+        use crate::pixel::{
+            Pixel,
+            monochrome_pixel::QuadPixel,
+        };
 
         #[test]
         fn character() {
-            assert_eq!('▌', QuadPixel::new([true, false, true, false]).character());
+            assert_eq!(
+                '▌',
+                QuadPixel::new([true, false, true, false]).character()
+            );
         }
     }
 
     mod hex_pixel {
-        use crate::pixel::{Pixel, monochrome_pixel::HexPixel};
+        use crate::pixel::{
+            Pixel,
+            monochrome_pixel::HexPixel,
+        };
 
         #[test]
         fn character() {
-            assert_eq!('🬕', HexPixel::new([true, true, true, false, true, false]).character());
+            assert_eq!(
+                '🬕',
+                HexPixel::new([true, true, true, false, true, false])
+                    .character()
+            );
         }
     }
 
     mod oct_pixel {
-        use crate::pixel::{Pixel, monochrome_pixel::OctPixel};
+        use crate::pixel::{
+            Pixel,
+            monochrome_pixel::OctPixel,
+        };
 
         #[test]
         fn character() {
-            assert_eq!('▚', OctPixel::new([true, false, true, false, false, true, false, true]).character());
+            assert_eq!(
+                '▚',
+                OctPixel::new([
+                    true, false, true, false, false, true, false, true
+                ])
+                .character()
+            );
         }
     }
 
     mod braille_oct_pixel {
-        use crate::pixel::{Pixel, monochrome_pixel::BrailleOctPixel};
+        use crate::pixel::{
+            Pixel,
+            monochrome_pixel::BrailleOctPixel,
+        };
 
         #[test]
         fn character() {
-            assert_eq!('⢑', BrailleOctPixel::new([true, false, false, true, false, false, false, true]).character());
+            assert_eq!(
+                '⢑',
+                BrailleOctPixel::new([
+                    true, false, false, true, false, false, false, true
+                ])
+                .character()
+            );
         }
     }
 }

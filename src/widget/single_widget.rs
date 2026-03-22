@@ -63,7 +63,7 @@ pub const trait SingleWidget<T: DynamicWidget>:
     fn child_mut(&mut self) -> Self::BorrowedMut<'_>;
 }
 
-#[derive(StaticWidget, DynamicWidget)]
+#[derive(StaticWidget, DynamicWidget, Debug, Clone, PartialEq)]
 pub struct UvWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     pixel_type: PhantomData<S>,
     child: T,
@@ -384,7 +384,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> const DerefMut
     }
 }
 
-#[derive(StaticWidget)]
+#[derive(StaticWidget, Debug, Clone, PartialEq, Eq)]
 pub struct DoubleBufferWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     pixel_type: PhantomData<S>,
     child: RefCell<T>,
@@ -486,7 +486,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> DerefMut
     }
 }
 
-#[derive(SingleWidget)]
+#[derive(SingleWidget, Debug, Clone, PartialEq, Eq)]
 pub struct PaddingWidget<T: DynamicWidget> {
     child: T,
     padding_left: usize,
@@ -579,6 +579,7 @@ pub const trait Border {
     fn width_right(&self) -> usize;
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BorderDefault {
     top: CharacterPixel,
     top_left: CharacterPixel,
@@ -868,6 +869,7 @@ impl Border for BorderDefault {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BorderWidget<T: DynamicWidget, S: Border> {
     child: T,
     border: S,
@@ -953,6 +955,7 @@ impl<T: DynamicWidget, S: Border> const DerefMut for BorderWidget<T, S> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InsetWidget<T: DynamicWidget> {
     child: T,
     inset_left: usize,
