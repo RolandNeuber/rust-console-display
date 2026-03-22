@@ -25,7 +25,7 @@ unicode-width = { version = "0.2.2", default-features = false }
 
 [dev-dependencies]
 chrono = "0.4.44"
-image = { version = "0.25.10", default-features = false }
+image = { version = "0.25.10", default-features = false, features = ["png"] }
 public-api = "0.51.0"
 rustdoc-json = "0.9.9"
 rustup-toolchain = "0.1.10"
