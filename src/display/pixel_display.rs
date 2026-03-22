@@ -35,6 +35,7 @@ pub type StaticPixelDisplay<
     const HEIGHT: usize,
 > = PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PixelDisplay<W: Dimension, H: Dimension, T: Pixel> {
     _w: PhantomData<W>,
     _h: PhantomData<H>,

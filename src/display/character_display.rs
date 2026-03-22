@@ -45,6 +45,7 @@ pub type StaticCharacterDisplay<
     CharacterPixel,
 >;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CharacterDisplay<W: Dimension, H: Dimension, CharacterPixel> {
     _w: PhantomData<W>,
     _h: PhantomData<H>,
@@ -554,7 +555,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn build_from_data_success() {
+    fn compile_time_build_from_data_success() {
         let character_display = StaticCharacterDisplay::<
             CharacterPixel,
             1,
@@ -571,7 +572,7 @@ mod tests {
     }
 
     #[test]
-    fn build_from_data_failure_dimensions() {
+    fn compile_time_build_from_data_failure_dimensions() {
         let character_display = StaticCharacterDisplay::<
             CharacterPixel,
             8,
@@ -589,7 +590,7 @@ mod tests {
     }
 
     #[test]
-    fn build_from_data_failure_fit() {
+    fn compile_time_build_from_data_failure_fit() {
         let character_display = StaticCharacterDisplay::<
             CharacterPixel,
             9,
@@ -603,6 +604,60 @@ mod tests {
                     .unwrap();
                     9 * 10 / 2
                 ]);
+        assert!(character_display.is_err());
+    }
+
+    #[test]
+    fn run_time_build_from_data_success() {
+        let character_display =
+            DynamicCharacterDisplay::<CharacterPixel>::build_from_data(
+                1,
+                1,
+                &[CharacterPixel::build(
+                    ' ',
+                    TerminalColor::Default,
+                    TerminalColor::Default,
+                )
+                .unwrap()],
+            );
+        assert!(character_display.is_ok());
+    }
+
+    #[test]
+    fn run_time_build_from_data_failure_dimensions() {
+        let character_display =
+            DynamicCharacterDisplay::<CharacterPixel>::build_from_data(
+                8,
+                10,
+                &vec![
+                    CharacterPixel::build(
+                        ' ',
+                        TerminalColor::Default,
+                        TerminalColor::Default,
+                    )
+                    .unwrap();
+                    8 * 10 - 1
+                ],
+            );
+        assert!(character_display.is_err());
+    }
+
+    #[test]
+    fn run_time_build_from_data_failure_fit() {
+        let character_display =
+            DynamicCharacterDisplay::<CharacterPixel>::build_from_data(
+                9,
+                10,
+                &vec![
+                    CharacterPixel::build(
+                        'あ',
+                        TerminalColor::Default,
+                        TerminalColor::Default,
+                    )
+                    .unwrap();
+                    9 * 10 / 2
+                ],
+            );
         assert!(character_display.is_err());
     }
 }

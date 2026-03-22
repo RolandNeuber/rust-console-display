@@ -32,7 +32,7 @@ pub const trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
     fn children_mut(&mut self) -> (&mut S, &mut T);
 }
 
-#[derive(StaticWidget, TwoWidget)]
+#[derive(StaticWidget, TwoWidget, Debug, Clone, PartialEq, Eq)]
 pub struct AlternativeWidget<S: DynamicWidget, T: DynamicWidget> {
     child1_on_top: bool,
     children: (S, T),
@@ -124,7 +124,7 @@ impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
     }
 }
 
-#[derive(TwoWidget)]
+#[derive(TwoWidget, Debug, Clone, PartialEq, Eq)]
 pub struct HorizontalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }
@@ -229,7 +229,7 @@ impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
     }
 }
 
-#[derive(TwoWidget)]
+#[derive(TwoWidget, Debug, Clone, PartialEq, Eq)]
 pub struct VerticalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }
@@ -328,7 +328,7 @@ impl<S: DynamicWidget, T: DynamicWidget> const DerefMut
     }
 }
 
-#[derive(StaticWidget)]
+#[derive(StaticWidget, Debug, Clone, PartialEq, Eq)]
 pub struct OverlayWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }
@@ -484,6 +484,8 @@ mod tests {
     use super::*;
 
     mod alternative_widget {
+        use crate::pixel::monochrome_pixel::DualPixel;
+
         use super::*;
 
         #[test]
@@ -516,6 +518,23 @@ mod tests {
             assert_eq!(alternative.width_characters(), 37);
             assert_eq!(alternative.height_characters(), 63);
         }
+
+        #[test]
+        fn deref() {
+            let mut alternative = AlternativeWidget::new(
+                StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
+                StaticPixelDisplay::<DualPixel, 1, 2>::new(true),
+                true,
+            );
+            assert_eq!(
+                alternative.clone().deref().0,
+                alternative.deref_mut().0
+            );
+            assert_eq!(
+                alternative.clone().deref().1,
+                alternative.deref_mut().1
+            );
+        }
     }
 
     mod horizontal_tiling {
@@ -523,30 +542,56 @@ mod tests {
 
         #[test]
         fn build_success() {
-            let overlay = HorizontalTilingWidget::build(
+            let horizontal_tiling = HorizontalTilingWidget::build(
                 StaticPixelDisplay::<SinglePixel, 3, 10>::new(false),
                 StaticPixelDisplay::<SinglePixel, 2, 10>::new(true),
             );
-            assert!(overlay.is_ok());
+            assert!(horizontal_tiling.is_ok());
         }
 
         #[test]
         fn build_failure() {
-            let overlay = HorizontalTilingWidget::build(
+            let horizontal_tiling = HorizontalTilingWidget::build(
                 StaticPixelDisplay::<SinglePixel, 10, 3>::new(false),
                 StaticPixelDisplay::<SinglePixel, 10, 2>::new(true),
             );
-            assert!(overlay.is_err());
+            assert!(horizontal_tiling.is_err());
         }
 
         #[test]
         fn dimensions() {
-            let overlay = HorizontalTilingWidget::new(
+            let horizontal_tiling = HorizontalTilingWidget::new(
                 StaticPixelDisplay::<SinglePixel, 37, 20>::new(false),
                 StaticPixelDisplay::<SinglePixel, 63, 20>::new(true),
             );
-            assert_eq!(overlay.width_characters(), 100);
-            assert_eq!(overlay.height_characters(), 20);
+            assert_eq!(horizontal_tiling.width_characters(), 100);
+            assert_eq!(horizontal_tiling.height_characters(), 20);
+        }
+
+        #[test]
+        fn deref() {
+            let mut horizontal_tiling = HorizontalTilingWidget::new(
+                StaticPixelDisplay::<SinglePixel, 3, 10>::new(false),
+                StaticPixelDisplay::<SinglePixel, 2, 10>::new(true),
+            );
+
+            assert_eq!(
+                *horizontal_tiling.left(),
+                horizontal_tiling.deref().0
+            );
+            assert_eq!(
+                *horizontal_tiling.clone().left_mut(),
+                horizontal_tiling.deref_mut().0
+            );
+
+            assert_eq!(
+                *horizontal_tiling.right(),
+                horizontal_tiling.deref().1
+            );
+            assert_eq!(
+                *horizontal_tiling.clone().right_mut(),
+                horizontal_tiling.deref_mut().1
+            );
         }
     }
 
@@ -555,30 +600,53 @@ mod tests {
 
         #[test]
         fn build_success() {
-            let overlay = VerticalTilingWidget::build(
+            let vertical_tiling = VerticalTilingWidget::build(
                 StaticPixelDisplay::<SinglePixel, 20, 5>::new(false),
                 StaticPixelDisplay::<SinglePixel, 20, 4>::new(true),
             );
-            assert!(overlay.is_ok());
+            assert!(vertical_tiling.is_ok());
         }
 
         #[test]
         fn build_failure() {
-            let overlay = VerticalTilingWidget::build(
+            let vertical_tiling = VerticalTilingWidget::build(
                 StaticPixelDisplay::<SinglePixel, 5, 20>::new(false),
                 StaticPixelDisplay::<SinglePixel, 4, 20>::new(true),
             );
-            assert!(overlay.is_err());
+            assert!(vertical_tiling.is_err());
         }
 
         #[test]
         fn dimensions() {
-            let overlay = VerticalTilingWidget::new(
+            let vertical_tiling = VerticalTilingWidget::new(
                 StaticPixelDisplay::<SinglePixel, 30, 45>::new(false),
                 StaticPixelDisplay::<SinglePixel, 30, 54>::new(true),
             );
-            assert_eq!(overlay.width_characters(), 30);
-            assert_eq!(overlay.height_characters(), 99);
+            assert_eq!(vertical_tiling.width_characters(), 30);
+            assert_eq!(vertical_tiling.height_characters(), 99);
+        }
+
+        #[test]
+        fn deref() {
+            let mut vertical_tiling = VerticalTilingWidget::new(
+                StaticPixelDisplay::<SinglePixel, 20, 5>::new(false),
+                StaticPixelDisplay::<SinglePixel, 20, 4>::new(true),
+            );
+
+            assert_eq!(*vertical_tiling.top(), vertical_tiling.deref().0);
+            assert_eq!(
+                *vertical_tiling.clone().top_mut(),
+                vertical_tiling.deref_mut().0
+            );
+
+            assert_eq!(
+                *vertical_tiling.bottom(),
+                vertical_tiling.deref().1
+            );
+            assert_eq!(
+                *vertical_tiling.clone().bottom_mut(),
+                vertical_tiling.deref_mut().1
+            );
         }
     }
 
@@ -620,6 +688,23 @@ mod tests {
             );
             assert_eq!(overlay.width_characters(), 37);
             assert_eq!(overlay.height_characters(), 63);
+        }
+
+        #[test]
+        fn deref() {
+            let mut overlay = OverlayWidget::new(
+                StaticPixelDisplay::<SinglePixel, 20, 10>::new(false),
+                StaticPixelDisplay::<SinglePixel, 20, 10>::new(true),
+            );
+
+            assert_eq!(*overlay.overlay(), overlay.deref().0);
+            assert_eq!(
+                *overlay.clone().overlay_mut(),
+                overlay.deref_mut().0
+            );
+
+            assert_eq!(*overlay.base(), overlay.deref().1);
+            assert_eq!(*overlay.clone().base_mut(), overlay.deref_mut().1);
         }
 
         #[test]

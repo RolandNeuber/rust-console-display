@@ -450,4 +450,40 @@ mod tests {
             assert_eq!(expected, transform);
         }
     }
+
+    mod ellipse {
+        use std::marker::PhantomData;
+
+        use crate::drawing::{
+            DynamicDrawable,
+            Ellipse,
+            NoFill,
+        };
+
+        #[test]
+        fn transform() {
+            let expected = Ellipse {
+                x1: -8.,
+                y1: -20.,
+                x2: 12.,
+                y2: 0.,
+                midpoint_x: 1.,
+                midpoint_y: -9.,
+                num_points: 10,
+                fill: PhantomData::<NoFill>,
+            };
+            let ellipse = Ellipse {
+                x1: -10.,
+                y1: -10.,
+                x2: 10.,
+                y2: 10.,
+                midpoint_x: -1.,
+                midpoint_y: 1.,
+                num_points: 10,
+                fill: PhantomData::<NoFill>,
+            };
+            let transform = ellipse.transform(|(x, y)| (x + 2., y - 10.));
+            assert_eq!(expected, transform);
+        }
+    }
 }
