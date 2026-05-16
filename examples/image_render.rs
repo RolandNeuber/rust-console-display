@@ -2,10 +2,10 @@
 #![feature(generic_const_exprs)]
 #![allow(clippy::unwrap_used)]
 
-use std::io::{
+use std::{env::args, io::{
     self,
     Write,
-};
+}};
 
 use console_display::{
     color::RGBColor,
@@ -31,18 +31,22 @@ fn main() {
 
     let max_dimensions: (u32, u32) = (200, 160);
 
-    let mut path_in = String::new();
-
-    println!("Input absolute image path:");
-    io::stdout().flush().unwrap();
-    io::stdin()
-        .read_line(&mut path_in)
-        .expect("Failed to read line");
+    let path_in = args().nth(1).unwrap_or_else(|| {
+        let mut temp = String::new();
+        println!("Input absolute image path:");
+        io::stdout().flush().unwrap();
+        io::stdin()
+            .read_line(&mut temp)
+            .expect("Failed to read line");
+        temp
+    });
     let path_in = path_in.trim();
 
     println!("Loading image...");
     let mut img = ImageReader::open(path_in)
         .expect("File could not be read.")
+        .with_guessed_format()
+        .expect("Could not guess format.")
         .decode()
         .expect("Image could not be decoded.");
     img = img.resize(
@@ -56,7 +60,7 @@ fn main() {
         dimensions.0 + (WIDTH - dimensions.0 % WIDTH) % WIDTH,
         dimensions.1 + (HEIGHT - dimensions.1 % HEIGHT) % HEIGHT,
     );
-    let rgb = img.as_rgb8().expect("Could not extract rgb data.");
+    let rgb = img.into_rgb8();
     let mut data =
         Vec::with_capacity((dimensions.0 * dimensions.1) as usize);
     let mut pixel_index = 0;
