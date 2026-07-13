@@ -83,7 +83,7 @@ fn main() {
         CharacterPixel::new::<'│'>(foreground, transparent).into(),
     );
     axis.set_pixel(
-        0.0,
+        0.5,
         0.5,
         CharacterPixel::new::<'┼'>(foreground, transparent).into(),
     )
@@ -100,17 +100,17 @@ fn main() {
     graph.set_uv_y_min(uv_y.0);
     graph.set_uv_y_max(uv_y.1);
 
-    let mut display = DisplayDriver::new(OverlayWidget::new(axis, graph));
+    let mut display = DisplayDriver::new(OverlayWidget::new(graph, axis));
 
     display.set_on_update(|this: &mut DisplayDriver<_>, _| {
         let function = |x: f32| (x * x).sin();
-        let mut xs = this.1.x_values().collect::<Vec<_>>().into_iter();
+        let mut xs = this.overlay().x_values().collect::<Vec<_>>().into_iter();
         let mut old_x = xs.next().unwrap();
         let mut old_y = function(old_x);
         for x in xs {
             let y = function(x);
 
-            this.base_mut().draw(
+            this.overlay_mut().draw(
                 &Line {
                     x1: old_x,
                     y1: old_y,
