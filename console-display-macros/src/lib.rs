@@ -44,7 +44,7 @@ pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let name = input.ident;
-    let generics = add_static_widget_bound_to_t(input.generics);
+    let generics = input.generics;
     let (impl_generics, ty_generics, where_clause) =
         generics.split_for_impl();
 
