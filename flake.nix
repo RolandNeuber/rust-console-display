@@ -15,7 +15,7 @@
       };
       toolchain = pkgs.fenix.fromToolchainFile {
         file = ./rust-toolchain.toml;
-        sha256 = "sha256-i3V0cUFX14wP4B+xzw+Ne3HuoHdg1yM4lHjnp5jwxZ4=";
+        sha256 = "sha256-VYaaz/Iz3wita53RiO4c00Orb/D5BQ9w66sjGd+QT+k=";
       };
     in {
       devShells.${system}.default = pkgs.mkShell {
