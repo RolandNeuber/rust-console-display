@@ -4,3 +4,4 @@
 *.txt
 examples/images
 src/main.rs
+/.direnv

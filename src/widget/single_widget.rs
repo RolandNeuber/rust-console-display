@@ -4,13 +4,10 @@ use std::{
         Ref,
         RefCell,
         RefMut,
-    },
-    marker::PhantomData,
-    mem,
-    ops::{
+    }, marker::PhantomData, mem, ops::{
         Deref,
         DerefMut,
-    },
+    }
 };
 
 use console_display_macros::{
@@ -73,7 +70,7 @@ pub struct UvWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     uv_y_max: f32,
 }
 
-impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicCanvas<S>
     for UvWidget<T, S>
 {
     type A = f32;
@@ -202,9 +199,22 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
             uv_y_max: height as f32,
         }
     }
+
+    pub fn new_with_aspect_ratio(child: T) -> Self {
+        let (width, height) = (child.width(), child.height());
+        
+        Self {
+            pixel_type: PhantomData::<S>,
+            child,
+            uv_x_min: 0.0,
+            uv_x_max: width as f32,
+            uv_y_min: 0.0,
+            uv_y_max: height as f32,
+        }
+    }
 }
 
-impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
+impl<S: Pixel, T: DynamicConsoleDisplay<S>> UvWidget<T, S> {
     impl_setters!(pub const uv_x_min: f32, pub const uv_x_max: f32, pub const uv_y_min: f32, pub const uv_y_max: f32);
 
     #[must_use]
@@ -342,7 +352,7 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> const
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const
     SingleWidget<T> for UvWidget<T, S>
 {
     type Borrowed<'a>
