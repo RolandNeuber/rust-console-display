@@ -25,6 +25,7 @@ fn main() -> io::Result<()> {
     
     let resp = dbg!(query_pixel_size(&response).expect(""), query_pixel_size(&response2).expect(""));
     println!("Raw response: {:?} {:?}", resp.1.0 / resp.0.0, resp.1.1 / resp.0.1);
+    println!("{:?}", crossterm::terminal::window_size());
 
     Ok(())
 }

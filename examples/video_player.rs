@@ -11,7 +11,7 @@ use console_display::{
     color::{RGBColor, TerminalColor}, console_display::DynamicConsoleDisplay, display_driver::{DisplayDriver, UpdateStatus}, drawing::DynamicCanvas, pixel::{
         Pixel,
         color_pixel::{ColorOctPixel, ColorSinglePixel},
-    }, pixel_display::DynamicPixelDisplay, widget::single_widget::UvWidget
+    }, pixel_display::DynamicPixelDisplay, widget::single_widget::{CrtWidget, UvWidget}
 };
 use crossterm::event::{Event, KeyCode};
 use video_rs::{Location, ffmpeg::{frame::Video, software::scaling::Flags}};
@@ -20,13 +20,13 @@ use video_rs::{Location, ffmpeg::{frame::Video, software::scaling::Flags}};
 #[allow(clippy::cast_possible_truncation)]
 #[allow(clippy::cast_sign_loss)]
 fn main() {
-    type PixelType = ColorSinglePixel;
+    type PixelType = ColorOctPixel;
     #[allow(clippy::cast_possible_truncation)]
     const WIDTH: u32 = PixelType::WIDTH as u32;
     #[allow(clippy::cast_possible_truncation)]
     const HEIGHT: u32 = PixelType::HEIGHT as u32;
 
-    let max_dimensions: (u32, u32) = (50, 30);
+    let max_dimensions: (u32, u32) = (50 * PixelType::WIDTH as u32, 30 * PixelType::HEIGHT as u32);
 
     let path_in = args().nth(1).unwrap_or_else(|| {
         let mut temp = String::new();
@@ -63,12 +63,16 @@ fn main() {
     );
 
     let mut display = DisplayDriver::new(
-        UvWidget::new_with_aspect_ratio(
-            DynamicPixelDisplay::<PixelType>::new(
-                padded_dimensions.0 as usize,
-                padded_dimensions.1 as usize,
-                TerminalColor::Default,
-            )
+        CrtWidget::new(
+            UvWidget::new_with_aspect_ratio(
+                DynamicPixelDisplay::<PixelType>::new(
+                    padded_dimensions.0 as usize,
+                    padded_dimensions.1 as usize,
+                    TerminalColor::Default,
+                )
+            ),
+            TerminalColor::Default,
+            0.3
         )
     );
 

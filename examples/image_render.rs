@@ -8,13 +8,13 @@ use std::{env::args, io::{
 }};
 
 use console_display::{
-    color::RGBColor,
+    color::{RGBColor, TerminalColor},
     display_driver::DisplayDriver,
     pixel::{
         Pixel,
-        color_pixel::ColorOctPixel,
+        color_pixel::{ColorOctPixel, ColorQuadPixel},
     },
-    pixel_display::DynamicPixelDisplay,
+    pixel_display::DynamicPixelDisplay, widget::single_widget::{CrtWidget, ScanLineWidget},
 };
 use image::{
     GenericImageView,
@@ -23,13 +23,13 @@ use image::{
 };
 
 fn main() {
-    type PixelType = ColorOctPixel;
+    type PixelType = ColorQuadPixel;
     #[allow(clippy::cast_possible_truncation)]
     const WIDTH: u32 = PixelType::WIDTH as u32;
     #[allow(clippy::cast_possible_truncation)]
     const HEIGHT: u32 = PixelType::HEIGHT as u32;
 
-    let max_dimensions: (u32, u32) = (200, 160);
+    let max_dimensions: (u32, u32) = (100 * PixelType::WIDTH as u32, 40 * PixelType::HEIGHT as u32);
 
     let path_in = args().nth(1).unwrap_or_else(|| {
         let mut temp = String::new();
@@ -90,12 +90,22 @@ fn main() {
     }
 
     let mut display = DisplayDriver::new(
-        DynamicPixelDisplay::<PixelType>::build_from_data(
-            padded_dimensions.0 as usize,
-            padded_dimensions.1 as usize,
-            &data,
-        )
-        .expect("Could not construct display."),
+        CrtWidget::new(
+            ScanLineWidget::new(
+                DynamicPixelDisplay::<PixelType>::build_from_data(
+                    padded_dimensions.0 as usize,
+                    padded_dimensions.1 as usize,
+                    &data,
+                )
+                .expect("Could not construct display."),
+                2,
+                3,
+                false,
+                0.1
+            ),
+            TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+            0.1,
+        ),
     );
 
     display.initialize().expect("Could not initialize display.");

@@ -181,6 +181,10 @@ where
     }
 }
 
+pub const trait Shadable {
+    fn adjust_lightness(&self, amount: f32) -> Self;
+}
+
 /// Defines a color used for foreground and background coloring of text.
 ///
 /// `Default` - Uses the default color provided by the terminal for foreground or background respectively.\
@@ -277,6 +281,15 @@ impl Color for TerminalColor {
     }
 }
 
+impl Shadable for TerminalColor {
+    fn adjust_lightness(&self, amount: f32) -> Self {
+        match self {
+            TerminalColor::Default => TerminalColor::Default,
+            TerminalColor::ARGBColor(argbcolor) => TerminalColor::ARGBColor(argbcolor.adjust_lightness(amount)),
+        }
+    }
+}
+
 // TODO: Check if this impl can be const
 impl From<RGBColor> for TerminalColor {
     fn from(value: RGBColor) -> Self {
@@ -347,6 +360,16 @@ impl Color for RGBColor {
             r: (sum.0 / colors_len).clamp(0, 255) as u8,
             g: (sum.1 / colors_len).clamp(0, 255) as u8,
             b: (sum.2 / colors_len).clamp(0, 255) as u8,
+        }
+    }
+}
+
+impl Shadable for RGBColor {
+    fn adjust_lightness(&self, amount: f32) -> Self {
+        Self {
+            r: (self.r as f32 * (1. + amount)) as u8,
+            g: (self.g as f32 * (1. + amount)) as u8,
+            b: (self.b as f32 * (1. + amount)) as u8,
         }
     }
 }
@@ -476,6 +499,15 @@ impl Color for ARGBColor {
             color: RGBColor::mix(
                 &colors.iter().map(|x| x.color).collect::<Vec<_>>(),
             ),
+        }
+    }
+}
+
+impl Shadable for ARGBColor {
+    fn adjust_lightness(&self, amount: f32) -> Self {
+        Self {
+            opacity: self.opacity,
+            color: self.color.adjust_lightness(amount),
         }
     }
 }
