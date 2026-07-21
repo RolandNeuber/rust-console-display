@@ -3,7 +3,15 @@ use std::marker::PhantomData;
 
 use crate::{
     drawing::{
-        Drawable, DynamicCanvas, DynamicDrawable, FillType, Filled, NoFill, SetPixel, Transformable, line::Line
+        Drawable,
+        DynamicCanvas,
+        DynamicDrawable,
+        FillType,
+        Filled,
+        NoFill,
+        SetPixel,
+        Transformable,
+        line::Line,
     },
     pixel::Pixel,
 };
@@ -75,11 +83,8 @@ impl DynamicDrawable<2> for Rectangle<NoFill> {
 }
 
 impl Drawable<2> for Rectangle<NoFill> {
-    fn draw<T: SetPixel<S>, S: Pixel>(
-        &self,
-        display: &mut T,
-        value: S::U,
-    ) where
+    fn draw<T: SetPixel<S>, S: Pixel>(&self, display: &mut T, value: S::U)
+    where
         [(); S::WIDTH * S::HEIGHT]:,
     {
         let lines = [
@@ -169,11 +174,8 @@ impl DynamicDrawable<2> for Rectangle<Filled> {
 }
 
 impl Drawable<2> for Rectangle<Filled> {
-    fn draw<T: SetPixel<S>, S: Pixel>(
-        &self,
-        display: &mut T,
-        value: S::U,
-    ) where
+    fn draw<T: SetPixel<S>, S: Pixel>(&self, display: &mut T, value: S::U)
+    where
         [(); S::WIDTH * S::HEIGHT]:,
     {
         #[allow(clippy::cast_possible_truncation)]
@@ -212,10 +214,7 @@ mod tests {
 
     use super::*;
 
-    use crate::drawing::{
-        DynamicDrawable,
-        NoFill,
-    };
+    use crate::drawing::NoFill;
 
     #[test]
     fn transform() {
@@ -233,7 +232,9 @@ mod tests {
             y2: 20.,
             fill: PhantomData::<NoFill>,
         };
-        let transform = Transformable::transform(&rect, |(x, y)| (if x == 0. { -10. } else { x }, y - 10.));
+        let transform = Transformable::transform(&rect, |(x, y)| {
+            (if x == 0. { -10. } else { x }, y - 10.)
+        });
         assert_eq!(expected, transform);
     }
 }

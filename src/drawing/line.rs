@@ -4,7 +4,11 @@ use num_traits::NumCast;
 
 use crate::{
     drawing::{
-        Drawable, DynamicCanvas, DynamicDrawable, SetPixel, Transformable
+        Drawable,
+        DynamicCanvas,
+        DynamicDrawable,
+        SetPixel,
+        Transformable,
     },
     pixel::Pixel,
 };
@@ -69,11 +73,8 @@ impl DynamicDrawable<2> for Line {
 }
 
 impl Drawable<2> for Line {
-    fn draw<T: SetPixel<S>, S: Pixel>(
-        &self,
-        display: &mut T,
-        value: S::U,
-    ) where
+    fn draw<T: SetPixel<S>, S: Pixel>(&self, display: &mut T, value: S::U)
+    where
         [(); S::WIDTH * S::HEIGHT]:,
     {
         let dx = self.x2 - self.x1;
@@ -138,7 +139,8 @@ mod tests {
             x2: 2.,
             y2: 3.,
         };
-        let transform = Transformable::transform(&line, |(x, y)| (x + 1., y));
+        let transform =
+            Transformable::transform(&line, |(x, y)| (x + 1., y));
         assert_eq!(expected, transform);
     }
 }

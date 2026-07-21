@@ -5,7 +5,14 @@ use num_traits::NumCast;
 
 use crate::{
     drawing::{
-        Drawable, DynamicCanvas, DynamicDrawable, FillType, NoFill, SetPixel, Transformable, line::Line
+        Drawable,
+        DynamicCanvas,
+        DynamicDrawable,
+        FillType,
+        NoFill,
+        SetPixel,
+        Transformable,
+        line::Line,
     },
     pixel::Pixel,
 };
@@ -112,11 +119,8 @@ impl DynamicDrawable<3> for Ellipse<NoFill> {
 }
 
 impl Drawable<3> for Ellipse<NoFill> {
-    fn draw<T: SetPixel<S>, S: Pixel>(
-        &self,
-        display: &mut T,
-        value: S::U,
-    ) where
+    fn draw<T: SetPixel<S>, S: Pixel>(&self, display: &mut T, value: S::U)
+    where
         [(); S::WIDTH * S::HEIGHT]:,
     {
         let first_point;
@@ -205,10 +209,7 @@ mod tests {
     use std::marker::PhantomData;
 
     use super::*;
-    use crate::drawing::{
-        DynamicDrawable,
-        NoFill,
-    };
+    use crate::drawing::NoFill;
 
     #[test]
     fn transform() {
@@ -232,7 +233,8 @@ mod tests {
             num_points: 10,
             fill: PhantomData::<NoFill>,
         };
-        let transform = Transformable::transform(&ellipse, |(x, y)| (x + 2., y - 10.));
+        let transform =
+            Transformable::transform(&ellipse, |(x, y)| (x + 2., y - 10.));
         assert_eq!(expected, transform);
     }
 }

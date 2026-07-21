@@ -1,7 +1,11 @@
 use num_traits::NumCast;
 
 use crate::{
-    drawing::{DynamicCanvas, GetPixel, SetPixel},
+    drawing::{
+        DynamicCanvas,
+        GetPixel,
+        SetPixel,
+    },
     error::{
         COULD_NOT_CAST_X_COORD,
         COULD_NOT_CAST_Y_COORD,
@@ -96,7 +100,9 @@ pub const trait DynamicHeight {
     fn height(&self) -> usize;
 }
 
-pub trait SetPixels<T: Pixel>: const DynamicWidth + const DynamicHeight + const SetPixel<T> {
+pub trait SetPixels<T: Pixel>:
+    const DynamicWidth + const DynamicHeight + const SetPixel<T>
+{
     /// Sets the pixels of the display to the provided data.
     ///
     /// # Errors
@@ -131,7 +137,9 @@ pub trait SetPixels<T: Pixel>: const DynamicWidth + const DynamicHeight + const 
     }
 }
 
-pub trait GetPixels<T: Pixel>: const DynamicWidth + const DynamicHeight + const GetPixel<T> {
+pub trait GetPixels<T: Pixel>:
+    const DynamicWidth + const DynamicHeight + const GetPixel<T>
+{
     /// Returns a vector containing all the pixels in the display.
     ///
     /// # Panics
