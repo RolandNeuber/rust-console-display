@@ -5,10 +5,9 @@ use num_traits::NumCast;
 
 use crate::{
     console_display::{
-        DynamicConsoleDisplay,
-        StaticConsoleDisplay,
+        DynamicConsoleDisplay, DynamicHeight, DynamicWidth, GetData, GetDataMut, Height, StaticConsoleDisplay, Width
     },
-    drawing::DynamicCanvas,
+    drawing::{DynamicCanvas, GetPixel, SetPixel},
     error::{
         DATA_DOES_NOT_MATCH_DIMENSIONS,
         DisplayError,
@@ -22,9 +21,7 @@ use crate::{
     },
     pixel::Pixel,
     widget::{
-        DynamicWidget,
-        StaticWidget,
-        StringData,
+        DynamicCharacterHeight, DynamicCharacterWidth, DynamicWidget, StaticCharacterHeight, StaticCharacterWidth, StaticWidget, StringData
     },
 };
 
@@ -153,11 +150,11 @@ impl<const WIDTH: usize, const HEIGHT: usize, T: Pixel>
         // T: [const] Pixel,
     {
         let mut multi_pixels = Vec::with_capacity(
-            Self::WIDTH_CHARACTERS * Self::HEIGHT_CHARACTERS,
+            <Self as StaticCharacterWidth>::WIDTH_CHARACTERS * <Self as StaticCharacterHeight>::HEIGHT_CHARACTERS,
         );
 
-        konst::for_range! { row in 0..Self::HEIGHT_CHARACTERS =>
-            konst::for_range! { col in 0..Self::WIDTH_CHARACTERS =>
+        konst::for_range! { row in 0..<Self as StaticCharacterHeight>::HEIGHT_CHARACTERS =>
+            konst::for_range! { col in 0..<Self as StaticCharacterWidth>::WIDTH_CHARACTERS =>
                 let block_x: usize = col * T::WIDTH;
                 let block_y: usize = row * T::HEIGHT;
 
@@ -202,6 +199,38 @@ impl<W: Dimension, H: Dimension, T: Pixel> DynamicConsoleDisplay<T>
     }
 }
 
+impl<W: Dimension, H: Dimension, T: Pixel> DynamicWidth
+    for PixelDisplay<W, H, T>
+{
+    default fn width(&self) -> usize {
+        self.width
+    }
+}
+
+impl<W: Dimension, H: Dimension, T: Pixel> DynamicHeight
+    for PixelDisplay<W, H, T>
+{
+    default fn height(&self) -> usize {
+        self.height
+    }
+}
+
+impl<W: Dimension, H: Dimension, T: Pixel> GetData<T>
+    for PixelDisplay<W, H, T>
+{
+    default fn data(&self) -> &[T] {
+        &self.data
+    }
+}
+
+impl<W: Dimension, H: Dimension, T: Pixel> GetDataMut<T>
+    for PixelDisplay<W, H, T>
+{
+    default fn data_mut(&mut self) -> &mut Box<[T]> {
+        &mut self.data
+    }
+}
+
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     DynamicConsoleDisplay<T>
     for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
@@ -223,6 +252,42 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     }
 }
 
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    DynamicWidth
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    fn width(&self) -> usize {
+        WIDTH
+    }
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    DynamicHeight
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    fn height(&self) -> usize {
+        HEIGHT
+    }
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    GetData<T>
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    fn data(&self) -> &[T] {
+        &self.data
+    }
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    GetDataMut<T>
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    fn data_mut(&mut self) -> &mut Box<[T]> {
+        &mut self.data
+    }
+}
+
 impl<W: Dimension, H: Dimension, T: Pixel> DynamicWidget
     for PixelDisplay<W, H, T>
 {
@@ -238,7 +303,37 @@ impl<W: Dimension, H: Dimension, T: Pixel> DynamicWidget
         StringData {
             data: self
                 .data
-                .chunks(self.width_characters())
+                .chunks(DynamicWidget::width_characters(self))
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
+    }
+}
+
+impl<W: Dimension, H: Dimension, T: Pixel> DynamicCharacterWidth
+    for PixelDisplay<W, H, T>
+{
+    default fn width_characters(&self) -> usize {
+        self.width / T::WIDTH
+    }
+}
+
+impl<W: Dimension, H: Dimension, T: Pixel> DynamicCharacterHeight
+    for PixelDisplay<W, H, T>
+{
+    default fn height_characters(&self) -> usize {
+        self.height / T::HEIGHT
+    }
+}
+
+impl<W: Dimension, H: Dimension, T: Pixel> Into<StringData>
+    for PixelDisplay<W, H, T>
+{
+    default fn into(self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(DynamicCharacterWidth::width_characters(&self))
                 .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
                 .collect(),
         }
@@ -249,18 +344,44 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> DynamicWidget
     for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
 {
     fn width_characters(&self) -> usize {
-        Self::WIDTH_CHARACTERS
+        <Self as StaticWidget>::WIDTH_CHARACTERS
     }
 
     fn height_characters(&self) -> usize {
-        Self::HEIGHT_CHARACTERS
+        <Self as StaticWidget>::HEIGHT_CHARACTERS
     }
 
     fn string_data(&self) -> StringData {
         StringData {
             data: self
                 .data
-                .chunks(Self::WIDTH_CHARACTERS)
+                .chunks(<Self as StaticWidget>::WIDTH_CHARACTERS)
+                .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
+                .collect(),
+        }
+    }
+}
+
+default impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> StaticCharacterWidth
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    const WIDTH_CHARACTERS: usize = <Self as StaticCharacterWidth>::WIDTH_CHARACTERS;
+}
+
+default impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> StaticCharacterHeight
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    const HEIGHT_CHARACTERS: usize = <Self as StaticCharacterHeight>::HEIGHT_CHARACTERS;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> Into<StringData>
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    fn into(self) -> StringData {
+        StringData {
+            data: self
+                .data
+                .chunks(<Self as StaticCharacterWidth>::WIDTH_CHARACTERS)
                 .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
                 .collect(),
         }
@@ -281,12 +402,12 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
         if let Some(x) = x &&
             let Some(y) = y
         {
-            if x >= self.width() || y >= self.height() {
+            if x >= DynamicConsoleDisplay::width(self) || y >= DynamicConsoleDisplay::height(self) {
                 return Err(DisplayError::CoordinatesOutOfBounds(
                     x,
-                    self.width(),
+                    DynamicConsoleDisplay::width(self),
                     y,
-                    self.height(),
+                    DynamicConsoleDisplay::height(self),
                 ))?;
             }
 
@@ -296,7 +417,7 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
             let offset_y: usize = y % S::HEIGHT;
 
             let pixel =
-                &self.data()[block_x + block_y * self.width_characters()];
+                &DynamicConsoleDisplay::data(self)[block_x + block_y * DynamicWidget::width_characters(self)];
 
             Ok(pixel
                 .subpixel(offset_x, offset_y)
@@ -321,12 +442,12 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
         if let Some(x) = x &&
             let Some(y) = y
         {
-            if x >= self.width() || y >= self.height() {
+            if x >= DynamicConsoleDisplay::width(self) || y >= DynamicConsoleDisplay::height(self) {
                 return Err(DisplayError::CoordinatesOutOfBounds(
                     x,
-                    self.width(),
+                    DynamicConsoleDisplay::width(self),
                     y,
-                    self.height(),
+                    DynamicConsoleDisplay::height(self),
                 ))?;
             }
 
@@ -335,9 +456,98 @@ impl<W: Dimension, H: Dimension, S: Pixel> DynamicCanvas<S>
             let offset_x: usize = x % S::WIDTH;
             let offset_y: usize = y % S::HEIGHT;
 
-            let width_characters = self.width_characters();
+            let width_characters = DynamicWidget::width_characters(self);
             let pixel =
-                &mut self.data_mut()[block_x + block_y * width_characters];
+                &mut DynamicConsoleDisplay::data_mut(self)[block_x + block_y * width_characters];
+            pixel
+                .set_subpixel(offset_x, offset_y, value)
+                .expect(OFFSET_SHOULD_BE_0_OR_1);
+
+            Ok(())
+        }
+        else {
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
+        }
+    }
+}
+
+impl<W: Dimension, H: Dimension, S: Pixel> GetPixel<S>
+    for PixelDisplay<W, H, S>
+{
+    type A = usize;
+
+    fn pixel(&self, x: Self::A, y: Self::A) -> Result<S::U, DrawingError>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= DynamicWidth::width(self) || y >= DynamicHeight::height(self) {
+                return Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    DynamicWidth::width(self),
+                    y,
+                    DynamicHeight::height(self),
+                ))?;
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let pixel =
+                &GetData::data(self)[block_x + block_y * DynamicCharacterWidth::width_characters(self)];
+
+            Ok(pixel
+                .subpixel(offset_x, offset_y)
+                .expect(OFFSET_SHOULD_BE_0_OR_1))
+        }
+        else {
+            Err(DisplayError::CoordinatesToUsizeConversionFailed)?
+        }
+    }
+}
+
+impl<W: Dimension, H: Dimension, S: Pixel> SetPixel<S>
+    for PixelDisplay<W, H, S>
+{
+    type A = usize;
+
+    fn set_pixel(
+        &mut self,
+        x: Self::A,
+        y: Self::A,
+        value: S::U,
+    ) -> Result<(), DrawingError>
+    where
+        [(); S::WIDTH * S::HEIGHT]:,
+    {
+        let x: Option<usize> = NumCast::from(x);
+        let y: Option<usize> = NumCast::from(y);
+        if let Some(x) = x &&
+            let Some(y) = y
+        {
+            if x >= DynamicWidth::width(self) || y >= DynamicHeight::height(self) {
+                return Err(DisplayError::CoordinatesOutOfBounds(
+                    x,
+                    DynamicWidth::width(self),
+                    y,
+                    DynamicHeight::height(self),
+                ))?;
+            }
+
+            let block_x: usize = x / S::WIDTH;
+            let block_y: usize = y / S::HEIGHT;
+            let offset_x: usize = x % S::WIDTH;
+            let offset_y: usize = y % S::HEIGHT;
+
+            let width_characters = DynamicCharacterWidth::width_characters(self);
+            let pixel =
+                &mut GetDataMut::data_mut(self)[block_x + block_y * width_characters];
             pixel
                 .set_subpixel(offset_x, offset_y, value)
                 .expect(OFFSET_SHOULD_BE_0_OR_1);
@@ -359,11 +569,37 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
     const HEIGHT: usize = HEIGHT;
 }
 
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    Width
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    const WIDTH: usize = WIDTH;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
+    Height
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    const HEIGHT: usize = HEIGHT;
+}
+
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> const StaticWidget
     for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
 {
     const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
 
+    const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> const StaticCharacterWidth
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
+    const WIDTH_CHARACTERS: usize = WIDTH / T::WIDTH;
+}
+
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> const StaticCharacterHeight
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
+{
     const HEIGHT_CHARACTERS: usize = HEIGHT / T::HEIGHT;
 }
 
@@ -374,8 +610,6 @@ mod tests {
     use super::*;
 
     mod dynamic_pixel_display {
-        use crate::drawing::DynamicCanvas;
-
         use super::*;
 
         #[test]
@@ -415,7 +649,7 @@ mod tests {
         fn pixel_success() {
             let dynamic_pixel_display =
                 DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
-            let pixel = dynamic_pixel_display.pixel(1, 0);
+            let pixel = GetPixel::pixel(&dynamic_pixel_display, 1, 0);
             assert!(pixel.is_ok());
         }
 
@@ -423,7 +657,7 @@ mod tests {
         fn pixel_failure() {
             let dynamic_pixel_display =
                 DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
-            let pixel = dynamic_pixel_display.pixel(0, 1);
+            let pixel = GetPixel::pixel(&dynamic_pixel_display, 0, 1);
             assert!(pixel.is_err());
         }
 
@@ -431,8 +665,8 @@ mod tests {
         fn set_pixel_success() {
             let mut dynamic_pixel_display =
                 DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
-            let res = dynamic_pixel_display.set_pixel(1, 0, true);
-            let pixel = dynamic_pixel_display.pixel(1, 0);
+            let res = SetPixel::set_pixel(&mut dynamic_pixel_display, 1, 0, true);
+            let pixel = GetPixel::pixel(&dynamic_pixel_display, 1, 0);
             assert!(res.is_ok());
             assert_eq!(pixel, Ok(true));
         }
@@ -441,7 +675,7 @@ mod tests {
         fn set_pixel_failure() {
             let mut dynamic_pixel_display =
                 DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
-            let res = dynamic_pixel_display.set_pixel(0, 1, true);
+            let res = SetPixel::set_pixel(&mut dynamic_pixel_display, 0, 1, true);
             assert!(res.is_err());
         }
     }
