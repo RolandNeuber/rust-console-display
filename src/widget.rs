@@ -14,6 +14,7 @@ use crate::color::{
 pub mod single_widget;
 pub mod two_widget;
 
+#[deprecated]
 pub const trait StaticWidget: DynamicWidget {
     /// Width of the display in characters.
     const WIDTH_CHARACTERS: usize;
@@ -21,6 +22,15 @@ pub const trait StaticWidget: DynamicWidget {
     const HEIGHT_CHARACTERS: usize;
 }
 
+pub const trait StaticCharacterWidth {
+    const WIDTH_CHARACTERS: usize;
+}
+
+pub const trait StaticCharacterHeight {
+    const HEIGHT_CHARACTERS: usize;
+}
+
+#[deprecated]
 pub const trait DynamicWidget {
     /// Returns the width of the display in characters.
     #[must_use]
@@ -28,11 +38,24 @@ pub const trait DynamicWidget {
     /// Returns the height of the display in characters.
     #[must_use]
     fn height_characters(&self) -> usize;
+    // TODO: Replace with Into/From
     /// Returns a string representation.
     /// The first vector contains rows.
     /// The vectors inside/rows contain individual characters.
     #[must_use]
     fn string_data(&self) -> StringData;
+}
+
+pub const trait DynamicCharacterWidth {
+    /// Returns the width of the display in characters.
+    #[must_use]
+    fn width_characters(&self) -> usize;
+}
+
+pub const trait DynamicCharacterHeight {
+    /// Returns the height of the display in characters.
+    #[must_use]
+    fn height_characters(&self) -> usize;
 }
 
 pub struct StringData {
