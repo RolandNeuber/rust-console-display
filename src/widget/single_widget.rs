@@ -18,6 +18,7 @@ use console_display_macros::{
     SingleWidget,
     StaticWidget,
 };
+use crossterm::terminal::window_size;
 use num_traits::NumCast;
 
 use crate::{
@@ -40,6 +41,7 @@ use crate::{
         character_pixel::CharacterPixel,
     },
     widget::{
+        DataCell,
         DynamicWidget,
         StringData,
     },
@@ -73,7 +75,7 @@ pub struct UvWidget<T: DynamicConsoleDisplay<S>, S: Pixel> {
     uv_y_max: f32,
 }
 
-impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> DynamicCanvas<S>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicCanvas<S>
     for UvWidget<T, S>
 {
     type A = f32;
@@ -202,9 +204,40 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> UvWidget<T, S> {
             uv_y_max: height as f32,
         }
     }
+
+    pub fn new_with_aspect_ratio(child: T) -> Self {
+        let (width, height) = (child.width(), child.height());
+
+        let (fragment_width, fragment_height) = if let Ok(size) =
+            window_size() &&
+            size.width != 0 &&
+            size.height != 0
+        {
+            (
+                <f32 as std::convert::From<u16>>::from(size.width) /
+                    <f32 as std::convert::From<u16>>::from(size.columns),
+                <f32 as std::convert::From<u16>>::from(size.height) /
+                    <f32 as std::convert::From<u16>>::from(size.rows),
+            )
+        }
+        else {
+            (9., 19.)
+        };
+
+        let pixel_aspect = fragment_height / fragment_width;
+
+        Self {
+            pixel_type: PhantomData::<S>,
+            child,
+            uv_x_min: 0.0,
+            uv_x_max: width as f32,
+            uv_y_min: 0.0,
+            uv_y_max: height as f32 * pixel_aspect,
+        }
+    }
 }
 
-impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
+impl<S: Pixel, T: DynamicConsoleDisplay<S>> UvWidget<T, S> {
     impl_setters!(pub const uv_x_min: f32, pub const uv_x_max: f32, pub const uv_y_min: f32, pub const uv_y_max: f32);
 
     #[must_use]
@@ -342,8 +375,8 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S> + StaticWidget> UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S> + StaticWidget, S: Pixel> const
-    SingleWidget<T> for UvWidget<T, S>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const SingleWidget<T>
+    for UvWidget<T, S>
 {
     type Borrowed<'a>
         = &'a T
@@ -1016,6 +1049,83 @@ impl<T: DynamicWidget> const Deref for InsetWidget<T> {
 }
 
 impl<T: DynamicWidget> const DerefMut for InsetWidget<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
+    }
+}
+
+pub struct CrtWidget<T: DynamicWidget> {
+    child: T,
+    fill_color: TerminalColor,
+    bend_strength: f32,
+}
+
+impl<T: DynamicWidget> CrtWidget<T> {
+    impl_new!(pub const CrtWidget<T>, child: T, fill_color: TerminalColor, bend_strength: f32);
+
+    impl_getters!(pub const child: T, pub const bend_strength: f32);
+}
+
+impl<T: DynamicWidget> DynamicWidget for CrtWidget<T> {
+    fn width_characters(&self) -> usize {
+        self.child.width_characters()
+    }
+
+    fn height_characters(&self) -> usize {
+        self.child.height_characters()
+    }
+
+    fn string_data(&self) -> StringData {
+        let data = self.child.string_data().data;
+
+        let height = data.len();
+
+        let mut new_data = vec![
+            vec![
+                DataCell {
+                    character: ' ',
+                    foreground: TerminalColor::Default,
+                    background: self.fill_color
+                };
+                data[0].len()
+            ];
+            data.len()
+        ];
+
+        for (y, line) in data.into_iter().enumerate() {
+            let width = line.len();
+
+            for (x, cell) in line.into_iter().enumerate() {
+                let mut uv_x: f32 =
+                    (x as f32 / width as f32).mul_add(2., -1.);
+                let mut uv_y = (y as f32 / height as f32).mul_add(2., -1.);
+                uv_x *= (self.bend_strength * uv_y).mul_add(-uv_y, 1.);
+                uv_y *= (self.bend_strength * uv_x).mul_add(-uv_x, 1.);
+                #[allow(clippy::cast_possible_truncation)]
+                #[allow(clippy::cast_sign_loss)]
+                let new_x = (f32::midpoint(uv_x, 1.) * width as f32)
+                    .round() as usize;
+                #[allow(clippy::cast_possible_truncation)]
+                #[allow(clippy::cast_sign_loss)]
+                let new_y = (f32::midpoint(uv_y, 1.) * height as f32)
+                    .round() as usize;
+                new_data[new_y][new_x] = cell;
+            }
+        }
+
+        StringData { data: new_data }
+    }
+}
+
+impl<T: DynamicWidget> const Deref for CrtWidget<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+
+impl<T: DynamicWidget> const DerefMut for CrtWidget<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
     }

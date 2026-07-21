@@ -181,6 +181,11 @@ where
     }
 }
 
+pub const trait Shadable {
+    #[must_use]
+    fn adjust_lightness(&self, amount: f32) -> Self;
+}
+
 /// Defines a color used for foreground and background coloring of text.
 ///
 /// `Default` - Uses the default color provided by the terminal for foreground or background respectively.\
@@ -277,6 +282,17 @@ impl Color for TerminalColor {
     }
 }
 
+impl Shadable for TerminalColor {
+    fn adjust_lightness(&self, amount: f32) -> Self {
+        match self {
+            Self::Default => Self::Default,
+            Self::ARGBColor(argbcolor) => {
+                Self::ARGBColor(argbcolor.adjust_lightness(amount))
+            }
+        }
+    }
+}
+
 // TODO: Check if this impl can be const
 impl From<RGBColor> for TerminalColor {
     fn from(value: RGBColor) -> Self {
@@ -347,6 +363,18 @@ impl Color for RGBColor {
             r: (sum.0 / colors_len).clamp(0, 255) as u8,
             g: (sum.1 / colors_len).clamp(0, 255) as u8,
             b: (sum.2 / colors_len).clamp(0, 255) as u8,
+        }
+    }
+}
+
+impl Shadable for RGBColor {
+    fn adjust_lightness(&self, amount: f32) -> Self {
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_sign_loss)]
+        Self {
+            r: (f32::from(self.r) * (1. + amount)) as u8,
+            g: (f32::from(self.g) * (1. + amount)) as u8,
+            b: (f32::from(self.b) * (1. + amount)) as u8,
         }
     }
 }
@@ -476,6 +504,15 @@ impl Color for ARGBColor {
             color: RGBColor::mix(
                 &colors.iter().map(|x| x.color).collect::<Vec<_>>(),
             ),
+        }
+    }
+}
+
+impl Shadable for ARGBColor {
+    fn adjust_lightness(&self, amount: f32) -> Self {
+        Self {
+            opacity: self.opacity,
+            color: self.color.adjust_lightness(amount),
         }
     }
 }
