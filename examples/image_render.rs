@@ -2,19 +2,27 @@
 #![feature(generic_const_exprs)]
 #![allow(clippy::unwrap_used)]
 
-use std::{env::args, io::{
-    self,
-    Write,
-}};
+use std::{
+    env::args,
+    io::{
+        self,
+        Write,
+    },
+};
 
 use console_display::{
-    color::{RGBColor, TerminalColor},
+    color::{
+        RGBColor,
+        TerminalColor,
+    },
     display_driver::DisplayDriver,
+    drawing::DynamicCanvas,
     pixel::{
         Pixel,
-        color_pixel::{ColorOctPixel, ColorQuadPixel},
+        color_pixel::ColorQuadPixel,
     },
-    pixel_display::DynamicPixelDisplay, widget::single_widget::{CrtWidget, ScanLineWidget},
+    pixel_display::DynamicPixelDisplay,
+    widget::single_widget::UvWidget,
 };
 use image::{
     GenericImageView,
@@ -29,7 +37,9 @@ fn main() {
     #[allow(clippy::cast_possible_truncation)]
     const HEIGHT: u32 = PixelType::HEIGHT as u32;
 
-    let max_dimensions: (u32, u32) = (100 * PixelType::WIDTH as u32, 40 * PixelType::HEIGHT as u32);
+    #[allow(clippy::cast_possible_truncation)]
+    let max_dimensions: (u32, u32) =
+        (100 * PixelType::WIDTH as u32, 20 * PixelType::HEIGHT as u32);
 
     let path_in = args().nth(1).unwrap_or_else(|| {
         let mut temp = String::new();
@@ -90,23 +100,36 @@ fn main() {
     }
 
     let mut display = DisplayDriver::new(
-        CrtWidget::new(
-            ScanLineWidget::new(
-                DynamicPixelDisplay::<PixelType>::build_from_data(
-                    padded_dimensions.0 as usize,
-                    padded_dimensions.1 as usize,
-                    &data,
-                )
-                .expect("Could not construct display."),
-                2,
-                3,
-                false,
-                0.1
+        // CrtWidget::new(
+        //     ScanLineWidget::new(
+        UvWidget::new_with_aspect_ratio(
+            DynamicPixelDisplay::<PixelType>::new(
+                padded_dimensions.0 as usize,
+                padded_dimensions.1 as usize,
+                TerminalColor::Default,
             ),
-            TerminalColor::ARGBColor(RGBColor::BLACK.into()),
-            0.1,
         ),
+        //         2,
+        //         3,
+        //         false,
+        //         0.1
+        //     ),
+        //     TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+        //     0.1,
+        // ),
     );
+
+    for x in 0..padded_dimensions.0 as usize {
+        for y in 0..padded_dimensions.1 as usize {
+            if let Some(value) =
+                data.get(x + y * padded_dimensions.0 as usize)
+            {
+                let _ = display.set_pixel(x as f32, y as f32, *value);
+            }
+        }
+    }
+
+    // dbg!(dimensions.0 as usize, dimensions.1 as usize, data.len());
 
     display.initialize().expect("Could not initialize display.");
     display.update().expect("Could not update display.");

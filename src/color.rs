@@ -182,6 +182,7 @@ where
 }
 
 pub const trait Shadable {
+    #[must_use]
     fn adjust_lightness(&self, amount: f32) -> Self;
 }
 
@@ -284,8 +285,10 @@ impl Color for TerminalColor {
 impl Shadable for TerminalColor {
     fn adjust_lightness(&self, amount: f32) -> Self {
         match self {
-            TerminalColor::Default => TerminalColor::Default,
-            TerminalColor::ARGBColor(argbcolor) => TerminalColor::ARGBColor(argbcolor.adjust_lightness(amount)),
+            Self::Default => Self::Default,
+            Self::ARGBColor(argbcolor) => {
+                Self::ARGBColor(argbcolor.adjust_lightness(amount))
+            }
         }
     }
 }
@@ -366,10 +369,12 @@ impl Color for RGBColor {
 
 impl Shadable for RGBColor {
     fn adjust_lightness(&self, amount: f32) -> Self {
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_sign_loss)]
         Self {
-            r: (self.r as f32 * (1. + amount)) as u8,
-            g: (self.g as f32 * (1. + amount)) as u8,
-            b: (self.b as f32 * (1. + amount)) as u8,
+            r: (f32::from(self.r) * (1. + amount)) as u8,
+            g: (f32::from(self.g) * (1. + amount)) as u8,
+            b: (f32::from(self.b) * (1. + amount)) as u8,
         }
     }
 }

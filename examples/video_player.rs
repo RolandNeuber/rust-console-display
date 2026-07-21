@@ -2,19 +2,46 @@
 #![feature(generic_const_exprs)]
 #![allow(clippy::unwrap_used)]
 
-use std::{env::args, io::{
-    self,
-    Write,
-}};
+use std::{
+    env::args,
+    io::{
+        self,
+        Write,
+    },
+};
 
 use console_display::{
-    color::{RGBColor, TerminalColor}, console_display::DynamicConsoleDisplay, display_driver::{DisplayDriver, UpdateStatus}, drawing::DynamicCanvas, pixel::{
+    color::{
+        RGBColor,
+        TerminalColor,
+    },
+    console_display::DynamicConsoleDisplay,
+    display_driver::{
+        DisplayDriver,
+        UpdateStatus,
+    },
+    drawing::DynamicCanvas,
+    pixel::{
         Pixel,
-        color_pixel::{ColorOctPixel, ColorSinglePixel},
-    }, pixel_display::DynamicPixelDisplay, widget::single_widget::{CrtWidget, UvWidget}
+        color_pixel::ColorOctPixel,
+    },
+    pixel_display::DynamicPixelDisplay,
+    widget::single_widget::{
+        CrtWidget,
+        UvWidget,
+    },
 };
-use crossterm::event::{Event, KeyCode};
-use video_rs::{Location, ffmpeg::{frame::Video, software::scaling::Flags}};
+use crossterm::event::{
+    Event,
+    KeyCode,
+};
+use video_rs::{
+    Location,
+    ffmpeg::{
+        frame::Video,
+        software::scaling::Flags,
+    },
+};
 
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::cast_possible_truncation)]
@@ -26,7 +53,8 @@ fn main() {
     #[allow(clippy::cast_possible_truncation)]
     const HEIGHT: u32 = PixelType::HEIGHT as u32;
 
-    let max_dimensions: (u32, u32) = (50 * PixelType::WIDTH as u32, 30 * PixelType::HEIGHT as u32);
+    let max_dimensions: (u32, u32) =
+        (50 * PixelType::WIDTH as u32, 30 * PixelType::HEIGHT as u32);
 
     let path_in = args().nth(1).unwrap_or_else(|| {
         let mut temp = String::new();
@@ -40,45 +68,57 @@ fn main() {
     let path_in = path_in.trim();
 
     video_rs::init().unwrap();
-    let mut decoder = video_rs::decode::Decoder::new(Location::File(path_in.into())).unwrap();
+    let mut decoder =
+        video_rs::decode::Decoder::new(Location::File(path_in.into()))
+            .unwrap();
 
     let size = decoder.size();
-    let dimensions= if size.1 / size.0 >= max_dimensions.1 / max_dimensions.0 {
-        (
-            (size.0 as f32 * max_dimensions.1 as f32 / size.1 as f32 * 19.0 / 9.0 * PixelType::WIDTH as f32 / PixelType::HEIGHT as f32) as u32, 
-            max_dimensions.1
-        )
-    }
-    else {
-        (
-            max_dimensions.0, 
-            (size.1 as f32 * max_dimensions.0 as f32 / size.0 as f32 / 19.0 * 9.0 / PixelType::WIDTH as f32 * PixelType::HEIGHT as f32) as u32
-        )
-    };
-    
+    let dimensions =
+        if size.1 / size.0 >= max_dimensions.1 / max_dimensions.0 {
+            (
+                (size.0 as f32 * max_dimensions.1 as f32 / size.1 as f32 *
+                    19.0 /
+                    9.0 *
+                    PixelType::WIDTH as f32 /
+                    PixelType::HEIGHT as f32) as u32,
+                max_dimensions.1,
+            )
+        }
+        else {
+            (
+                max_dimensions.0,
+                (size.1 as f32 * max_dimensions.0 as f32 /
+                    size.0 as f32 /
+                    19.0 *
+                    9.0 /
+                    PixelType::WIDTH as f32 *
+                    PixelType::HEIGHT as f32) as u32,
+            )
+        };
+
     #[allow(clippy::modulo_one)]
     let padded_dimensions = (
         dimensions.0 + (WIDTH - dimensions.0 % WIDTH) % WIDTH,
         dimensions.1 + (HEIGHT - dimensions.1 % HEIGHT) % HEIGHT,
     );
 
-    let mut display = DisplayDriver::new(
-        CrtWidget::new(
-            UvWidget::new_with_aspect_ratio(
-                DynamicPixelDisplay::<PixelType>::new(
-                    padded_dimensions.0 as usize,
-                    padded_dimensions.1 as usize,
-                    TerminalColor::Default,
-                )
+    let mut display = DisplayDriver::new(CrtWidget::new(
+        UvWidget::new_with_aspect_ratio(
+            DynamicPixelDisplay::<PixelType>::new(
+                padded_dimensions.0 as usize,
+                padded_dimensions.1 as usize,
+                TerminalColor::Default,
             ),
-            TerminalColor::Default,
-            0.3
-        )
-    );
+        ),
+        TerminalColor::Default,
+        0.3,
+    ));
 
     let mut video = decoder.decode_raw().unwrap();
     let mut video_out = Video::empty();
-    let mut scaler = video.scaler(dimensions.0, dimensions.1, Flags::BILINEAR).unwrap();
+    let mut scaler = video
+        .scaler(dimensions.0, dimensions.1, Flags::BILINEAR)
+        .unwrap();
 
     let width = dimensions.0 as usize;
     let height = dimensions.1 as usize;
@@ -95,7 +135,7 @@ fn main() {
     display.set_on_update(move |disp, e| {
         if let Some(Event::Key(k)) = e {
             if k.code == KeyCode::Char(' ') {
-                paused ^= true; 
+                paused ^= true;
             }
             if k.code == KeyCode::Right {
                 video = decoder.decode_raw().unwrap();
@@ -149,10 +189,18 @@ fn main() {
 
         let width = disp.width();
         #[allow(clippy::needless_collect)]
-        for (index_x, x) in disp.x_values().enumerate().collect::<Vec<_>>() {
+        for (index_x, x) in disp.x_values().enumerate().collect::<Vec<_>>()
+        {
             #[allow(clippy::needless_collect)]
-            for (index_y, y) in disp.y_values().enumerate().collect::<Vec<_>>() {
-                disp.set_pixel(x, y, color_data[index_x + index_y * width]).unwrap();
+            for (index_y, y) in
+                disp.y_values().enumerate().collect::<Vec<_>>()
+            {
+                disp.set_pixel(
+                    x,
+                    y,
+                    color_data[index_x + index_y * width],
+                )
+                .unwrap();
             }
         }
         disp.print_display().unwrap();
