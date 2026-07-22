@@ -20,7 +20,7 @@ use console_display::{
     pixel::character_pixel::CharacterPixel,
     widget::{
         single_widget::UvWidget,
-        two_widget::OverlayWidget,
+        two_widget::OverlayWidgetOld,
     },
 };
 
@@ -43,7 +43,7 @@ fn main() {
     let mut symbol = 'X';
     let mut state: [[Option<char>; 3]; 3] = [[None; 3]; 3];
 
-    let mut char_disp = OverlayWidget::new(
+    let mut char_disp = OverlayWidgetOld::new(
         UvWidget::new(StaticCharacterDisplay::<_, WIDTH, HEIGHT>::new(
             CharacterPixel::new::<' '>(
                 ARGBColor::TRANSPARENT.into(),

@@ -101,7 +101,7 @@ pub const trait DynamicHeight {
 }
 
 pub trait SetPixels<T: Pixel>:
-    const DynamicWidth + const DynamicHeight + const SetPixel<T>
+    DynamicWidth + DynamicHeight + SetPixel<T>
 {
     /// Sets the pixels of the display to the provided data.
     ///
@@ -138,7 +138,7 @@ pub trait SetPixels<T: Pixel>:
 }
 
 pub trait GetPixels<T: Pixel>:
-    const DynamicWidth + const DynamicHeight + const GetPixel<T>
+    DynamicWidth + DynamicHeight + GetPixel<T>
 {
     /// Returns a vector containing all the pixels in the display.
     ///

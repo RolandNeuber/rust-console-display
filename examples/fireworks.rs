@@ -14,16 +14,21 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::DynamicConsoleDisplay,
+    console_display::{
+        DynamicHeight,
+        DynamicWidth,
+        GetPixels,
+        SetPixels,
+    },
     display_driver::{
-        DisplayDriverOld,
+        DisplayDriver,
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Ellipse,
         Line,
         NoFill,
+        SetPixel,
     },
     pixel::color_pixel::ColorOctPixel,
     pixel_display::StaticPixelDisplay,
@@ -178,8 +183,7 @@ fn main() {
     let disp = Display::new(RGBColor::BLACK.into());
     let expl = Display::new(ARGBColor::TRANSPARENT.into());
 
-    let mut display =
-        DisplayDriverOld::new(OverlayWidget::new(expl, disp));
+    let mut display = DisplayDriver::new(OverlayWidget::new(expl, disp));
 
     display.initialize().expect("Could not initialize display.");
 

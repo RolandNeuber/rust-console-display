@@ -24,7 +24,7 @@ use console_display::{
     pixel_display::StaticPixelDisplay,
     widget::{
         single_widget::UvWidget,
-        two_widget::OverlayWidget,
+        two_widget::OverlayWidgetOld,
     },
 };
 
@@ -101,7 +101,7 @@ fn main() {
     graph.set_uv_y_max(uv_y.1);
 
     let mut display =
-        DisplayDriverOld::new(OverlayWidget::new(axis, graph));
+        DisplayDriverOld::new(OverlayWidgetOld::new(axis, graph));
 
     display.set_on_update(|this: &mut DisplayDriverOld<_>, _| {
         let function = |x: f32| (x * x).sin();

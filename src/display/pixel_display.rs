@@ -10,7 +10,9 @@ use crate::{
         DynamicWidth,
         GetData,
         GetDataMut,
+        GetPixels,
         Height,
+        SetPixels,
         StaticConsoleDisplay,
         Width,
     },
@@ -586,6 +588,16 @@ impl<W: Dimension, H: Dimension, S: Pixel> SetPixel<S>
             Err(DisplayError::CoordinatesToUsizeConversionFailed)?
         }
     }
+}
+
+impl<W: Dimension, H: Dimension, S: Pixel> SetPixels<S>
+    for PixelDisplay<W, H, S>
+{
+}
+
+impl<W: Dimension, H: Dimension, S: Pixel> GetPixels<S>
+    for PixelDisplay<W, H, S>
+{
 }
 
 impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
