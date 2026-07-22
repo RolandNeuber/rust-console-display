@@ -15,12 +15,12 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::DynamicConsoleDisplay,
+    console_display::DynamicWidth,
     display_driver::{
-        DisplayDriverOld,
+        DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
+    drawing::SetPixel,
     pixel::{
         Pixel,
         color_pixel::ColorOctPixel,
@@ -28,7 +28,7 @@ use console_display::{
     pixel_display::DynamicPixelDisplay,
     widget::single_widget::{
         CrtWidget,
-        UvWidgetOld,
+        UvWidget,
     },
 };
 use crossterm::event::{
@@ -102,8 +102,8 @@ fn main() {
         dimensions.1 + (HEIGHT - dimensions.1 % HEIGHT) % HEIGHT,
     );
 
-    let mut display = DisplayDriverOld::new(CrtWidget::new(
-        UvWidgetOld::new_with_aspect_ratio(
+    let mut display = DisplayDriver::new(CrtWidget::new(
+        UvWidget::new_with_aspect_ratio(
             DynamicPixelDisplay::<PixelType>::new(
                 padded_dimensions.0 as usize,
                 padded_dimensions.1 as usize,
