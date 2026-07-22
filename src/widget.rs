@@ -12,35 +12,11 @@ use crate::color::{
 };
 
 pub mod single_widget;
+
+pub mod traits;
+pub use traits::*;
+
 pub mod two_widget;
-
-pub const trait StaticCharacterWidth {
-    const WIDTH_CHARACTERS: usize;
-}
-
-pub const trait StaticCharacterHeight {
-    const HEIGHT_CHARACTERS: usize;
-}
-
-pub const trait DynamicCharacterWidth {
-    /// Returns the width of the display in characters.
-    #[must_use]
-    fn width_characters(&self) -> usize;
-}
-
-pub const trait DynamicCharacterHeight {
-    /// Returns the height of the display in characters.
-    #[must_use]
-    fn height_characters(&self) -> usize;
-}
-
-pub const trait ToStringData {
-    /// Returns a string representation.
-    /// The first vector contains rows.
-    /// The vectors inside/rows contain individual characters.
-    #[must_use]
-    fn string_data(&self) -> StringData;
-}
 
 pub struct StringData {
     pub data: Vec<Vec<DataCell>>,

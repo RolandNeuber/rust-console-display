@@ -11,7 +11,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod color;
-mod display;
+pub mod display;
 pub mod drawing;
 pub mod error;
 mod macros;
