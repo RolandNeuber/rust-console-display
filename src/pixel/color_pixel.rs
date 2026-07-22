@@ -1,8 +1,5 @@
 use crate::{
-    color::{
-        Color,
-        TerminalColor,
-    },
+    color::TerminalColor,
     impl_from_color_pixel_for_datacell,
     impl_getters,
     impl_getters_mut,

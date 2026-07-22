@@ -1,6 +1,10 @@
 use crate::color::{
     ARGBColor,
-    Color,
+    Blendable,
+    Colorable,
+    Groupable,
+    MetricSpace,
+    Mixable,
     RGBColor,
     Shadable,
 };
@@ -17,8 +21,7 @@ pub enum TerminalColor {
     ARGBColor(ARGBColor),
 }
 
-// TODO: Check if this impl can be const
-impl Color for TerminalColor {
+impl Blendable for TerminalColor {
     fn blend(color_top: &Self, color_bottom: &Self) -> Self {
         if let Self::ARGBColor(color_top) = color_top &&
             let Self::ARGBColor(color_bottom) = color_bottom
@@ -37,7 +40,9 @@ impl Color for TerminalColor {
             *color_bottom
         }
     }
+}
 
+impl Colorable for TerminalColor {
     fn color(
         text: &str,
         foreground_color: &Self,
@@ -75,7 +80,9 @@ impl Color for TerminalColor {
         }
         format!("{}{text}{}", codes.join(""), "\x1b[0m")
     }
+}
 
+impl MetricSpace for TerminalColor {
     fn distance(color1: &Self, color2: &Self) -> f32 {
         if let Self::ARGBColor(col1) = color1 &&
             let Self::ARGBColor(col2) = color2
@@ -84,7 +91,9 @@ impl Color for TerminalColor {
         }
         0.
     }
+}
 
+impl Mixable for TerminalColor {
     fn mix(colors: &[Self]) -> Self {
         let mut argb_colors = Vec::with_capacity(colors.len());
         for color in colors {
@@ -124,6 +133,8 @@ impl const From<ARGBColor> for TerminalColor {
         Self::ARGBColor(value)
     }
 }
+
+impl Groupable for TerminalColor {}
 
 #[cfg(test)]
 mod tests {

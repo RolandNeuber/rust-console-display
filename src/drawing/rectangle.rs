@@ -4,8 +4,6 @@ use std::marker::PhantomData;
 use crate::{
     drawing::{
         Drawable,
-        DynamicCanvas,
-        DynamicDrawable,
         FillType,
         Filled,
         NoFill,
@@ -24,62 +22,6 @@ pub struct Rectangle<FILL: FillType> {
     pub x2: f32,
     pub y2: f32,
     pub fill: PhantomData<FILL>,
-}
-
-impl DynamicDrawable<2> for Rectangle<NoFill> {
-    fn draw<T: DynamicCanvas<S>, S: Pixel>(
-        &self,
-        display: &mut T,
-        value: S::U,
-    ) where
-        [(); S::WIDTH * S::HEIGHT]:,
-    {
-        let lines = [
-            Line {
-                x1: self.x1,
-                y1: self.y1,
-                x2: self.x2,
-                y2: self.y1,
-            },
-            Line {
-                x1: self.x1,
-                y1: self.y2,
-                x2: self.x2,
-                y2: self.y2,
-            },
-            Line {
-                x1: self.x1,
-                y1: self.y1,
-                x2: self.x1,
-                y2: self.y2,
-            },
-            Line {
-                x1: self.x2,
-                y1: self.y1,
-                x2: self.x2,
-                y2: self.y2,
-            },
-        ];
-
-        for line in lines {
-            DynamicDrawable::draw(&line, display, value);
-        }
-    }
-
-    fn transform<F: Fn((f32, f32)) -> (f32, f32)>(
-        &self,
-        transform: F,
-    ) -> Self {
-        let trans_p1 = transform((self.x1, self.y1));
-        let trans_p2 = transform((self.x2, self.y2));
-        Self {
-            x1: trans_p1.0,
-            y1: trans_p1.1,
-            x2: trans_p2.0,
-            y2: trans_p2.1,
-            fill: PhantomData::<NoFill>,
-        }
-    }
 }
 
 impl Drawable<2> for Rectangle<NoFill> {
@@ -133,42 +75,6 @@ impl Transformable for Rectangle<NoFill> {
             x2: trans_p2.0,
             y2: trans_p2.1,
             fill: PhantomData::<NoFill>,
-        }
-    }
-}
-
-impl DynamicDrawable<2> for Rectangle<Filled> {
-    fn draw<T: DynamicCanvas<S>, S: Pixel>(
-        &self,
-        display: &mut T,
-        value: S::U,
-    ) where
-        [(); S::WIDTH * S::HEIGHT]:,
-    {
-        #[allow(clippy::cast_possible_truncation)]
-        for x in self.x1.round() as i32..=self.x2.round() as i32 {
-            let line = Line {
-                x1: x as f32,
-                y1: self.y1,
-                x2: x as f32,
-                y2: self.y2,
-            };
-            DynamicDrawable::draw(&line, display, value);
-        }
-    }
-
-    fn transform<F: Fn((f32, f32)) -> (f32, f32)>(
-        &self,
-        transform: F,
-    ) -> Self {
-        let trans_p1 = transform((self.x1, self.y1));
-        let trans_p2 = transform((self.x2, self.y2));
-        Self {
-            x1: trans_p1.0,
-            y1: trans_p1.1,
-            x2: trans_p2.0,
-            y2: trans_p2.1,
-            fill: PhantomData::<Filled>,
         }
     }
 }

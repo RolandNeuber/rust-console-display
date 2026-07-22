@@ -4,6 +4,7 @@ use std::fmt::{
 };
 
 use crate::{
+    color::Colorable,
     constraint,
     error::{
         FOUND_CONTROL_CHAR,
@@ -14,10 +15,7 @@ use crate::{
     widget::DataCell,
 };
 
-use crate::color::{
-    Color,
-    TerminalColor,
-};
+use crate::color::TerminalColor;
 use unicode_width::UnicodeWidthChar;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -3,8 +3,6 @@ use std::ops::{
     DerefMut,
 };
 
-use console_display_macros::SingleWidgetOld;
-
 use crate::{
     impl_new,
     impl_setters,
@@ -12,96 +10,11 @@ use crate::{
     widget::{
         DynamicCharacterHeight,
         DynamicCharacterWidth,
-        DynamicWidget,
         StringData,
         ToStringData,
-        single_widget::{
-            SingleWidget,
-            SingleWidgetOld,
-        },
+        single_widget::SingleWidget,
     },
 };
-
-#[derive(SingleWidgetOld, Debug, Clone, PartialEq, Eq)]
-pub struct PaddingWidgetOld<T: DynamicWidget> {
-    child: T,
-    padding_left: usize,
-    padding_right: usize,
-    padding_top: usize,
-    padding_bottom: usize,
-}
-
-impl<T: DynamicWidget> PaddingWidgetOld<T> {
-    impl_new!(pub const PaddingWidgetOld<T>, child: T, padding_left: usize, padding_right: usize, padding_top: usize, padding_bottom: usize);
-
-    impl_setters!(pub const padding_left: usize, pub const padding_right: usize, pub const padding_top: usize, pub const padding_bottom: usize);
-}
-
-impl<T: DynamicWidget> DynamicWidget for PaddingWidgetOld<T> {
-    fn width_characters(&self) -> usize {
-        self.child.width_characters() +
-            self.padding_left +
-            self.padding_right
-    }
-
-    fn height_characters(&self) -> usize {
-        self.child.height_characters() +
-            self.padding_top +
-            self.padding_bottom
-    }
-
-    fn string_data(&self) -> StringData {
-        let mut data = self.child.string_data().data;
-        let padding_top = vec![
-            vec![
-                CharacterPixel::default().into();
-                self.width_characters()
-            ];
-            self.padding_top
-        ];
-        let padding_bottom = vec![
-            vec![
-                CharacterPixel::default().into();
-                self.width_characters()
-            ];
-            self.padding_bottom
-        ];
-        data = data
-            .into_iter()
-            .map(|line| {
-                [
-                    vec![
-                        CharacterPixel::default().into();
-                        self.padding_left
-                    ],
-                    line,
-                    vec![
-                        CharacterPixel::default().into();
-                        self.padding_right
-                    ],
-                ]
-                .concat()
-            })
-            .collect();
-        StringData {
-            data: [padding_top, data, padding_bottom].concat(),
-        }
-    }
-}
-
-impl<T: DynamicWidget> const Deref for PaddingWidgetOld<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.child
-    }
-}
-
-impl<T: DynamicWidget> const DerefMut for PaddingWidgetOld<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.child
-    }
-}
 
 #[derive(SingleWidget, Debug, Clone, PartialEq, Eq)]
 pub struct PaddingWidget<T> {
@@ -205,7 +118,7 @@ mod tests {
 
     #[test]
     fn dimensions() {
-        let widget = PaddingWidgetOld::new(
+        let widget = PaddingWidget::new(
             StaticPixelDisplay::<SinglePixel, 1, 1>::new(false),
             10,
             20,

@@ -1,5 +1,9 @@
 use crate::color::{
-    Color,
+    Blendable,
+    Colorable,
+    Groupable,
+    MetricSpace,
+    Mixable,
     Shadable,
 };
 
@@ -12,12 +16,13 @@ pub struct RGBColor {
     pub b: u8,
 }
 
-// TODO: Check if this impl can be const
-impl Color for RGBColor {
+impl Blendable for RGBColor {
     fn blend(color_top: &Self, _color_bottom: &Self) -> Self {
         *color_top
     }
+}
 
+impl Colorable for RGBColor {
     fn color(
         text: &str,
         foreground_color: &Self,
@@ -34,7 +39,9 @@ impl Color for RGBColor {
             text
         )
     }
+}
 
+impl MetricSpace for RGBColor {
     #[rustfmt::skip]
     #[allow(clippy::suboptimal_flops)]
     fn distance(color1: &Self, color2: &Self) -> f32 {
@@ -45,7 +52,9 @@ impl Color for RGBColor {
         )
         .sqrt()
     }
+}
 
+impl Mixable for RGBColor {
     fn mix(colors: &[Self]) -> Self {
         let mut sum = (0, 0, 0);
         for color in colors {
@@ -117,6 +126,8 @@ impl RGBColor {
         b: 255,
     };
 }
+
+impl Groupable for RGBColor {}
 
 #[cfg(test)]
 mod tests {

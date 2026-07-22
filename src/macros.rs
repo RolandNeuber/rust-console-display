@@ -242,7 +242,7 @@ macro_rules! impl_from_color_pixel_for_datacell {
         impl From<$type> for DataCell {
             fn from(val: $type) -> Self {
                 let colors = val.pixels();
-                let grouping = TerminalColor::group(&colors);
+                let grouping = $crate::color::Groupable::group(&colors);
                 let symb = <$base>::new(grouping).character();
 
                 let mut col1 = vec![];
@@ -255,8 +255,8 @@ macro_rules! impl_from_color_pixel_for_datacell {
                         col2.push(colors[i]);
                     }
                 }
-                let col1 = TerminalColor::mix(&col1);
-                let col2 = TerminalColor::mix(&col2);
+                let col1 = $crate::color::Mixable::mix(&col1);
+                let col2 = $crate::color::Mixable::mix(&col2);
 
                 Self {
                     character: symb,

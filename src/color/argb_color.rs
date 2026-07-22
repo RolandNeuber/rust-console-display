@@ -1,5 +1,9 @@
 use crate::color::{
-    Color,
+    Blendable,
+    Colorable,
+    Groupable,
+    MetricSpace,
+    Mixable,
     RGBColor,
     Shadable,
 };
@@ -12,8 +16,7 @@ pub struct ARGBColor {
     pub color: RGBColor,
 }
 
-// TODO: Check if this impl can be const
-impl Color for ARGBColor {
+impl Blendable for ARGBColor {
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_sign_loss)]
     fn blend(color_top: &Self, color_bottom: &Self) -> Self {
@@ -48,7 +51,9 @@ impl Color for ARGBColor {
             },
         }
     }
+}
 
+impl Colorable for ARGBColor {
     fn color(
         text: &str,
         foreground_color: &Self,
@@ -65,14 +70,18 @@ impl Color for ARGBColor {
             text
         )
     }
+}
 
+impl MetricSpace for ARGBColor {
     fn distance(color1: &Self, color2: &Self) -> f32 {
         // Equivalent to d = sqrt(r²+g²+b²+a²)
         RGBColor::distance(&color1.color, &color2.color).hypot(
             (f32::from(color1.opacity) - f32::from(color2.opacity)) / 255.,
         )
     }
+}
 
+impl Mixable for ARGBColor {
     fn mix(colors: &[Self]) -> Self {
         let mut sum_opacity = 0;
         for color in colors {
@@ -115,6 +124,8 @@ impl const From<RGBColor> for ARGBColor {
         }
     }
 }
+
+impl Groupable for ARGBColor {}
 
 #[cfg(test)]
 mod tests {
