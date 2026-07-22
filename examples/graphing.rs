@@ -9,12 +9,12 @@ use console_display::{
         RGBColor,
     },
     display_driver::{
-        DisplayDriverOld,
+        DisplayDriver,
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Line,
+        SetPixel,
     },
     pixel::{
         Pixel,
@@ -24,7 +24,7 @@ use console_display::{
     pixel_display::StaticPixelDisplay,
     widget::{
         single_widget::UvWidget,
-        two_widget::OverlayWidgetOld,
+        two_widget::OverlayWidget,
     },
 };
 
@@ -100,10 +100,9 @@ fn main() {
     graph.set_uv_y_min(uv_y.0);
     graph.set_uv_y_max(uv_y.1);
 
-    let mut display =
-        DisplayDriverOld::new(OverlayWidgetOld::new(axis, graph));
+    let mut display = DisplayDriver::new(OverlayWidget::new(axis, graph));
 
-    display.set_on_update(|this: &mut DisplayDriverOld<_>, _| {
+    display.set_on_update(|this: &mut DisplayDriver<_>, _| {
         let function = |x: f32| (x * x).sin();
         let mut xs = this.1.x_values().collect::<Vec<_>>().into_iter();
         let mut old_x = xs.next().unwrap();

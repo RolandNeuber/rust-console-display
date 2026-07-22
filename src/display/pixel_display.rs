@@ -343,14 +343,14 @@ impl<W: Dimension, H: Dimension, T: Pixel> DynamicCharacterHeight
     }
 }
 
-impl<W: Dimension, H: Dimension, T: Pixel> From<PixelDisplay<W, H, T>>
-    for StringData
+impl<W: Dimension, H: Dimension, T: Pixel> ToStringData
+    for PixelDisplay<W, H, T>
 {
-    default fn from(val: PixelDisplay<W, H, T>) -> Self {
-        Self {
-            data: val
+    default fn string_data(&self) -> StringData {
+        StringData {
+            data: self
                 .data
-                .chunks(DynamicCharacterWidth::width_characters(&val))
+                .chunks(DynamicCharacterWidth::width_characters(self))
                 .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
                 .collect(),
         }

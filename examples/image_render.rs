@@ -15,8 +15,8 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    display_driver::DisplayDriverOld,
-    drawing::DynamicCanvas,
+    display_driver::DisplayDriver,
+    drawing::SetPixel,
     pixel::{
         Pixel,
         color_pixel::ColorQuadPixel,
@@ -99,7 +99,7 @@ fn main() {
         }
     }
 
-    let mut display = DisplayDriverOld::new(
+    let mut display = DisplayDriver::new(
         // CrtWidget::new(
         //     ScanLineWidget::new(
         UvWidget::new_with_aspect_ratio(

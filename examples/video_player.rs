@@ -28,7 +28,7 @@ use console_display::{
     pixel_display::DynamicPixelDisplay,
     widget::single_widget::{
         CrtWidget,
-        UvWidget,
+        UvWidgetOld,
     },
 };
 use crossterm::event::{
@@ -103,7 +103,7 @@ fn main() {
     );
 
     let mut display = DisplayDriverOld::new(CrtWidget::new(
-        UvWidget::new_with_aspect_ratio(
+        UvWidgetOld::new_with_aspect_ratio(
             DynamicPixelDisplay::<PixelType>::new(
                 padded_dimensions.0 as usize,
                 padded_dimensions.1 as usize,

@@ -143,7 +143,10 @@ pub const trait SetPixel<S: Pixel> {
 
     /// Draw a drawable/shape onto a canvas with the specified pixel type/brush.
     /// Convenience method for inversing `DynamicDrawable::draw` by using double dispatch.
-    fn draw<D: [const] Drawable<N>, const N: usize>(
+    fn draw<
+        D: [const] Drawable<N> + [const] Transformable,
+        const N: usize,
+    >(
         &mut self,
         drawable: &D,
         value: S::U,

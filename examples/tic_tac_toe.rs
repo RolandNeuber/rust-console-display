@@ -10,17 +10,17 @@ use console_display::{
         TerminalColor,
     },
     display_driver::{
-        DisplayDriverOld,
+        DisplayDriver,
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Line,
+        SetPixel,
     },
     pixel::character_pixel::CharacterPixel,
     widget::{
         single_widget::UvWidget,
-        two_widget::OverlayWidgetOld,
+        two_widget::OverlayWidget,
     },
 };
 
@@ -43,7 +43,7 @@ fn main() {
     let mut symbol = 'X';
     let mut state: [[Option<char>; 3]; 3] = [[None; 3]; 3];
 
-    let mut char_disp = OverlayWidgetOld::new(
+    let mut char_disp = OverlayWidget::new(
         UvWidget::new(StaticCharacterDisplay::<_, WIDTH, HEIGHT>::new(
             CharacterPixel::new::<' '>(
                 ARGBColor::TRANSPARENT.into(),
@@ -98,7 +98,7 @@ fn main() {
         }
     }
 
-    let mut display = DisplayDriverOld::new(char_disp);
+    let mut display = DisplayDriver::new(char_disp);
 
     display
         .0
