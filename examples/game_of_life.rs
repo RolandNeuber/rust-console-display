@@ -5,12 +5,18 @@
 use std::array;
 
 use console_display::{
-    console_display::DynamicConsoleDisplay,
+    console_display::{
+        DynamicHeight,
+        DynamicWidth,
+    },
     display_driver::{
-        DisplayDriverOld,
+        DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
+    drawing::{
+        GetPixel,
+        SetPixel,
+    },
     pixel::monochrome_pixel::OctPixel,
     pixel_display::StaticPixelDisplay,
     widget::single_widget::DoubleBufferWidget,
@@ -32,7 +38,7 @@ fn main() {
             ),
         );
 
-    let mut display = DisplayDriverOld::new(disp);
+    let mut display = DisplayDriver::new(disp);
 
     let offsets = [
         (-1, -1),

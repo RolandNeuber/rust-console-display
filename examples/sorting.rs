@@ -9,12 +9,15 @@ use std::{
 
 use console_display::{
     color::RGBColor,
-    console_display::DynamicConsoleDisplay,
+    console_display::DynamicHeight,
     display_driver::{
-        DisplayDriverOld,
+        DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
+    drawing::{
+        GetPixel,
+        SetPixel,
+    },
     pixel::color_pixel::ColorDualPixel,
     pixel_display::StaticPixelDisplay,
     widget::single_widget::DoubleBufferWidget,
@@ -83,7 +86,7 @@ fn main() {
         WIDTH,
     >::new(RGBColor::BLACK.into()));
 
-    let mut display = DisplayDriverOld::new(disp);
+    let mut display = DisplayDriver::new(disp);
 
     display.set_target_frame_rate(60.);
     let mut state = BubbleSortState::new();
