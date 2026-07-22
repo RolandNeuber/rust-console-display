@@ -21,7 +21,7 @@ use crate::{
     widget::{
         DynamicWidget,
         StringData,
-        single_widget::SingleWidget,
+        single_widget::SingleWidgetOld,
     },
 };
 
@@ -78,7 +78,7 @@ impl<T: DynamicConsoleDisplay<S>, S: Pixel> DynamicWidget
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> const SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const SingleWidgetOld<T>
     for DoubleBufferWidget<T, S>
 {
     type Borrowed<'a>

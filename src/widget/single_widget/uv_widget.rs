@@ -24,7 +24,7 @@ use crate::{
     },
     impl_setters,
     pixel::Pixel,
-    widget::single_widget::SingleWidget,
+    widget::single_widget::SingleWidgetOld,
 };
 
 use crate::widget::{
@@ -342,7 +342,7 @@ impl<S: Pixel, T: DynamicConsoleDisplay<S>> UvWidget<T, S> {
     }
 }
 
-impl<T: DynamicConsoleDisplay<S>, S: Pixel> const SingleWidget<T>
+impl<T: DynamicConsoleDisplay<S>, S: Pixel> const SingleWidgetOld<T>
     for UvWidget<T, S>
 {
     type Borrowed<'a>

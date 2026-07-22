@@ -11,7 +11,7 @@ use console_display::{
     color::RGBColor,
     console_display::DynamicConsoleDisplay,
     display_driver::{
-        DisplayDriver,
+        DisplayDriverOld,
         UpdateStatus,
     },
     drawing::DynamicCanvas,
@@ -83,7 +83,7 @@ fn main() {
         WIDTH,
     >::new(RGBColor::BLACK.into()));
 
-    let mut display = DisplayDriver::new(disp);
+    let mut display = DisplayDriverOld::new(disp);
 
     display.set_target_frame_rate(60.);
     let mut state = BubbleSortState::new();

@@ -3,7 +3,10 @@ use std::ops::{
     DerefMut,
 };
 
-use console_display_macros::StaticWidget;
+use console_display_macros::{
+    StaticWidget,
+    TwoWidgetOld,
+};
 
 use crate::{
     constraint,
@@ -18,10 +21,10 @@ use crate::{
 
 use super::{
     StaticWidget,
-    TwoWidget,
+    TwoWidgetOld,
 };
 
-#[derive(StaticWidget, TwoWidget, Debug, Clone, PartialEq, Eq)]
+#[derive(StaticWidget, TwoWidgetOld, Debug, Clone, PartialEq, Eq)]
 pub struct AlternativeWidget<S: DynamicWidget, T: DynamicWidget> {
     child1_on_top: bool,
     children: (S, T),

@@ -19,9 +19,15 @@ pub use horizontal_tiling_widget::*;
 pub use overlay_widget::*;
 pub use vertical_tiling_widget::*;
 
-pub const trait TwoWidget<S: DynamicWidget, T: DynamicWidget>:
+#[deprecated]
+pub const trait TwoWidgetOld<S: DynamicWidget, T: DynamicWidget>:
     DynamicWidget + Deref + DerefMut
 {
+    fn children(&self) -> (&S, &T);
+    fn children_mut(&mut self) -> (&mut S, &mut T);
+}
+
+pub const trait TwoWidget<S, T> {
     fn children(&self) -> (&S, &T);
     fn children_mut(&mut self) -> (&mut S, &mut T);
 }

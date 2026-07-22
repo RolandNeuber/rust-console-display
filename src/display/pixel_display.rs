@@ -39,6 +39,7 @@ use crate::{
         StaticCharacterWidth,
         StaticWidget,
         StringData,
+        ToStringData,
     },
 };
 
@@ -392,23 +393,14 @@ default impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
         <Self as StaticCharacterHeight>::HEIGHT_CHARACTERS;
 }
 
-impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize>
-    From<PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>>
-    for StringData
+impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> ToStringData
+    for PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>
 {
-    fn from(
-        val: PixelDisplay<CompileTime<WIDTH>, CompileTime<HEIGHT>, T>,
-    ) -> Self {
-        Self {
-            data: val
+    default fn string_data(&self) -> StringData {
+        StringData {
+            data: self
                 .data
-                .chunks(
-                    <PixelDisplay<
-                        CompileTime<WIDTH>,
-                        CompileTime<HEIGHT>,
-                        T,
-                    > as StaticCharacterWidth>::WIDTH_CHARACTERS,
-                )
+                .chunks(<Self as StaticCharacterWidth>::WIDTH_CHARACTERS)
                 .map(|chunk| chunk.iter().map(|x| (*x).into()).collect())
                 .collect(),
         }

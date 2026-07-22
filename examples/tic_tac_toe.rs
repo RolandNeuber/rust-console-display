@@ -10,7 +10,7 @@ use console_display::{
         TerminalColor,
     },
     display_driver::{
-        DisplayDriver,
+        DisplayDriverOld,
         UpdateStatus,
     },
     drawing::{
@@ -98,7 +98,7 @@ fn main() {
         }
     }
 
-    let mut display = DisplayDriver::new(char_disp);
+    let mut display = DisplayDriverOld::new(char_disp);
 
     display
         .0

@@ -3,6 +3,8 @@ use std::ops::{
     DerefMut,
 };
 
+use console_display_macros::TwoWidgetOld;
+
 use crate::{
     constraint,
     error::WidgetError,
@@ -14,10 +16,10 @@ use crate::{
 
 use super::{
     StaticWidget,
-    TwoWidget,
+    TwoWidgetOld,
 };
 
-#[derive(TwoWidget, Debug, Clone, PartialEq, Eq)]
+#[derive(TwoWidgetOld, Debug, Clone, PartialEq, Eq)]
 pub struct VerticalTilingWidget<S: DynamicWidget, T: DynamicWidget> {
     children: (S, T),
 }

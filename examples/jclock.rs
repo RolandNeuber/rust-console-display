@@ -17,10 +17,10 @@ use console_display::{
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Filled,
         Line,
         Rectangle,
+        SetPixel,
     },
     pixel::color_pixel::ColorOctPixel,
     pixel_display::StaticPixelDisplay,

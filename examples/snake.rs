@@ -13,7 +13,7 @@ use console_display::{
         StaticConsoleDisplay,
     },
     display_driver::{
-        DisplayDriver,
+        DisplayDriverOld,
         UpdateStatus,
     },
     drawing::DynamicCanvas,
@@ -181,7 +181,7 @@ fn main() {
     disp.update().expect("Could not update display.");
 }
 
-type Display = DisplayDriver<
+type Display = DisplayDriverOld<
     BorderWidget<
         VerticalTilingWidget<
             StaticCharacterDisplay<CharacterPixel, 100, 1>,
@@ -195,7 +195,7 @@ type Display = DisplayDriver<
 >;
 
 fn construct_display() -> Display {
-    DisplayDriver::new(BorderWidget::new(
+    DisplayDriverOld::new(BorderWidget::new(
         VerticalTilingWidget::new(
             StaticCharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::new::<' '>(

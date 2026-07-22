@@ -58,6 +58,14 @@ pub const trait DynamicCharacterHeight {
     fn height_characters(&self) -> usize;
 }
 
+pub const trait ToStringData {
+    /// Returns a string representation.
+    /// The first vector contains rows.
+    /// The vectors inside/rows contain individual characters.
+    #[must_use]
+    fn string_data(&self) -> StringData;
+}
+
 pub struct StringData {
     pub data: Vec<Vec<DataCell>>,
 }

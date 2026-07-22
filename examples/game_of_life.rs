@@ -7,7 +7,7 @@ use std::array;
 use console_display::{
     console_display::DynamicConsoleDisplay,
     display_driver::{
-        DisplayDriver,
+        DisplayDriverOld,
         UpdateStatus,
     },
     drawing::DynamicCanvas,
@@ -32,7 +32,7 @@ fn main() {
             ),
         );
 
-    let mut display = DisplayDriver::new(disp);
+    let mut display = DisplayDriverOld::new(disp);
 
     let offsets = [
         (-1, -1),

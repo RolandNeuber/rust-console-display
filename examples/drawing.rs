@@ -11,8 +11,8 @@ use console_display::{
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Line,
+        SetPixel,
     },
     pixel::{
         Pixel,

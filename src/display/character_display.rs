@@ -44,6 +44,7 @@ use crate::{
         StaticCharacterWidth,
         StaticWidget,
         StringData,
+        ToStringData,
     },
 };
 
@@ -413,17 +414,17 @@ impl<W: Dimension, H: Dimension> DynamicCharacterHeight
     }
 }
 
-impl<W: Dimension, H: Dimension>
-    From<CharacterDisplay<W, H, CharacterPixel>> for StringData
+impl<W: Dimension, H: Dimension> ToStringData
+    for CharacterDisplay<W, H, CharacterPixel>
 {
-    default fn from(val: CharacterDisplay<W, H, CharacterPixel>) -> Self {
+    default fn string_data(&self) -> StringData {
         let mut result = Vec::new();
         let mut row = Vec::new();
         let mut width = 0;
 
-        let mut iter = val.data.iter();
+        let mut iter = self.data.iter();
         while let Some(cell) = iter.next() {
-            if width >= DynamicCharacterWidth::width_characters(&val) {
+            if width >= DynamicCharacterWidth::width_characters(self) {
                 result.push(row);
                 row = Vec::new();
                 width = 0;
@@ -447,7 +448,7 @@ impl<W: Dimension, H: Dimension>
             result.push(row);
         }
 
-        Self { data: result }
+        StringData { data: result }
     }
 }
 

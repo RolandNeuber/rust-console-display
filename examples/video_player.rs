@@ -17,7 +17,7 @@ use console_display::{
     },
     console_display::DynamicConsoleDisplay,
     display_driver::{
-        DisplayDriver,
+        DisplayDriverOld,
         UpdateStatus,
     },
     drawing::DynamicCanvas,
@@ -102,7 +102,7 @@ fn main() {
         dimensions.1 + (HEIGHT - dimensions.1 % HEIGHT) % HEIGHT,
     );
 
-    let mut display = DisplayDriver::new(CrtWidget::new(
+    let mut display = DisplayDriverOld::new(CrtWidget::new(
         UvWidget::new_with_aspect_ratio(
             DynamicPixelDisplay::<PixelType>::new(
                 padded_dimensions.0 as usize,

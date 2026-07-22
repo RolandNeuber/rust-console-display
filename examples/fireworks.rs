@@ -16,7 +16,7 @@ use console_display::{
     },
     console_display::DynamicConsoleDisplay,
     display_driver::{
-        DisplayDriver,
+        DisplayDriverOld,
         UpdateStatus,
     },
     drawing::{
@@ -178,7 +178,8 @@ fn main() {
     let disp = Display::new(RGBColor::BLACK.into());
     let expl = Display::new(ARGBColor::TRANSPARENT.into());
 
-    let mut display = DisplayDriver::new(OverlayWidget::new(expl, disp));
+    let mut display =
+        DisplayDriverOld::new(OverlayWidget::new(expl, disp));
 
     display.initialize().expect("Could not initialize display.");
 
