@@ -6,7 +6,7 @@ use crate::{
     impl_new,
     pixel::{
         Pixel,
-        monochrome_pixel::{
+        monochrome::{
             HexPixel,
             OctPixel,
             QuadPixel,

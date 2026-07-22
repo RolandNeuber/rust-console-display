@@ -31,7 +31,7 @@ use crate::widget::{
     DynamicCharacterHeight,
     DynamicCharacterWidth,
     ToStringData,
-    single_widget::PaddingWidget,
+    single::PaddingWidget,
 };
 
 pub enum UpdateStatus {
@@ -282,7 +282,7 @@ mod tests {
 
     use crate::{
         display_driver::DisplayDriver,
-        pixel::monochrome_pixel::SinglePixel,
+        pixel::monochrome::SinglePixel,
         pixel_display::StaticPixelDisplay,
     };
 

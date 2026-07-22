@@ -11,12 +11,12 @@ pub use width::*;
 #[cfg(test)]
 mod tests {
     use crate::{
-        console_display::{
+        pixel::monochrome::SinglePixel,
+        pixel_display::StaticPixelDisplay,
+        traits::{
             GetPixelStatic,
             SetPixelStatic,
         },
-        pixel::monochrome_pixel::SinglePixel,
-        pixel_display::StaticPixelDisplay,
     };
 
     #[test]

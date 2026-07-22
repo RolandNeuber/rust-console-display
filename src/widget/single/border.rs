@@ -10,7 +10,7 @@ use crate::{
         DynamicCharacterWidth,
         StringData,
         ToStringData,
-        single_widget::border_trait::Border,
+        single::border_trait::Border,
     },
 };
 

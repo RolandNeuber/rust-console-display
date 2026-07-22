@@ -11,12 +11,12 @@ use crate::color::{
     TerminalColor,
 };
 
-pub mod single_widget;
+pub mod single;
 
 pub mod traits;
 pub use traits::*;
 
-pub mod two_widget;
+pub mod two;
 
 pub struct StringData {
     pub data: Vec<Vec<DataCell>>,

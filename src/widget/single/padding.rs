@@ -6,13 +6,13 @@ use std::ops::{
 use crate::{
     impl_new,
     impl_setters,
-    pixel::character_pixel::CharacterPixel,
+    pixel::character::CharacterPixel,
     widget::{
         DynamicCharacterHeight,
         DynamicCharacterWidth,
         StringData,
         ToStringData,
-        single_widget::SingleWidget,
+        single::SingleWidget,
     },
 };
 
@@ -110,7 +110,7 @@ impl<T> const DerefMut for PaddingWidget<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        pixel::monochrome_pixel::SinglePixel,
+        pixel::monochrome::SinglePixel,
         pixel_display::StaticPixelDisplay,
     };
 

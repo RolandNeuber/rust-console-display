@@ -10,12 +10,6 @@ use crossterm::terminal::window_size;
 use num_traits::NumCast;
 
 use crate::{
-    console_display::{
-        DynamicHeight,
-        DynamicWidth,
-        GetPixels,
-        SetPixels,
-    },
     drawing::{
         Drawable,
         GetPixel,
@@ -30,13 +24,19 @@ use crate::{
     },
     impl_setters,
     pixel::Pixel,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+        GetPixels,
+        SetPixels,
+    },
     widget::{
         DynamicCharacterHeight,
         DynamicCharacterWidth,
         StaticCharacterHeight,
         StaticCharacterWidth,
         ToStringData,
-        single_widget::SingleWidget,
+        single::SingleWidget,
     },
 };
 
@@ -440,7 +440,7 @@ impl<
     /// use console_display::{
     ///     widget::single_widget::UvWidget,
     ///     pixel_display::StaticPixelDisplay,
-    ///     pixel::monochrome_pixel::SinglePixel,
+    ///     pixel::monochrome::SinglePixel,
     /// };
     ///
     /// let mut widget = UvWidget::new(
@@ -470,7 +470,7 @@ impl<
     /// use console_display::{
     ///     widget::single_widget::UvWidget,
     ///     pixel_display::StaticPixelDisplay,
-    ///     pixel::monochrome_pixel::SinglePixel,
+    ///     pixel::monochrome::SinglePixel,
     /// };
     ///
     /// let mut widget = UvWidget::new(
@@ -550,7 +550,7 @@ impl<
 #[cfg(test)]
 mod tests {
     use crate::{
-        pixel::monochrome_pixel::SinglePixel,
+        pixel::monochrome::SinglePixel,
         pixel_display::StaticPixelDisplay,
     };
 

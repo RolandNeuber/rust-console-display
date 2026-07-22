@@ -22,7 +22,7 @@ use console_display::{
         Rectangle,
         SetPixel,
     },
-    pixel::color_pixel::ColorOctPixel,
+    pixel::color::ColorOctPixel,
     pixel_display::StaticPixelDisplay,
 };
 

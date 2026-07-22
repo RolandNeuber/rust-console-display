@@ -458,7 +458,7 @@ mod tests {
     mod single_pixel {
         use crate::pixel::{
             Pixel,
-            monochrome_pixel::SinglePixel,
+            monochrome::SinglePixel,
         };
 
         #[test]
@@ -470,7 +470,7 @@ mod tests {
     mod dual_pixel {
         use crate::pixel::{
             Pixel,
-            monochrome_pixel::DualPixel,
+            monochrome::DualPixel,
         };
 
         #[test]
@@ -482,7 +482,7 @@ mod tests {
     mod quad_pixel {
         use crate::pixel::{
             Pixel,
-            monochrome_pixel::QuadPixel,
+            monochrome::QuadPixel,
         };
 
         #[test]
@@ -497,7 +497,7 @@ mod tests {
     mod hex_pixel {
         use crate::pixel::{
             Pixel,
-            monochrome_pixel::HexPixel,
+            monochrome::HexPixel,
         };
 
         #[test]
@@ -513,7 +513,7 @@ mod tests {
     mod oct_pixel {
         use crate::pixel::{
             Pixel,
-            monochrome_pixel::OctPixel,
+            monochrome::OctPixel,
         };
 
         #[test]
@@ -531,7 +531,7 @@ mod tests {
     mod braille_oct_pixel {
         use crate::pixel::{
             Pixel,
-            monochrome_pixel::BrailleOctPixel,
+            monochrome::BrailleOctPixel,
         };
 
         #[test]

@@ -3,18 +3,6 @@ use std::marker::PhantomData;
 use num_traits::NumCast;
 
 use crate::{
-    console_display::{
-        DynamicHeight,
-        DynamicWidth,
-        GetData,
-        GetDataMut,
-        GetPixelStatic,
-        GetPixels,
-        Height,
-        SetPixelStatic,
-        SetPixels,
-        Width,
-    },
     drawing::{
         GetPixel,
         SetPixel,
@@ -32,10 +20,22 @@ use crate::{
     },
     pixel::{
         Pixel,
-        character_pixel::{
+        character::{
             CharacterPixel,
             CharacterPixelData,
         },
+    },
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+        GetData,
+        GetDataMut,
+        GetPixelStatic,
+        GetPixels,
+        Height,
+        SetPixelStatic,
+        SetPixels,
+        Width,
     },
     widget::{
         DynamicCharacterHeight,

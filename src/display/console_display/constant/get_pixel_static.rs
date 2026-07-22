@@ -1,5 +1,5 @@
 use crate::{
-    console_display::{
+    traits::{
         GetData,
         Height,
         Width,

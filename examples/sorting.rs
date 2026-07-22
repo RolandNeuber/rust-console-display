@@ -9,7 +9,6 @@ use std::{
 
 use console_display::{
     color::RGBColor,
-    console_display::DynamicHeight,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -18,9 +17,10 @@ use console_display::{
         GetPixel,
         SetPixel,
     },
-    pixel::color_pixel::ColorDualPixel,
+    pixel::color::ColorDualPixel,
     pixel_display::StaticPixelDisplay,
-    widget::single_widget::DoubleBufferWidget,
+    traits::DynamicHeight,
+    widget::single::DoubleBufferWidget,
 };
 use rand::{
     RngExt,

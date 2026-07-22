@@ -1,10 +1,6 @@
 use num_traits::NumCast;
 
 use crate::{
-    console_display::{
-        DynamicHeight,
-        DynamicWidth,
-    },
     drawing::SetPixel,
     error::{
         COULD_NOT_CAST_X_COORD,
@@ -13,6 +9,10 @@ use crate::{
         PIXEL_INDEX_OUT_OF_RANGE,
     },
     pixel::Pixel,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+    },
 };
 
 pub trait SetPixels<T: Pixel>:

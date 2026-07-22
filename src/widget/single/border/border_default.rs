@@ -5,8 +5,8 @@ use crate::{
     impl_getters,
     impl_new,
     or,
-    pixel::character_pixel::CharacterPixel,
-    widget::single_widget::border_trait::Border,
+    pixel::character::CharacterPixel,
+    widget::single::border_trait::Border,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

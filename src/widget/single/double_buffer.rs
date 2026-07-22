@@ -14,11 +14,11 @@ use std::{
 };
 
 use crate::{
-    console_display::{
+    pixel::Pixel,
+    traits::{
         GetData,
         GetDataMut,
     },
-    pixel::Pixel,
     widget::{
         DynamicCharacterHeight,
         DynamicCharacterWidth,
@@ -26,7 +26,7 @@ use crate::{
         StaticCharacterWidth,
         StringData,
         ToStringData,
-        single_widget::SingleWidget,
+        single::SingleWidget,
     },
 };
 
@@ -153,9 +153,9 @@ impl<T: GetData<S> + GetDataMut<S>, S: Pixel> DerefMut
 #[cfg(test)]
 mod tests {
     use crate::{
-        console_display::SetPixelStatic,
-        pixel::monochrome_pixel::SinglePixel,
+        pixel::monochrome::SinglePixel,
         pixel_display::StaticPixelDisplay,
+        traits::SetPixelStatic,
     };
 
     use super::*;

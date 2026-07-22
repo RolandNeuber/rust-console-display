@@ -195,8 +195,8 @@ mod tests {
         },
         drawing::SetPixel,
         pixel::{
-            color_pixel::ColorSinglePixel,
-            monochrome_pixel::SinglePixel,
+            color::ColorSinglePixel,
+            monochrome::SinglePixel,
         },
         pixel_display::{
             DynamicPixelDisplay,

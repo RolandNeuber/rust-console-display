@@ -1,11 +1,11 @@
 use crate::{
-    console_display::{
+    constraint,
+    pixel::Pixel,
+    traits::{
         GetDataMut,
         Height,
         Width,
     },
-    constraint,
-    pixel::Pixel,
     widget::StaticCharacterWidth,
 };
 

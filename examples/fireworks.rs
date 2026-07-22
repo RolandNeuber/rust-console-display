@@ -14,12 +14,6 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::{
-        DynamicHeight,
-        DynamicWidth,
-        GetPixels,
-        SetPixels,
-    },
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -30,9 +24,15 @@ use console_display::{
         NoFill,
         SetPixel,
     },
-    pixel::color_pixel::ColorOctPixel,
+    pixel::color::ColorOctPixel,
     pixel_display::StaticPixelDisplay,
-    widget::two_widget::OverlayWidget,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+        GetPixels,
+        SetPixels,
+    },
+    widget::two::OverlayWidget,
 };
 use rand::{
     RngExt,

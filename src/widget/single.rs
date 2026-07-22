@@ -5,19 +5,19 @@ use std::ops::{
 
 use console_display_macros::SingleWidget;
 
-pub mod border_widget;
-pub mod crt_widget;
-pub mod double_buffer_widget;
-pub mod inset_widget;
-pub mod padding_widget;
-pub mod uv_widget;
+pub mod border;
+pub mod crt;
+pub mod double_buffer;
+pub mod inset;
+pub mod padding;
+pub mod uv;
 
-pub use border_widget::*;
-pub use crt_widget::*;
-pub use double_buffer_widget::*;
-pub use inset_widget::*;
-pub use padding_widget::*;
-pub use uv_widget::*;
+pub use border::*;
+pub use crt::*;
+pub use double_buffer::*;
+pub use inset::*;
+pub use padding::*;
+pub use uv::*;
 
 pub const trait SingleWidget<T> {
     type Borrowed<'a>: Deref<Target = T>

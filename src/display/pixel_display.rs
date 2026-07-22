@@ -4,18 +4,6 @@ use std::marker::PhantomData;
 use num_traits::NumCast;
 
 use crate::{
-    console_display::{
-        DynamicHeight,
-        DynamicWidth,
-        GetData,
-        GetDataMut,
-        GetPixelStatic,
-        GetPixels,
-        Height,
-        SetPixelStatic,
-        SetPixels,
-        Width,
-    },
     drawing::{
         GetPixel,
         SetPixel,
@@ -32,6 +20,18 @@ use crate::{
         RunTime,
     },
     pixel::Pixel,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+        GetData,
+        GetDataMut,
+        GetPixelStatic,
+        GetPixels,
+        Height,
+        SetPixelStatic,
+        SetPixels,
+        Width,
+    },
     widget::{
         DynamicCharacterHeight,
         DynamicCharacterWidth,
@@ -467,7 +467,7 @@ impl<T: Pixel, const WIDTH: usize, const HEIGHT: usize> const
 
 #[cfg(test)]
 mod tests {
-    use crate::pixel::monochrome_pixel::SinglePixel;
+    use crate::pixel::monochrome::SinglePixel;
 
     use super::*;
 

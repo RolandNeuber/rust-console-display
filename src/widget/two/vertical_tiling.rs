@@ -13,7 +13,7 @@ use crate::{
         StaticCharacterWidth,
         StringData,
         ToStringData,
-        two_widget::TwoWidget,
+        two::TwoWidget,
     },
 };
 
@@ -131,7 +131,7 @@ impl<S, T> const DerefMut for VerticalTilingWidget<S, T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        pixel::monochrome_pixel::SinglePixel,
+        pixel::monochrome::SinglePixel,
         pixel_display::StaticPixelDisplay,
     };
 

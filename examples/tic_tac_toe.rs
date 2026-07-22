@@ -17,10 +17,10 @@ use console_display::{
         Line,
         SetPixel,
     },
-    pixel::character_pixel::CharacterPixel,
+    pixel::character::CharacterPixel,
     widget::{
-        single_widget::UvWidget,
-        two_widget::OverlayWidget,
+        single::UvWidget,
+        two::OverlayWidget,
     },
 };
 

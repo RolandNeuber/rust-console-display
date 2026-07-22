@@ -5,10 +5,6 @@
 use std::array;
 
 use console_display::{
-    console_display::{
-        DynamicHeight,
-        DynamicWidth,
-    },
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -17,9 +13,13 @@ use console_display::{
         GetPixel,
         SetPixel,
     },
-    pixel::monochrome_pixel::OctPixel,
+    pixel::monochrome::OctPixel,
     pixel_display::StaticPixelDisplay,
-    widget::single_widget::DoubleBufferWidget,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+    },
+    widget::single::DoubleBufferWidget,
 };
 use rand::{
     RngExt,

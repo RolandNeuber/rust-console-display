@@ -15,7 +15,6 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::DynamicWidth,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
@@ -23,10 +22,11 @@ use console_display::{
     drawing::SetPixel,
     pixel::{
         Pixel,
-        color_pixel::ColorOctPixel,
+        color::ColorOctPixel,
     },
     pixel_display::DynamicPixelDisplay,
-    widget::single_widget::{
+    traits::DynamicWidth,
+    widget::single::{
         CrtWidget,
         UvWidget,
     },

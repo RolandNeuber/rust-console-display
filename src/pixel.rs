@@ -4,9 +4,9 @@ use crate::{
     widget::DataCell,
 };
 
-pub mod character_pixel;
-pub mod color_pixel;
-pub mod monochrome_pixel;
+pub mod character;
+pub mod color;
+pub mod monochrome;
 
 pub trait Pixel: Copy + Into<DataCell>
 where

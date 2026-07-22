@@ -18,13 +18,13 @@ use console_display::{
     },
     pixel::{
         Pixel,
-        character_pixel::CharacterPixel,
-        color_pixel::ColorOctPixel,
+        character::CharacterPixel,
+        color::ColorOctPixel,
     },
     pixel_display::StaticPixelDisplay,
     widget::{
-        single_widget::UvWidget,
-        two_widget::OverlayWidget,
+        single::UvWidget,
+        two::OverlayWidget,
     },
 };
 

@@ -1,4 +1,4 @@
-use crate::pixel::character_pixel::CharacterPixel;
+use crate::pixel::character::CharacterPixel;
 
 pub const trait Border {
     fn border_at(
