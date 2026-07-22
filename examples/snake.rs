@@ -9,14 +9,15 @@ use console_display::{
         TerminalColor,
     },
     console_display::{
-        DynamicConsoleDisplay,
-        StaticConsoleDisplay,
+        DynamicHeight,
+        DynamicWidth,
+        SetPixelStatic,
     },
     display_driver::{
-        DisplayDriverOld,
+        DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
+    drawing::SetPixel,
     pixel::{
         character_pixel::CharacterPixel,
         color_pixel::ColorDualPixel,
@@ -181,7 +182,7 @@ fn main() {
     disp.update().expect("Could not update display.");
 }
 
-type Display = DisplayDriverOld<
+type Display = DisplayDriver<
     BorderWidget<
         VerticalTilingWidget<
             StaticCharacterDisplay<CharacterPixel, 100, 1>,
@@ -195,7 +196,7 @@ type Display = DisplayDriverOld<
 >;
 
 fn construct_display() -> Display {
-    DisplayDriverOld::new(BorderWidget::new(
+    DisplayDriver::new(BorderWidget::new(
         VerticalTilingWidget::new(
             StaticCharacterDisplay::<_, 100, 1>::new(
                 CharacterPixel::new::<' '>(

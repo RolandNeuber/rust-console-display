@@ -118,7 +118,7 @@ pub const trait Height {
 }
 
 pub trait SetPixelStatic<T: Pixel>:
-    StaticCharacterWidth + Width + Height + const GetDataMut<T>
+    StaticCharacterWidth + Width + Height + GetDataMut<T>
 {
     // TODO: Update docs
     /// Set a pixel at the specified coordinate with a given value.
@@ -150,7 +150,7 @@ pub trait SetPixelStatic<T: Pixel>:
 }
 
 pub trait GetPixelStatic<T: Pixel>:
-    StaticCharacterWidth + Width + Height + const GetData<T>
+    StaticCharacterWidth + Width + Height + GetData<T>
 {
     // TODO: Update docs
     /// Returns a bool representing the state of the pixel at the specified coordinate.
