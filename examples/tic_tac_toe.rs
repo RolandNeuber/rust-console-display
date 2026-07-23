@@ -14,13 +14,13 @@ use console_display::{
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Line,
+        SetPixel,
     },
-    pixel::character_pixel::CharacterPixel,
+    pixel::character::CharacterPixel,
     widget::{
-        single_widget::UvWidget,
-        two_widget::OverlayWidget,
+        single::UvWidget,
+        two::OverlayWidget,
     },
 };
 

@@ -15,18 +15,18 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
+    drawing::SetPixel,
     pixel::{
         Pixel,
-        color_pixel::ColorOctPixel,
+        color::ColorOctPixel,
     },
     pixel_display::DynamicPixelDisplay,
-    widget::single_widget::{
+    traits::DynamicWidth,
+    widget::single::{
         CrtWidget,
         UvWidget,
     },

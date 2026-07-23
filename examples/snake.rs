@@ -8,26 +8,27 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::{
-        DynamicConsoleDisplay,
-        StaticConsoleDisplay,
-    },
     display_driver::{
         DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
+    drawing::SetPixel,
     pixel::{
-        character_pixel::CharacterPixel,
-        color_pixel::ColorDualPixel,
+        character::CharacterPixel,
+        color::ColorDualPixel,
     },
     pixel_display::StaticPixelDisplay,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+        SetPixelStatic,
+    },
     widget::{
-        single_widget::{
+        single::{
             BorderDefault,
             BorderWidget,
         },
-        two_widget::{
+        two::{
             AlternativeWidget,
             VerticalTilingWidget,
         },

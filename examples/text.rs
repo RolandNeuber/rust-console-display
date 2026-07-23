@@ -5,10 +5,10 @@
 use console_display::{
     character_display::StaticCharacterDisplay,
     color::TerminalColor,
-    console_display::DynamicConsoleDisplay,
     display_driver::DisplayDriver,
-    drawing::DynamicCanvas,
-    pixel::character_pixel::CharacterPixel,
+    drawing::SetPixel,
+    pixel::character::CharacterPixel,
+    traits::DynamicWidth,
 };
 
 fn main() {

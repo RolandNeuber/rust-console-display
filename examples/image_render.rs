@@ -16,13 +16,13 @@ use console_display::{
         TerminalColor,
     },
     display_driver::DisplayDriver,
-    drawing::DynamicCanvas,
+    drawing::SetPixel,
     pixel::{
         Pixel,
-        color_pixel::ColorQuadPixel,
+        color::ColorQuadPixel,
     },
     pixel_display::DynamicPixelDisplay,
-    widget::single_widget::UvWidget,
+    widget::single::UvWidget,
 };
 use image::{
     GenericImageView,

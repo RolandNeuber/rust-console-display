@@ -14,20 +14,25 @@ use console_display::{
         RGBColor,
         TerminalColor,
     },
-    console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Ellipse,
         Line,
         NoFill,
+        SetPixel,
     },
-    pixel::color_pixel::ColorOctPixel,
+    pixel::color::ColorOctPixel,
     pixel_display::StaticPixelDisplay,
-    widget::two_widget::OverlayWidget,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+        GetPixels,
+        SetPixels,
+    },
+    widget::two::OverlayWidget,
 };
 use rand::{
     RngExt,

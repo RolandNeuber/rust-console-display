@@ -3,8 +3,6 @@ use quote::quote;
 use syn::{
     DeriveInput,
     Expr,
-    GenericParam,
-    Generics,
     Ident,
     Token,
     parse::{
@@ -12,56 +10,11 @@ use syn::{
         ParseStream,
     },
     parse_macro_input,
-    parse_quote,
     visit_mut::{
         VisitMut,
         visit_expr_mut,
     },
 };
-
-/// Derives `StaticWidget` for a struct.
-/// Sets the width and height in characters to the dimensions of the child element.
-#[proc_macro_derive(StaticWidget)]
-pub fn derive_static_widget(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
-    let name = input.ident;
-    let generics = add_static_widget_bound_to_t(input.generics);
-    let (impl_generics, ty_generics, where_clause) =
-        generics.split_for_impl();
-
-    TokenStream::from(quote!(
-    impl #impl_generics const StaticWidget for #name #ty_generics #where_clause {
-        const WIDTH_CHARACTERS: usize = <T as StaticWidget>::WIDTH_CHARACTERS;
-        const HEIGHT_CHARACTERS: usize = <T as StaticWidget>::HEIGHT_CHARACTERS;
-    }))
-}
-
-/// Derives `DynamicWidget` for a struct.
-/// Sets the width and height in characters to the dimensions of the child element.
-#[proc_macro_derive(DynamicWidget)]
-pub fn derive_dynamic_widget(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
-    let name = input.ident;
-    let generics = input.generics;
-    let (impl_generics, ty_generics, where_clause) =
-        generics.split_for_impl();
-
-    // TODO: Check if this can be const
-    TokenStream::from(quote!(
-    impl #impl_generics DynamicWidget for #name #ty_generics #where_clause {
-        fn width_characters(&self) -> usize {
-            self.child.width_characters()
-        }
-        fn height_characters(&self) -> usize {
-            self.child.height_characters()
-        }
-        fn string_data(&self) -> StringData {
-            self.child.string_data()
-        }
-    }))
-}
 
 /// Derives `SingleWidget` for a struct.
 /// Implements getter (+ mut) for the child element assuming the child is of type `T`.
@@ -118,18 +71,6 @@ pub fn derive_two_widget(input: TokenStream) -> TokenStream {
             (&mut self.children.0, &mut self.children.1)
         }
     }))
-}
-
-/// Adds a bound that restricts generics such that: `T: StaticWidget`.
-fn add_static_widget_bound_to_t(mut generics: Generics) -> Generics {
-    for param in &mut generics.params {
-        if let GenericParam::Type(type_param) = param &&
-            type_param.ident == "T"
-        {
-            type_param.bounds.push(parse_quote!(StaticWidget));
-        }
-    }
-    generics
 }
 
 struct ReplaceExpr {

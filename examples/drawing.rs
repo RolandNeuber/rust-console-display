@@ -11,18 +11,18 @@ use console_display::{
         UpdateStatus,
     },
     drawing::{
-        DynamicCanvas,
         Line,
+        SetPixel,
     },
     pixel::{
         Pixel,
-        color_pixel::{
+        color::{
             ColorDualPixel,
             ColorSinglePixel,
         },
     },
     pixel_display::StaticPixelDisplay,
-    widget::two_widget::HorizontalTilingWidget,
+    widget::two::HorizontalTilingWidget,
 };
 use crossterm::event::{
     Event,

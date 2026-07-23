@@ -13,7 +13,7 @@ mod tests {
     use std::fs::read_to_string;
 
     use crate::color::{
-        Color,
+        Colorable,
         RGBColor,
         TerminalColor,
     };
@@ -77,7 +77,7 @@ mod tests {
                 ChangeTag::Insert => (add_color.into(), "+ "),
                 ChangeTag::Equal => continue,
             };
-            res.push_str(&TerminalColor::color(
+            res.push_str(&Colorable::color(
                 &format!("{sign}{change}"),
                 &color,
                 &TerminalColor::Default,
@@ -106,7 +106,7 @@ mod tests {
                 ChangeTag::Delete => remove_color,
                 ChangeTag::Insert => add_color,
             };
-            res.push_str(&TerminalColor::color(
+            res.push_str(&Colorable::color(
                 change.to_string().trim_end_matches('\n'),
                 &color.into(),
                 &TerminalColor::Default,

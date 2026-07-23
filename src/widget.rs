@@ -7,33 +7,16 @@ use std::{
 };
 
 use crate::color::{
-    Color,
+    Colorable,
     TerminalColor,
 };
 
-pub mod single_widget;
-pub mod two_widget;
+pub mod single;
 
-pub const trait StaticWidget: DynamicWidget {
-    /// Width of the display in characters.
-    const WIDTH_CHARACTERS: usize;
-    /// Height of the display in characters.
-    const HEIGHT_CHARACTERS: usize;
-}
+pub mod traits;
+pub use traits::*;
 
-pub const trait DynamicWidget {
-    /// Returns the width of the display in characters.
-    #[must_use]
-    fn width_characters(&self) -> usize;
-    /// Returns the height of the display in characters.
-    #[must_use]
-    fn height_characters(&self) -> usize;
-    /// Returns a string representation.
-    /// The first vector contains rows.
-    /// The vectors inside/rows contain individual characters.
-    #[must_use]
-    fn string_data(&self) -> StringData;
-}
+pub mod two;
 
 pub struct StringData {
     pub data: Vec<Vec<DataCell>>,
@@ -79,7 +62,7 @@ impl Display for DataCell {
         write!(
             f,
             "{}",
-            TerminalColor::color(
+            Colorable::color(
                 &self.character.to_string(),
                 &self.foreground,
                 &self.background

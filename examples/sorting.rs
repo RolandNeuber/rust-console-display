@@ -9,15 +9,18 @@ use std::{
 
 use console_display::{
     color::RGBColor,
-    console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
-    pixel::color_pixel::ColorDualPixel,
+    drawing::{
+        GetPixel,
+        SetPixel,
+    },
+    pixel::color::ColorDualPixel,
     pixel_display::StaticPixelDisplay,
-    widget::single_widget::DoubleBufferWidget,
+    traits::DynamicHeight,
+    widget::single::DoubleBufferWidget,
 };
 use rand::{
     RngExt,

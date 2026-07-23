@@ -5,15 +5,21 @@
 use std::array;
 
 use console_display::{
-    console_display::DynamicConsoleDisplay,
     display_driver::{
         DisplayDriver,
         UpdateStatus,
     },
-    drawing::DynamicCanvas,
-    pixel::monochrome_pixel::OctPixel,
+    drawing::{
+        GetPixel,
+        SetPixel,
+    },
+    pixel::monochrome::OctPixel,
     pixel_display::StaticPixelDisplay,
-    widget::single_widget::DoubleBufferWidget,
+    traits::{
+        DynamicHeight,
+        DynamicWidth,
+    },
+    widget::single::DoubleBufferWidget,
 };
 use rand::{
     RngExt,

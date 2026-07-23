@@ -28,8 +28,10 @@ use crossterm::{
 };
 
 use crate::widget::{
-    DynamicWidget,
-    single_widget::PaddingWidget,
+    DynamicCharacterHeight,
+    DynamicCharacterWidth,
+    ToStringData,
+    single::PaddingWidget,
 };
 
 pub enum UpdateStatus {
@@ -37,11 +39,14 @@ pub enum UpdateStatus {
     Continue,
 }
 
-type UpdateFunction<T: DynamicWidget> =
-    dyn FnMut(&mut DisplayDriver<T>, Option<Event>) -> UpdateStatus;
+type UpdateFunction<
+    T: ToStringData + DynamicCharacterWidth + DynamicCharacterHeight,
+> = dyn FnMut(&mut DisplayDriver<T>, Option<Event>) -> UpdateStatus;
 
 /// Represents a display driver responsible for handling the interaction between the displays and the terminal.
-pub struct DisplayDriver<T: DynamicWidget> {
+pub struct DisplayDriver<
+    T: ToStringData + DynamicCharacterWidth + DynamicCharacterHeight,
+> {
     original_width: u16,
     original_height: u16,
     display: PaddingWidget<T>,
@@ -49,7 +54,9 @@ pub struct DisplayDriver<T: DynamicWidget> {
     target_frame_time: Duration,
 }
 
-impl<T: DynamicWidget> DisplayDriver<T> {
+impl<T: ToStringData + DynamicCharacterWidth + DynamicCharacterHeight>
+    DisplayDriver<T>
+{
     /// Convenience method to build a blank display struct with specified dimensions
     pub fn new(widget: T) -> Self {
         let (original_width, original_height) =
@@ -221,7 +228,9 @@ impl<T: DynamicWidget> DisplayDriver<T> {
     }
 }
 
-impl<T: DynamicWidget> const Deref for DisplayDriver<T> {
+impl<T: ToStringData + DynamicCharacterWidth + DynamicCharacterHeight> const
+    Deref for DisplayDriver<T>
+{
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -229,13 +238,17 @@ impl<T: DynamicWidget> const Deref for DisplayDriver<T> {
     }
 }
 
-impl<T: DynamicWidget> const DerefMut for DisplayDriver<T> {
+impl<T: ToStringData + DynamicCharacterWidth + DynamicCharacterHeight> const
+    DerefMut for DisplayDriver<T>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.child_mut()
     }
 }
 
-impl<T: DynamicWidget> Drop for DisplayDriver<T> {
+impl<T: ToStringData + DynamicCharacterWidth + DynamicCharacterHeight> Drop
+    for DisplayDriver<T>
+{
     fn drop(&mut self) {
         let mut stdout = io::stdout();
 
@@ -269,7 +282,7 @@ mod tests {
 
     use crate::{
         display_driver::DisplayDriver,
-        pixel::monochrome_pixel::SinglePixel,
+        pixel::monochrome::SinglePixel,
         pixel_display::StaticPixelDisplay,
     };
 
