@@ -7,7 +7,7 @@ pub const trait MetricSpace {
     ///
     /// ```
     /// use console_display::color::{
-    ///     Color,
+    ///     MetricSpace,
     ///     RGBColor,
     ///     TerminalColor,
     /// };

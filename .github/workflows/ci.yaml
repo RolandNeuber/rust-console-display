@@ -78,40 +78,56 @@ jobs:
         fi
 
     - name: Show rust version
-      run: rustc --version
+      run: |
+        rustc --version
+        cargo fmt --version
+        cargo clippy --version
+
+    - name: Install FFmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          pkg-config \
+          libavcodec-dev \
+          libavformat-dev \
+          libavfilter-dev \
+          libavdevice-dev \
+          libavutil-dev \
+          libswscale-dev \
+          libswresample-dev
 
     - name: Format code
       if: env.AUTO_FORMAT == 'true'
-      run: cargo +nightly fmt --all
+      run: cargo fmt --all
 
     - name: Check formatting
       if: env.AUTO_FORMAT != 'true'
       run: |
-        cargo +nightly fmt --all --check || {
-          echo "Formatting failed — please run 'cargo +nightly fmt --all' locally before pushing.";
+        cargo fmt --all --check || {
+          echo "Formatting failed — please run 'cargo fmt --all' locally before pushing.";
           exit 1;
         }
     
     # Allow dirty flag added for convinience. Be careful when auto-formatting is enabled.
     - name: Clippy apply suggestions
       if: env.AUTO_FORMAT == 'true'
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features --fix --allow-dirty
+      run: RUSTFLAGS="-Dclippy::all" cargo clippy --all-targets --all-features --fix --allow-dirty
 
     # Still need to run clippy as well, because cargo clippy fix makes errors into warnings. See: https://github.com/rust-lang/rust-clippy/discussions/9979
     - name: Clippy
-      run: RUSTFLAGS="-Dclippy::all" cargo +nightly clippy --all-targets --all-features
+      run: RUSTFLAGS="-Dclippy::all" cargo clippy --all-targets --all-features
 
     # Replaces cargo test and checks test coverage.
     - name: Test coverage
       run: |
-        cargo +nightly llvm-cov clean --workspace;
-        cargo +nightly llvm-cov --no-report --workspace --all-features --all-targets;
-        cargo +nightly llvm-cov --no-report --workspace --all-features --doctests;
-        cargo +nightly llvm-cov report --fail-under-regions 50;
+        cargo llvm-cov clean --workspace;
+        cargo llvm-cov --no-report --workspace --all-features --all-targets;
+        cargo llvm-cov --no-report --workspace --all-features --doctests;
+        cargo llvm-cov report --fail-under-regions 50;
         
     # Needed to catch dangling references in documentation.
     - name: Build documentation
-      run: cargo +nightly doc --no-deps;
+      run: cargo doc --no-deps;
 
     - name: Add master to worktree
       run: |

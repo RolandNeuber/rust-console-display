@@ -22,11 +22,10 @@ pub trait GetPixelStatic<T: Pixel>:
     /// #![feature(generic_const_exprs)]
     ///
     /// use console_display::{
-    ///     console_display::DynamicConsoleDisplay,
     ///     display_driver::DisplayDriver,
-    ///     pixel::monochrome_pixel::SinglePixel,
+    ///     drawing::GetPixel,
+    ///     pixel::monochrome::SinglePixel,
     ///     pixel_display::StaticPixelDisplay,
-    ///     drawing::DynamicCanvas
     /// };
     ///
     /// let disp: DisplayDriver<StaticPixelDisplay<SinglePixel, 6, 6>> = DisplayDriver::new(

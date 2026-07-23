@@ -43,3 +43,21 @@ pub trait GetPixels<T: Pixel>:
         pixels
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        pixel::monochrome::SinglePixel,
+        pixel_display::DynamicPixelDisplay,
+    };
+
+    use super::*;
+
+    #[test]
+    fn pixels() {
+        let dynamic_pixel_display =
+            DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+        let res = dynamic_pixel_display.pixels();
+        assert_eq!(res, vec![false, false]);
+    }
+}

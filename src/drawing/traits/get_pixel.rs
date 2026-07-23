@@ -17,11 +17,10 @@ pub const trait GetPixel<S: Pixel> {
     /// #![feature(generic_const_exprs)]
     ///
     /// use console_display::{
-    ///     console_display::DynamicConsoleDisplay,
     ///     display_driver::DisplayDriver,
-    ///     pixel::monochrome_pixel::SinglePixel,
+    ///     drawing::GetPixel,
+    ///     pixel::monochrome::SinglePixel,
     ///     pixel_display::DynamicPixelDisplay,
-    ///     drawing::DynamicCanvas
     /// };
     ///
     /// let disp: DisplayDriver<DynamicPixelDisplay<SinglePixel>> = DisplayDriver::new(

@@ -10,14 +10,14 @@ pub const trait Groupable: [const] MetricSpace + Sized {
     ///
     /// ```
     /// use console_display::color::{
-    ///     Color,
+    ///     Groupable,
     ///     RGBColor,
     /// };
     ///
     /// let colors =
     ///     [RGBColor::BLACK, RGBColor::WHITE, RGBColor::BLACK];
     ///
-    /// let grouping = RGBColor::group(&colors);
+    /// let grouping = Groupable::group(&colors);
     ///
     /// assert_ne!(grouping[0], grouping[1]);
     /// assert_ne!(grouping[1], grouping[2]);

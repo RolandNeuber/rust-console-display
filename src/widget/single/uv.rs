@@ -438,12 +438,12 @@ impl<
     /// #![feature(generic_const_exprs)]
     ///
     /// use console_display::{
-    ///     widget::single_widget::UvWidget,
+    ///     widget::single::UvWidget,
     ///     pixel_display::StaticPixelDisplay,
     ///     pixel::monochrome::SinglePixel,
     /// };
     ///
-    /// let mut widget = UvWidget::new(
+    /// let mut widget = UvWidget::<_, SinglePixel>::new(
     ///     StaticPixelDisplay::<SinglePixel, 5, 1>::new(
     ///         false
     ///     )
@@ -468,12 +468,12 @@ impl<
     /// #![feature(generic_const_exprs)]
     ///
     /// use console_display::{
-    ///     widget::single_widget::UvWidget,
+    ///     widget::single::UvWidget,
     ///     pixel_display::StaticPixelDisplay,
     ///     pixel::monochrome::SinglePixel,
     /// };
     ///
-    /// let mut widget = UvWidget::new(
+    /// let mut widget = UvWidget::<_, SinglePixel>::new(
     ///     StaticPixelDisplay::<SinglePixel, 1, 5>::new(
     ///         false
     ///     )

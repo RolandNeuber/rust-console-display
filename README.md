@@ -52,7 +52,7 @@ use console_display::{
         DisplayDriver,
         UpdateStatus,
     },
-    pixel::color_pixel::{
+    pixel::color::{
         self,
         ColorOctPixel,
     },

@@ -5,7 +5,7 @@ pub const trait Mixable: Sized {
     ///
     /// ```
     /// use console_display::color::{
-    ///     Color,
+    ///     Mixable,
     ///     RGBColor,
     ///     TerminalColor,
     /// };
@@ -16,7 +16,7 @@ pub const trait Mixable: Sized {
     ///     RGBColor::WHITE.into(),
     /// ];
     ///
-    /// let mix = TerminalColor::mix(&colors);
+    /// let mix = Mixable::mix(&colors);
     ///
     /// assert_eq!(
     ///     mix,

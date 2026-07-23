@@ -26,7 +26,7 @@ impl SinglePixel {
     ///
     /// use console_display::pixel::{
     ///     Pixel,
-    ///     monochrome_pixel::SinglePixel
+    ///     monochrome::SinglePixel
     /// };
     ///
     /// let pixel = SinglePixel::new ([
@@ -99,7 +99,7 @@ impl DualPixel {
     ///
     /// use console_display::pixel::{
     ///     Pixel,
-    ///     monochrome_pixel::DualPixel
+    ///     monochrome::DualPixel
     /// };
     /// let pixel = DualPixel::new ([
     ///     true,  // #
@@ -177,7 +177,7 @@ impl QuadPixel {
     ///
     /// use console_display::pixel::{
     ///     Pixel,
-    ///     monochrome_pixel::QuadPixel,
+    ///     monochrome::QuadPixel,
     /// };
     ///
     /// let pixel = QuadPixel::new([
@@ -248,7 +248,7 @@ impl HexPixel {
     ///
     /// use console_display::pixel::{
     ///     Pixel,
-    ///     monochrome_pixel::HexPixel
+    ///     monochrome::HexPixel
     /// };
     ///
     /// let pixel = HexPixel::new ([
@@ -334,7 +334,7 @@ impl OctPixel {
     ///
     /// use console_display::pixel::{
     ///     Pixel,
-    ///     monochrome_pixel::OctPixel
+    ///     monochrome::OctPixel
     /// };
     /// 
     /// let pixel = OctPixel::new ([
@@ -417,7 +417,7 @@ impl BrailleOctPixel {
     ///
     /// use console_display::pixel::{
     ///     Pixel,
-    ///     monochrome_pixel::BrailleOctPixel
+    ///     monochrome::BrailleOctPixel
     /// };
     ///
     /// let pixel = BrailleOctPixel::new ([

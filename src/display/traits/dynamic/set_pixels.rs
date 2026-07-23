@@ -51,3 +51,23 @@ pub trait SetPixels<T: Pixel>:
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        drawing::GetPixel,
+        pixel::monochrome::SinglePixel,
+        pixel_display::DynamicPixelDisplay,
+    };
+
+    use super::*;
+
+    #[test]
+    fn set_pixels() {
+        let mut dynamic_pixel_display =
+            DynamicPixelDisplay::<SinglePixel>::new(2, 1, false);
+        dynamic_pixel_display.set_pixels(&[true, false]).unwrap();
+        assert!(dynamic_pixel_display.pixel(0, 0).unwrap());
+        assert!(!dynamic_pixel_display.pixel(1, 0).unwrap());
+    }
+}

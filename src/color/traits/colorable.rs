@@ -5,12 +5,12 @@ pub const trait Colorable {
     ///
     /// ```
     /// use console_display::color::{
-    ///     Color,
+    ///     Colorable,
     ///     RGBColor,
     /// };
     ///
     /// let msg =
-    ///     RGBColor::color("test", &RGBColor::RED, &RGBColor::BLACK);
+    ///     Colorable::color("test", &RGBColor::RED, &RGBColor::BLACK);
     ///
     /// // msg contains escape sequences containing color information.
     /// assert!(msg.chars().count() > 4);

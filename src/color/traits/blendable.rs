@@ -8,7 +8,7 @@ pub const trait Blendable {
     ///
     /// ```
     /// use console_display::color::{
-    ///     Color,
+    ///     Blendable,
     ///     RGBColor,
     /// };
     /// use rand::{
@@ -28,7 +28,7 @@ pub const trait Blendable {
     /// };
     ///
     /// // Opaque top color is returned.
-    /// assert_eq!(top, RGBColor::blend(&top, &bottom));
+    /// assert_eq!(top, Blendable::blend(&top, &bottom));
     /// ```
     #[must_use]
     fn blend(color_top: &Self, color_bottom: &Self) -> Self;
