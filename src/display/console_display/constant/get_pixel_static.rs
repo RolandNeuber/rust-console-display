@@ -63,8 +63,8 @@ pub trait GetPixelStatic<T: Pixel>:
     #[must_use]
     fn pixel_static<const X: usize, const Y: usize>(&self) -> T::U
     where
-        constraint!(X <= Self::WIDTH):,
-        constraint!(Y <= Self::HEIGHT):,
+        constraint!(X < Self::WIDTH):,
+        constraint!(Y < Self::HEIGHT):,
         constraint!(X % T::WIDTH < T::WIDTH):,
         constraint!(Y % T::HEIGHT < T::HEIGHT):,
         [(); T::WIDTH * T::HEIGHT]:,

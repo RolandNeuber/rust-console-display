@@ -3,6 +3,6 @@
 #[macro_export]
 macro_rules! or {
     ($( $item:expr ),*) => {
-        ( 1 $( | $item as u8 )* ) == 1
+        ( 0 $( | $item as u8 )* ) != 0
     }
 }

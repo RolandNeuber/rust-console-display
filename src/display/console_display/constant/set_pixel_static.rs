@@ -27,8 +27,8 @@ pub trait SetPixelStatic<T: Pixel>:
         &mut self,
         value: T::U,
     ) where
-        constraint!(X <= Self::WIDTH):,
-        constraint!(Y <= Self::HEIGHT):,
+        constraint!(X < Self::WIDTH):,
+        constraint!(Y < Self::HEIGHT):,
         constraint!(X % T::WIDTH < T::WIDTH):,
         constraint!(Y % T::HEIGHT < T::HEIGHT):,
         [(); T::WIDTH * T::HEIGHT]:,
