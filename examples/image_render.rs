@@ -19,10 +19,16 @@ use console_display::{
     drawing::SetPixel,
     pixel::{
         Pixel,
-        color::ColorQuadPixel,
+        color::ColorSinglePixel,
     },
     pixel_display::DynamicPixelDisplay,
-    widget::single::UvWidget,
+    widget::single::{
+        ShaderWidget,
+        UvWidget,
+        bend::Bend,
+        composite::Composite,
+        scan_line::ScanLine,
+    },
 };
 use image::{
     GenericImageView,
@@ -31,7 +37,7 @@ use image::{
 };
 
 fn main() {
-    type PixelType = ColorQuadPixel;
+    type PixelType = ColorSinglePixel;
     #[allow(clippy::cast_possible_truncation)]
     const WIDTH: u32 = PixelType::WIDTH as u32;
     #[allow(clippy::cast_possible_truncation)]
@@ -39,7 +45,7 @@ fn main() {
 
     #[allow(clippy::cast_possible_truncation)]
     let max_dimensions: (u32, u32) =
-        (100 * PixelType::WIDTH as u32, 20 * PixelType::HEIGHT as u32);
+        (100 * PixelType::WIDTH as u32, 30 * PixelType::HEIGHT as u32);
 
     let path_in = args().nth(1).unwrap_or_else(|| {
         let mut temp = String::new();
@@ -66,6 +72,7 @@ fn main() {
     );
 
     let dimensions = img.dimensions();
+    #[allow(clippy::modulo_one)]
     let padded_dimensions = (
         dimensions.0 + (WIDTH - dimensions.0 % WIDTH) % WIDTH,
         dimensions.1 + (HEIGHT - dimensions.1 % HEIGHT) % HEIGHT,
@@ -99,9 +106,7 @@ fn main() {
         }
     }
 
-    let mut display = DisplayDriver::new(
-        // CrtWidget::new(
-        //     ScanLineWidget::new(
+    let mut display = DisplayDriver::new(ShaderWidget::new(
         UvWidget::new_with_aspect_ratio(
             DynamicPixelDisplay::<PixelType>::new(
                 padded_dimensions.0 as usize,
@@ -109,15 +114,14 @@ fn main() {
                 TerminalColor::Default,
             ),
         ),
-        //         2,
-        //         3,
-        //         false,
-        //         0.1
-        //     ),
-        //     TerminalColor::ARGBColor(RGBColor::BLACK.into()),
-        //     0.1,
-        // ),
-    );
+        Composite::new(vec![
+            Box::new(ScanLine::new(0.3)),
+            Box::new(Bend::new(
+                TerminalColor::ARGBColor(RGBColor::BLACK.into()),
+                0.1,
+            )),
+        ]),
+    ));
 
     for x in 0..padded_dimensions.0 as usize {
         for y in 0..padded_dimensions.1 as usize {

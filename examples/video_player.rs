@@ -22,13 +22,16 @@ use console_display::{
     drawing::SetPixel,
     pixel::{
         Pixel,
-        color::ColorOctPixel,
+        color::ColorSinglePixel,
     },
     pixel_display::DynamicPixelDisplay,
     traits::DynamicWidth,
     widget::single::{
-        CrtWidget,
+        ShaderWidget,
         UvWidget,
+        bend::Bend,
+        composite::Composite,
+        scan_line::ScanLine,
     },
 };
 use crossterm::event::{
@@ -47,7 +50,7 @@ use video_rs::{
 #[allow(clippy::cast_possible_truncation)]
 #[allow(clippy::cast_sign_loss)]
 fn main() {
-    type PixelType = ColorOctPixel;
+    type PixelType = ColorSinglePixel;
     #[allow(clippy::cast_possible_truncation)]
     const WIDTH: u32 = PixelType::WIDTH as u32;
     #[allow(clippy::cast_possible_truncation)]
@@ -102,7 +105,7 @@ fn main() {
         dimensions.1 + (HEIGHT - dimensions.1 % HEIGHT) % HEIGHT,
     );
 
-    let mut display = DisplayDriver::new(CrtWidget::new(
+    let mut display = DisplayDriver::new(ShaderWidget::new(
         UvWidget::new_with_aspect_ratio(
             DynamicPixelDisplay::<PixelType>::new(
                 padded_dimensions.0 as usize,
@@ -110,8 +113,10 @@ fn main() {
                 TerminalColor::Default,
             ),
         ),
-        TerminalColor::Default,
-        0.3,
+        Composite::new(vec![
+            Box::new(ScanLine::new(0.3)),
+            Box::new(Bend::new(TerminalColor::Default, 0.1)),
+        ]),
     ));
 
     let mut video = decoder.decode_raw().unwrap();
