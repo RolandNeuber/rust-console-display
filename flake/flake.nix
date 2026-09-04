@@ -16,7 +16,7 @@
     in {
       devShells.${system}.default = rust-shell.lib.mkDevShell {
         inherit system;
-        toolchainFile = ./rust-toolchain.toml;
+        toolchainFile = ../rust-toolchain.toml;
         toolchainHash = "sha256-VYaaz/Iz3wita53RiO4c00Orb/D5BQ9w66sjGd+QT+k=";
         extraPackages = with pkgs; [
           pkg-config
