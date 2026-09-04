@@ -6,17 +6,17 @@ use std::ops::{
 use console_display_macros::SingleWidget;
 
 pub mod border;
-pub mod crt;
 pub mod double_buffer;
 pub mod inset;
 pub mod padding;
+pub mod shader;
 pub mod uv;
 
 pub use border::*;
-pub use crt::*;
 pub use double_buffer::*;
 pub use inset::*;
 pub use padding::*;
+pub use shader::*;
 pub use uv::*;
 
 pub const trait SingleWidget<T> {

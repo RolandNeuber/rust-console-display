@@ -1,5 +1,5 @@
 {
-    "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
+    "nixEnvSelector.nixFile": "${workspaceFolder}/flake/flake.nix",
     "nixEnvSelector.useFlakes": true,
     "nixEnvSelector.flakeShell": "default"
 }
